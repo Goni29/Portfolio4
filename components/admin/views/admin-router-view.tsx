@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { useStore } from "@/components/providers/store-provider";
 import { EmptyState, InputField, Row } from "@/components/public/shared/ui";
 import { resolveText } from "@/lib/i18n";
+import { getProductPriceBySize, getProductSizeLabel, hasMultipleProductSizes } from "@/lib/product-pricing";
 import type { Article, Banner, Collection, Coupon, Order, Product, SupportInquiry } from "@/lib/types";
 import { currency, formatDate, uid } from "@/lib/utils";
 
@@ -173,6 +174,7 @@ function AdminProductsView() {
     name: "",
     shortDescription: "",
     price: "0",
+    freeShipping: false,
     category: "serum",
     image: "",
     collectionSlugs: "",
@@ -185,6 +187,7 @@ function AdminProductsView() {
       name: "",
       shortDescription: "",
       price: "0",
+      freeShipping: false,
       category: "serum",
       image: "",
       collectionSlugs: "",
@@ -215,6 +218,7 @@ function AdminProductsView() {
       shortDescription: form.shortDescription,
       description: existing?.description ?? form.shortDescription,
       price: Number(form.price),
+      freeShipping: form.freeShipping,
       category: form.category as Product["category"],
       images: [form.image || existing?.images[0] || ""].filter(Boolean),
       collectionSlugs: form.collectionSlugs
@@ -264,6 +268,15 @@ function AdminProductsView() {
             onChange={(value) => setForm((prev) => ({ ...prev, collectionSlugs: value }))}
           />
         </div>
+        <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-slate-300 text-[#e6194c] focus:ring-[#e6194c]"
+            checked={form.freeShipping}
+            onChange={(event) => setForm((prev) => ({ ...prev, freeShipping: event.target.checked }))}
+          />
+          {t("무료배송 상품", "Free Shipping Product")}
+        </label>
         <InputField label={t("이미지 URL", "Image URL")} value={form.image} onChange={(value) => setForm((prev) => ({ ...prev, image: value }))} />
         <div className="flex gap-2">
           <button type="button" className="h-11 px-6 rounded-xl bg-[#e6194c] text-white text-sm" onClick={save}>
@@ -287,6 +300,9 @@ function AdminProductsView() {
                 <p className="text-sm text-slate-500">
                   {product.slug} - {currency(product.price)}
                 </p>
+                {product.freeShipping && (
+                  <p className="text-xs font-medium text-[#e6194c] mt-1">{t("무료배송 적용", "Free shipping enabled")}</p>
+                )}
               </div>
               <div className="flex gap-2">
                 <button
@@ -299,6 +315,7 @@ function AdminProductsView() {
                       name: resolveText(product.name, locale),
                       shortDescription: resolveText(product.shortDescription, locale),
                       price: String(product.price),
+                      freeShipping: Boolean(product.freeShipping),
                       category: product.category,
                       image: product.images[0] ?? "",
                       collectionSlugs: product.collectionSlugs.join(","),
@@ -811,9 +828,21 @@ function AdminOrderDetailView({ id }: { id: string }) {
       if (!product) {
         return null;
       }
-      return { item, product };
+      return {
+        item,
+        product,
+        unitPrice: getProductPriceBySize(product, item.sizeKey),
+      };
     })
-    .filter((entry): entry is { item: (typeof order.items)[number]; product: (typeof db.products)[number] } => Boolean(entry));
+    .filter(
+      (
+        entry,
+      ): entry is {
+        item: (typeof order.items)[number];
+        product: (typeof db.products)[number];
+        unitPrice: number;
+      } => Boolean(entry),
+    );
 
   const statusTone: Record<Order["status"], string> = {
     pending: "bg-amber-100 text-amber-700 border-amber-200",
@@ -823,7 +852,7 @@ function AdminOrderDetailView({ id }: { id: string }) {
     cancelled: "bg-slate-100 text-slate-600 border-slate-200",
   };
 
-  const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.item.quantity, 0);
+  const subtotal = lines.reduce((sum, line) => sum + line.unitPrice * line.item.quantity, 0);
   const shippingAndTax = Math.max(0, order.total - (subtotal - order.discount));
 
   return (
@@ -907,7 +936,7 @@ function AdminOrderDetailView({ id }: { id: string }) {
             <div className="divide-y divide-slate-100">
               {lines.map((line) => (
                 <div
-                  key={line.product.id}
+                  key={`${line.product.id}:${line.item.sizeKey ?? "default"}`}
                   className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-6 hover:bg-slate-50/50 transition-colors"
                 >
                   <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
@@ -920,14 +949,19 @@ function AdminOrderDetailView({ id }: { id: string }) {
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-semibold text-slate-900 truncate">{resolveText(line.product.name, locale)}</h4>
                     <p className="text-sm text-slate-500 capitalize">{productCategoryLabel(line.product.category)}</p>
+                    {hasMultipleProductSizes(line.product) && (
+                      <p className="text-xs text-slate-500 mt-1">
+                        {t("용량", "Size")}: {getProductSizeLabel(line.product, locale, line.item.sizeKey)}
+                      </p>
+                    )}
                     <p className="text-xs font-mono text-slate-400 mt-1">SKU: {line.product.slug.toUpperCase()}</p>
                   </div>
                   <div className="flex flex-row sm:flex-col items-center sm:items-end gap-x-6 sm:gap-1 mt-2 sm:mt-0 w-full sm:w-auto justify-between sm:justify-end">
                     <div className="text-sm text-slate-500">
                       <span className="sm:hidden">{t("수량: ", "Qty: ")}</span>
-                      {line.item.quantity} x {currency(line.product.price)}
+                      {line.item.quantity} x {currency(line.unitPrice)}
                     </div>
-                    <div className="text-sm font-bold text-slate-900">{currency(line.product.price * line.item.quantity)}</div>
+                    <div className="text-sm font-bold text-slate-900">{currency(line.unitPrice * line.item.quantity)}</div>
                   </div>
                 </div>
               ))}

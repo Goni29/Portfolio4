@@ -39,6 +39,12 @@ export interface ProductIngredient {
   benefit: LocalizedValue;
 }
 
+export interface ProductSizeOption {
+  key: string;
+  label: string;
+  price: number;
+}
+
 export interface Product {
   id: string;
   slug: string;
@@ -49,9 +55,11 @@ export interface Product {
   skinTypes: SkinType[];
   concerns: Concern[];
   price: number;
+  freeShipping?: boolean;
   compareAtPrice?: number;
   badge?: "new" | "best";
   images: string[];
+  sizeOptions?: ProductSizeOption[];
   ingredients: ProductIngredient[];
   howToUse: LocalizedListValue;
   routineTip: LocalizedValue;
@@ -123,6 +131,7 @@ export interface Review {
 
 export interface CartItem {
   productSlug: string;
+  sizeKey?: string;
   quantity: number;
 }
 

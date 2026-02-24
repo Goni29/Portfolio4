@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useStore } from "@/components/providers/store-provider";
 import { EmptyState } from "@/components/public/shared/ui";
 import { BRAND_LABELS, CONTENT_COPY, resolveText } from "@/lib/i18n";
+import { getProductSizeLabel, getProductSizeOptions, hasMultipleProductSizes } from "@/lib/product-pricing";
 import { cn, currency } from "@/lib/utils";
 
 export function CartView() {
@@ -14,7 +15,10 @@ export function CartView() {
     cartLines,
     cartSubtotal,
     cartDiscount,
+    cartShipping,
+    cartFreeShippingReason,
     updateCartQuantity,
+    updateCartItemSize,
     removeFromCart,
     db,
     locale,
@@ -39,7 +43,18 @@ export function CartView() {
 
   const checkoutAmount = Math.max(0, cartSubtotal - cartDiscount);
   const freeShippingGap = Math.max(0, db.settings.freeShippingThreshold - cartSubtotal);
-  const progressPercent = Math.min(100, Math.round((cartSubtotal / Math.max(db.settings.freeShippingThreshold, 1)) * 100));
+  const progressPercent = cartFreeShippingReason
+    ? 100
+    : Math.min(100, Math.round((cartSubtotal / Math.max(db.settings.freeShippingThreshold, 1)) * 100));
+  const freeShippingMessage =
+    cartFreeShippingReason === "product"
+      ? t("무료배송 상품이 포함되어 배송비가 무료입니다", "A free-shipping item in your bag unlocks free shipping")
+      : cartFreeShippingReason === "threshold"
+        ? t("무료배송 기준을 충족해 배송비가 무료입니다", "You reached the free-shipping threshold")
+        : t(
+            `무료 배송까지 ${currency(freeShippingGap)} 남았습니다`,
+            `${currency(freeShippingGap)} away from complimentary shipping`,
+          );
 
   return (
     <section className="fixed inset-x-0 bottom-0 top-[var(--public-header-height)] z-[70] overflow-hidden bg-[#f8f6f6] dark:bg-[#211115]">
@@ -80,12 +95,7 @@ export function CartView() {
 
             <div className="space-y-2 bg-[#f8f6f6] dark:bg-[#211115] p-3 rounded-lg border border-[#f3e7ea] dark:border-[#4a3b3e]">
               <div className="flex justify-between text-xs font-medium">
-                <span className="text-[#1b0e11] dark:text-gray-200">
-                  {t(
-                    `무료 배송까지 ${currency(freeShippingGap)} 남았습니다`,
-                    `${currency(freeShippingGap)} away from complimentary shipping`,
-                  )}
-                </span>
+                <span className="text-[#1b0e11] dark:text-gray-200">{freeShippingMessage}</span>
               </div>
               <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
                 <div
@@ -98,12 +108,19 @@ export function CartView() {
 
           <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-2 space-y-8 bg-white dark:bg-[#2d1b20]">
             <div className="space-y-6 mt-4">
-              {cartLines.map((line, index) => (
-                <article key={line.product.slug} className="flex gap-4 group" style={{ animationDelay: `${index * 100}ms` }}>
+              {cartLines.map((line, index) => {
+                const sizeOptions = hasMultipleProductSizes(line.product) ? getProductSizeOptions(line.product) : [];
+                const currentSizeKey = line.item.sizeKey ?? sizeOptions[0]?.key ?? "default";
+                return (
+                  <article
+                    key={`${line.product.slug}-${index}`}
+                    className="flex gap-4 group"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
                   <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-[#f8f6f6] dark:bg-[#211115] relative border border-[#f3e7ea] dark:border-[#4a3b3e]">
                     <img
                       alt={resolveText(line.product.name, locale)}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover"
                       src={line.product.images[0]}
                     />
                   </div>
@@ -119,6 +136,32 @@ export function CartView() {
                       <p className="text-xs text-[#974e60] dark:text-gray-400 mt-1">
                         {resolveText(line.product.shortDescription, locale)}
                       </p>
+                      {hasMultipleProductSizes(line.product) && (
+                        <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-[#974e60] dark:text-gray-400">
+                          <span>{t("용량", "Size")}:</span>
+                          {sizeOptions.map((option, optionIndex) => {
+                            const selected = option.key === currentSizeKey;
+                            return (
+                              <div key={option.key} className="contents">
+                                <button
+                                  type="button"
+                                  aria-pressed={selected}
+                                  className={cn(
+                                    "text-xs transition-colors",
+                                    selected
+                                      ? "font-medium text-[#1b0e11] dark:text-white"
+                                      : "hover:text-[#e6194c]",
+                                  )}
+                                  onClick={() => updateCartItemSize(line.product.slug, option.key, currentSizeKey)}
+                                >
+                                  {getProductSizeLabel(line.product, locale, option.key)}
+                                </button>
+                                {optionIndex < sizeOptions.length - 1 && <span className="opacity-50">/</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex justify-between items-center mt-2">
@@ -126,7 +169,13 @@ export function CartView() {
                         <button
                           type="button"
                           className="px-2 h-full hover:bg-gray-100 dark:hover:bg-[#3b2a30] hover:text-[#e6194c] transition-colors flex items-center justify-center border-r border-[#f3e7ea] dark:border-[#4a3b3e]"
-                          onClick={() => updateCartQuantity(line.product.slug, Math.max(1, line.item.quantity - 1))}
+                          onClick={() =>
+                            updateCartQuantity(
+                              line.product.slug,
+                              Math.max(1, line.item.quantity - 1),
+                              line.item.sizeKey,
+                            )
+                          }
                         >
                           <span className="material-symbols-outlined text-[14px]">remove</span>
                         </button>
@@ -134,7 +183,9 @@ export function CartView() {
                         <button
                           type="button"
                           className="px-2 h-full hover:bg-gray-100 dark:hover:bg-[#3b2a30] hover:text-[#e6194c] transition-colors flex items-center justify-center border-l border-[#f3e7ea] dark:border-[#4a3b3e]"
-                          onClick={() => updateCartQuantity(line.product.slug, line.item.quantity + 1)}
+                          onClick={() =>
+                            updateCartQuantity(line.product.slug, line.item.quantity + 1, line.item.sizeKey)
+                          }
                         >
                           <span className="material-symbols-outlined text-[14px]">add</span>
                         </button>
@@ -143,14 +194,15 @@ export function CartView() {
                       <button
                         type="button"
                         className="text-xs text-[#974e60] dark:text-gray-400 hover:text-[#e6194c] border-b border-transparent hover:border-[#e6194c] transition-all"
-                        onClick={() => removeFromCart(line.product.slug)}
+                        onClick={() => removeFromCart(line.product.slug, line.item.sizeKey)}
                       >
                         {resolveText(CONTENT_COPY.cartRemove, locale)}
                       </button>
                     </div>
                   </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
 
             <div className="pt-6 border-t border-[#f3e7ea] dark:border-[#4a3b3e]">
@@ -260,7 +312,15 @@ export function CartView() {
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-[#974e60] dark:text-gray-400">{resolveText(CONTENT_COPY.cartShipping, locale)}</span>
-                <span className="text-green-600 font-medium text-xs bg-green-50 px-2 py-0.5 rounded-full">{t("결제 단계에서 계산", "Calculated at checkout")}</span>
+                <span
+                  className={
+                    cartShipping === 0
+                      ? "text-green-600 font-medium text-xs bg-green-50 px-2 py-0.5 rounded-full"
+                      : "text-[#1b0e11] dark:text-white font-medium text-sm"
+                  }
+                >
+                  {cartShipping === 0 ? t("무료", "Free") : currency(cartShipping)}
+                </span>
               </div>
             </div>
 

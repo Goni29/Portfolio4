@@ -139,6 +139,7 @@ const products: Product[] = [
     skinTypes: ["dry", "oily", "combination", "normal", "sensitive"],
     concerns: ["puffiness", "texture"],
     price: 65,
+    freeShipping: true,
     images: [
       "https://lh3.googleusercontent.com/aida-public/AB6AXuDDeaMjfnRcsb-EhCZ8Jzeg-QWUApRk3zY8Vft0kc0pCGpEQ4qZkh5JLLUYhqybZVBSLLecMGW4N8HaKc8pMVuwFt1dbdFsoIndrkHaPbwCs2BIvkl6yhKpoMk9cTS4JWPiYr8LszIQ6Mh8RUPBV55GjQaMsXjQYSSpdDfunvTaS1iDflAV9UGLllK1e348CXMU5MO--dyXahtPBF2CZOymVo9gmztr5AECArz-vTJ2LSI3Wo8M_4aSElpHDMz6HL7B18EpCgGspGE",
       "https://lh3.googleusercontent.com/aida-public/AB6AXuDclVy48WOKbOruUtt4kSkObsqwjeOlRvqrfy8eEOUfnXEER99Z1307sHLjwwr-DXURfYapVVLADMRE5HUqrzhggY0mJiEX1R-Nmp_4_gj5O2Cya3s61BMlE0A2Wq6w0_Jw32ypJNA2S8Ca_sHkpGAByq_5QhQ4z4B9PaX73ZcxWWRafP5K7g92qqSdx9hoCrqIPRzynoVe-THy1MqENlf53o9PT8hjzojs9BC9hU9-ldkkZ3DqYaooS4NKaxsmYOtHLBXUCOdBeGs",
@@ -309,6 +310,7 @@ const products: Product[] = [
     skinTypes: ["dry", "combination", "normal", "sensitive"],
     concerns: ["hydration", "dullness", "redness"],
     price: 28,
+    freeShipping: true,
     images: [
       "https://lh3.googleusercontent.com/aida-public/AB6AXuDlQ6DOZ3HXmtzLhHRA4bHl-ViXi_9HpcDH3UjcdFEiioTuY3A1KkhtEDAb60FxEb6VtaZXyBsiGPVt0GQ8_sxu7tm1np8YhxvRbNylSaNKpxy7U0UbjHuPVmyIAIk5J0XXzp1dryiNqV9fMY2kZN04y-VWB4hq2PJAfG3RX9m7QqErcrM0boS1TgIfz-t06s4MtUipw2YHiTlZI_kNZMRDXK8tF9q5q3V2YryOx8s-SmktjUTZZoF6XviJxWUSRrVprBcYz2jRjsY",
     ],

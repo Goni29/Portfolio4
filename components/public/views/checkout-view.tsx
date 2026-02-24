@@ -2,19 +2,20 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useStore } from "@/components/providers/store-provider";
 import { EmptyState } from "@/components/public/shared/ui";
 import { BRAND_LABELS, CONTENT_COPY, resolveText } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/locale-routing";
+import { getProductSizeLabel, hasMultipleProductSizes } from "@/lib/product-pricing";
 import type { Address, Locale } from "@/lib/types";
 import { currency, uid } from "@/lib/utils";
 
 const ADDRESS_LABEL_KO_MAP: Record<string, string> = {
-  home: "집",
-  office: "오피스",
-  work: "직장",
-  default: "기본 배송지",
+  home: "\uC9D1",
+  office: "\uC0AC\uBB34\uC2E4",
+  work: "\uC9C1\uC7A5",
+  default: "\uAE30\uBCF8 \uBC30\uC1A1\uC9C0",
 };
 
 function localizeAddressLabel(label: string, locale: Locale): string {
@@ -41,6 +42,44 @@ const parseRecipient = (recipient?: string): { firstName: string; lastName: stri
   };
 };
 
+type CheckoutStep = "shipping" | "payment";
+type PaymentMethod = "card" | "bank" | "wallet";
+
+const digitsOnly = (value: string) => value.replace(/\D/g, "");
+
+const formatCardNumber = (value: string) => {
+  const digits = digitsOnly(value).slice(0, 16);
+  return digits.replace(/(\d{4})(?=\d)/g, "$1 ");
+};
+
+const formatCardExpiry = (value: string) => {
+  const digits = digitsOnly(value).slice(0, 4);
+  if (digits.length <= 2) {
+    return digits;
+  }
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+};
+
+const maskCardNumber = (value: string) => {
+  const digits = digitsOnly(value);
+  if (!digits) {
+    return "**** **** **** ****";
+  }
+  const padded = digits.padEnd(16, "*");
+  return padded.replace(/(.{4})/g, "$1 ").trim();
+};
+
+const detectCardBrand = (value: string) => {
+  const digits = digitsOnly(value);
+  if (digits.startsWith("4")) return "VISA";
+  if (/^5[1-5]/.test(digits)) return "MASTERCARD";
+  if (/^3[47]/.test(digits)) return "AMEX";
+  return "CARD";
+};
+
+const BANK_OPTIONS = ["Chase", "Bank of America", "Wells Fargo", "Citi"];
+const WALLET_OPTIONS = ["Apple Pay", "Google Pay", "PayPal"];
+
 export function CheckoutView() {
   const router = useRouter();
   const {
@@ -48,6 +87,8 @@ export function CheckoutView() {
     cartLines,
     cartSubtotal,
     cartDiscount,
+    cartShipping,
+    cartFreeShippingReason,
     cartTotal,
     createOrder,
     db,
@@ -68,6 +109,19 @@ export function CheckoutView() {
   const [couponMessage, setCouponMessage] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>("shipping");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
+  const [mockPaymentAgreed, setMockPaymentAgreed] = useState(false);
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardHolder, setCardHolder] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvc, setCardCvc] = useState("");
+  const [bankName, setBankName] = useState(BANK_OPTIONS[0]);
+  const [bankAccountName, setBankAccountName] = useState("");
+  const [bankTransferRef, setBankTransferRef] = useState("");
+  const [walletProvider, setWalletProvider] = useState(WALLET_OPTIONS[0]);
+  const [walletIdentifier, setWalletIdentifier] = useState("");
+  const [walletOtp, setWalletOtp] = useState("");
 
   const [form, setForm] = useState({
     firstName: nameParts.firstName,
@@ -108,7 +162,7 @@ export function CheckoutView() {
   }
 
   const estimatedTax = Math.round(Math.max(0, cartSubtotal - cartDiscount) * db.settings.taxRate * 100) / 100;
-  const totalPreview = Math.max(0, cartTotal + estimatedTax);
+  const totalPreview = Math.max(0, cartTotal + cartShipping + estimatedTax);
 
   const createAddressPayload = (): Address => {
     const recipient = `${form.firstName} ${form.lastName}`.trim();
@@ -130,67 +184,155 @@ export function CheckoutView() {
     };
   };
 
+  const validateShipping = (): boolean => {
+    const required = [
+      contactEmail,
+      form.firstName,
+      form.lastName,
+      form.address,
+      form.city,
+      form.state,
+      form.postalCode,
+      form.phone,
+    ];
+
+    if (required.some((value) => value.trim() === "")) {
+      setMessage(resolveText(CONTENT_COPY.checkoutIncomplete, locale));
+      return false;
+    }
+
+    return true;
+  };
+
+  const validatePayment = (): boolean => {
+    if (paymentMethod === "card") {
+      const cardDigits = digitsOnly(cardNumber);
+      const cvcDigits = digitsOnly(cardCvc);
+      const [monthText] = cardExpiry.split("/");
+      const month = Number(monthText);
+
+      if (
+        cardDigits.length !== 16 ||
+        cardHolder.trim() === "" ||
+        !/^\d{2}\/\d{2}$/.test(cardExpiry) ||
+        Number.isNaN(month) ||
+        month < 1 ||
+        month > 12 ||
+        cvcDigits.length < 3 ||
+        cvcDigits.length > 4
+      ) {
+        setMessage(
+          t(
+            "\uCE74\uB4DC \uC815\uBCF4(\uCE74\uB4DC\uBC88\uD638 16\uC790\uB9AC, \uB9CC\uB8CC\uC77C, CVC)\uB97C \uC815\uD655\uD788 \uC785\uB825\uD574 \uC8FC\uC138\uC694.",
+            "Please enter valid card details (16-digit number, expiry, and CVC).",
+          ),
+        );
+        return false;
+      }
+      return true;
+    }
+
+    if (paymentMethod === "bank") {
+      const transferDigits = digitsOnly(bankTransferRef);
+      if (bankName.trim() === "" || bankAccountName.trim() === "" || transferDigits.length < 6) {
+        setMessage(
+          t(
+            "\uACC4\uC88C\uC774\uCCB4 \uC815\uBCF4(\uC740\uD589, \uC608\uAE08\uC8FC, \uC774\uCCB4 \uC778\uC99D\uBC88\uD638)\uB97C \uC815\uD655\uD788 \uC785\uB825\uD574 \uC8FC\uC138\uC694.",
+            "Please enter valid bank transfer details (bank, account holder, transfer verification code).",
+          ),
+        );
+        return false;
+      }
+      return true;
+    }
+
+    const otpDigits = digitsOnly(walletOtp);
+    const walletId = walletIdentifier.trim();
+    const isWalletEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(walletId);
+    const isWalletPhone = digitsOnly(walletId).length >= 10;
+    if (walletProvider.trim() === "" || (!isWalletEmail && !isWalletPhone) || otpDigits.length !== 6) {
+      setMessage(
+        t(
+          "\uC804\uC790\uC9C0\uAC11 \uC815\uBCF4(\uC81C\uACF5\uC0AC, \uACC4\uC815, OTP)\uB97C \uC815\uD655\uD788 \uC785\uB825\uD574 \uC8FC\uC138\uC694.",
+          "Please enter valid wallet details (provider, account, OTP).",
+        ),
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  const handlePaymentMethodChange = (nextMethod: PaymentMethod) => {
+    setPaymentMethod(nextMethod);
+    setMockPaymentAgreed(false);
+    setMessage("");
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setMessage("");
+
+    if (checkoutStep === "shipping") {
+      if (!validateShipping()) {
+        return;
+      }
+      setMockPaymentAgreed(false);
+      setCheckoutStep("payment");
+      return;
+    }
+
+    if (!validateShipping()) {
+      return;
+    }
+
+    if (!validatePayment()) {
+      return;
+    }
+
+    if (!mockPaymentAgreed) {
+      setMessage(
+        t(
+          "\uBAA8\uC758 \uACB0\uC81C \uB3D9\uC758 \uD6C4 \uC8FC\uBB38\uC744 \uC9C4\uD589\uD574 \uC8FC\uC138\uC694.",
+          "Please agree to the mock payment confirmation before placing your order.",
+        ),
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    await new Promise((resolve) => setTimeout(resolve, 900));
+
+    const order = createOrder({
+      address: createAddressPayload(),
+      couponCode: cartCoupon?.code,
+    });
+
+    if (!order) {
+      setMessage(resolveText(CONTENT_COPY.checkoutCreateOrderFailed, locale));
+      setIsSubmitting(false);
+      return;
+    }
+
+    router.push(`${localize("/checkout/complete")}?orderId=${order.id}`);
+  };
+
   return (
     <main className="flex-grow">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 xl:gap-x-16">
           <div className="lg:col-span-7">
             <nav className="mb-8 flex items-center text-sm font-medium">
-              <span className="text-[#e6194c]">{t("\uBC30\uC1A1", "Shipping")}</span>
+              <span className={checkoutStep === "shipping" ? "text-[#e6194c]" : "text-[#974e60]"}>{t("\uBC30\uC1A1", "Shipping")}</span>
               <span className="mx-3 text-[#974e60]/50 material-symbols-outlined text-base">chevron_right</span>
-              <span className="text-[#974e60]">{t("\uACB0\uC81C", "Payment")}</span>
+              <span className={checkoutStep === "payment" ? "text-[#e6194c]" : "text-[#974e60]"}>{t("\uACB0\uC81C", "Payment")}</span>
               <span className="mx-3 text-[#974e60]/50 material-symbols-outlined text-base">chevron_right</span>
               <span className="text-[#974e60]">{t("\uD655\uC778", "Review")}</span>
             </nav>
 
-            <form
-              className="space-y-10"
-              onSubmit={(event) => {
-                event.preventDefault();
-                setIsSubmitting(true);
-                setMessage("");
-
-                const required = [
-                  contactEmail,
-                  form.firstName,
-                  form.lastName,
-                  form.address,
-                  form.city,
-                  form.state,
-                  form.postalCode,
-                  form.phone,
-                ];
-
-                if (required.some((value) => value.trim() === "")) {
-                  setMessage(resolveText(CONTENT_COPY.checkoutIncomplete, locale));
-                  setIsSubmitting(false);
-                  return;
-                }
-
-                const order = createOrder({
-                  address: createAddressPayload(),
-                  couponCode: cartCoupon?.code,
-                });
-
-                if (!order) {
-                  setMessage(resolveText(CONTENT_COPY.checkoutCreateOrderFailed, locale));
-                  setIsSubmitting(false);
-                  return;
-                }
-
-                router.push(`${localize("/checkout/complete")}?orderId=${order.id}`);
-              }}
-            >
+            <form className="space-y-10" onSubmit={handleSubmit}>
               <section className="mb-10">
-                <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-[#1b0e11]">{t("연락처", "Contact Information")}</h2>
-                  <div className="text-sm">
-                    <span className="text-[#974e60]">{t("\uC774\uBBF8 \uACC4\uC815\uC774 \uC788\uC73C\uC2E0\uAC00\uC694?", "Already have an account?")}</span>
-                    <Link className="ml-1 font-semibold text-[#e6194c] hover:text-[#b8143d]" href={localize("/account/login")}>
-                      {t("\uB85C\uADF8\uC778", "Log in")}
-                    </Link>
-                  </div>
-                </div>
+                <h2 className="mb-6 text-xl font-bold text-[#1b0e11]">{t("\uC5F0\uB77D\uCC98 \uC815\uBCF4", "Contact Information")}</h2>
 
                 <div className="space-y-4">
                   <div>
@@ -216,7 +358,7 @@ export function CheckoutView() {
                       onChange={(event) => setNewsletterOptIn(event.target.checked)}
                     />
                     <label className="ml-2 block text-sm text-[#974e60]" htmlFor="newsletter">
-                      {t("신제품 소식과 멤버 혜택 받기", "Email me with news and offers")}
+                      {t("\uB274\uC2A4 \uBC0F \uD61C\uD0DD \uBA54\uC77C \uBC1B\uAE30", "Email me with news and offers")}
                     </label>
                   </div>
                 </div>
@@ -275,7 +417,7 @@ export function CheckoutView() {
 
                   <div className="sm:col-span-2">
                     <label className="mb-1 block text-sm font-medium text-[#1b0e11]" htmlFor="apartment">
-                      {t("상세 주소(선택)", "Apartment, suite, etc. (optional)")}
+                      {t("\uC0C1\uC138 \uC8FC\uC18C(\uC120\uD0DD)", "Apartment, suite, etc. (optional)")}
                     </label>
                     <input
                       id="apartment"
@@ -365,28 +507,321 @@ export function CheckoutView() {
                 </div>
               </section>
 
-              <section className="mb-10 border-t border-[#f0e4e6] pt-10 opacity-60 pointer-events-none select-none grayscale">
+              <section
+                className={`mb-10 border-t border-[#f0e4e6] pt-10 ${
+                  checkoutStep === "shipping" ? "opacity-60 pointer-events-none select-none grayscale" : ""
+                }`}
+              >
                 <h2 className="mb-6 text-xl font-bold text-[#1b0e11] flex justify-between">
                   {t("\uACB0\uC81C", "Payment")}
-                  <span className="material-symbols-outlined text-[#974e60]">lock</span>
+                  <span className="material-symbols-outlined text-[#974e60]">{checkoutStep === "shipping" ? "lock" : "verified"}</span>
                 </h2>
-                <div className="rounded-lg border border-[#f0e4e6] bg-white p-6 text-center">
-                  <p className="text-[#974e60]">{t("배송 정보를 입력하면 결제 수단이 활성화됩니다.", "Enter your shipping address to view payment options.")}</p>
-                </div>
+
+                {checkoutStep === "shipping" ? (
+                  <div className="rounded-lg border border-[#f0e4e6] bg-white p-6 text-center">
+                    <p className="text-[#974e60]">
+                      {t(
+                        "\uBC30\uC1A1 \uC815\uBCF4\uB97C \uC785\uB825\uD558\uBA74 \uACB0\uC81C \uC218\uB2E8\uC774 \uC0C1\uC138 \uD45C\uC2DC\uB429\uB2C8\uB2E4.",
+                        "Enter your shipping details to activate mock payment methods.",
+                      )}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-sm text-[#974e60]">
+                      {t(
+                        "\uD3EC\uD2B8\uD3F4\uB9AC\uC624 \uC2DC\uC5F0\uC744 \uC704\uD55C \uBAA8\uC758 \uACB0\uC81C \uB2E8\uACC4\uC785\uB2C8\uB2E4. \uC2E4\uC81C \uACB0\uC81C\uB294 \uBC1C\uC0DD\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.",
+                        "This is a mock payment step for portfolio demo purposes. No real transaction will be made.",
+                      )}
+                    </p>
+
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <label className="flex items-center gap-3 rounded-lg border border-[#f0e4e6] bg-white px-4 py-3 text-sm font-medium text-[#1b0e11]">
+                        <input
+                          type="radio"
+                          name="payment-method"
+                          className="h-4 w-4 border-[#d8b8c3] text-[#e6194c] focus:ring-[#e6194c]"
+                          checked={paymentMethod === "card"}
+                          onChange={() => handlePaymentMethodChange("card")}
+                        />
+                        <span className="material-symbols-outlined text-base text-[#974e60]">credit_card</span>
+                        {t("\uCE74\uB4DC", "Card")}
+                      </label>
+                      <label className="flex items-center gap-3 rounded-lg border border-[#f0e4e6] bg-white px-4 py-3 text-sm font-medium text-[#1b0e11]">
+                        <input
+                          type="radio"
+                          name="payment-method"
+                          className="h-4 w-4 border-[#d8b8c3] text-[#e6194c] focus:ring-[#e6194c]"
+                          checked={paymentMethod === "bank"}
+                          onChange={() => handlePaymentMethodChange("bank")}
+                        />
+                        <span className="material-symbols-outlined text-base text-[#974e60]">account_balance</span>
+                        {t("\uACC4\uC88C\uC774\uCCB4", "Bank Transfer")}
+                      </label>
+                      <label className="flex items-center gap-3 rounded-lg border border-[#f0e4e6] bg-white px-4 py-3 text-sm font-medium text-[#1b0e11]">
+                        <input
+                          type="radio"
+                          name="payment-method"
+                          className="h-4 w-4 border-[#d8b8c3] text-[#e6194c] focus:ring-[#e6194c]"
+                          checked={paymentMethod === "wallet"}
+                          onChange={() => handlePaymentMethodChange("wallet")}
+                        />
+                        <span className="material-symbols-outlined text-base text-[#974e60]">payments</span>
+                        {t("\uC804\uC790\uC9C0\uAC11", "Wallet")}
+                      </label>
+                    </div>
+
+                    {paymentMethod === "card" && (
+                      <div className="space-y-4 rounded-xl border border-[#f0e4e6] bg-white p-5">
+                        <div className="rounded-lg bg-gradient-to-br from-[#211115] via-[#3a1b26] to-[#5b2236] p-5 text-white">
+                          <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-white/70">
+                            <span>{t("\uBCF4\uC548 \uACB0\uC81C", "Secure Checkout")}</span>
+                            <span>{detectCardBrand(cardNumber)}</span>
+                          </div>
+                          <p className="mt-5 font-mono text-2xl tracking-[0.22em]">{maskCardNumber(cardNumber)}</p>
+                          <div className="mt-5 flex items-end justify-between text-xs">
+                            <div>
+                              <p className="text-white/60">{t("\uCE74\uB4DC \uC18C\uC720\uC790", "Card Holder")}</p>
+                              <p className="mt-1 font-semibold tracking-wide">{cardHolder.trim() || t("\uC774\uB984 \uC131", "FULL NAME")}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-white/60">{t("\uB9CC\uB8CC\uC77C", "Expires")}</p>
+                              <p className="mt-1 font-semibold">{cardExpiry || "MM/YY"}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-[#1b0e11]" htmlFor="mock-card-number">
+                            {t("\uCE74\uB4DC \uBC88\uD638", "Card Number")}
+                          </label>
+                          <input
+                            id="mock-card-number"
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="cc-number"
+                            className="block w-full rounded-lg border-[#f0e4e6] bg-white px-4 py-3 text-[#1b0e11] placeholder-[#974e60]/50 focus:border-[#e6194c] focus:ring-[#e6194c]"
+                            placeholder="4242 4242 4242 4242"
+                            value={cardNumber}
+                            onChange={(event) => setCardNumber(formatCardNumber(event.target.value))}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-[#1b0e11]" htmlFor="mock-card-holder">
+                            {t("\uCE74\uB4DC \uC18C\uC720\uC790\uBA85", "Card Holder Name")}
+                          </label>
+                          <input
+                            id="mock-card-holder"
+                            type="text"
+                            autoComplete="cc-name"
+                            className="block w-full rounded-lg border-[#f0e4e6] bg-white px-4 py-3 text-[#1b0e11] placeholder-[#974e60]/50 focus:border-[#e6194c] focus:ring-[#e6194c]"
+                            placeholder={t("\uD64D \uAE38\uB3D9", "Jane Doe")}
+                            value={cardHolder}
+                            onChange={(event) => setCardHolder(event.target.value)}
+                          />
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-[#1b0e11]" htmlFor="mock-card-expiry">
+                              {t("\uB9CC\uB8CC\uC77C", "Expiry")}
+                            </label>
+                            <input
+                              id="mock-card-expiry"
+                              type="text"
+                              inputMode="numeric"
+                              autoComplete="cc-exp"
+                              className="block w-full rounded-lg border-[#f0e4e6] bg-white px-4 py-3 text-[#1b0e11] placeholder-[#974e60]/50 focus:border-[#e6194c] focus:ring-[#e6194c]"
+                              placeholder="MM/YY"
+                              value={cardExpiry}
+                              onChange={(event) => setCardExpiry(formatCardExpiry(event.target.value))}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-[#1b0e11]" htmlFor="mock-card-cvc">
+                              CVC
+                            </label>
+                            <input
+                              id="mock-card-cvc"
+                              type="text"
+                              inputMode="numeric"
+                              autoComplete="cc-csc"
+                              className="block w-full rounded-lg border-[#f0e4e6] bg-white px-4 py-3 text-[#1b0e11] placeholder-[#974e60]/50 focus:border-[#e6194c] focus:ring-[#e6194c]"
+                              placeholder="123"
+                              value={cardCvc}
+                              onChange={(event) => setCardCvc(digitsOnly(event.target.value).slice(0, 4))}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {paymentMethod === "bank" && (
+                      <div className="space-y-4 rounded-xl border border-[#f0e4e6] bg-white p-5">
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-[#1b0e11]" htmlFor="mock-bank-name">
+                            {t("\uC740\uD589 \uC120\uD0DD", "Select Bank")}
+                          </label>
+                          <select
+                            id="mock-bank-name"
+                            className="block w-full rounded-lg border-[#f0e4e6] bg-white px-4 py-3 text-[#1b0e11] focus:border-[#e6194c] focus:ring-[#e6194c]"
+                            value={bankName}
+                            onChange={(event) => setBankName(event.target.value)}
+                          >
+                            {BANK_OPTIONS.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-[#1b0e11]" htmlFor="mock-bank-holder">
+                            {t("\uC608\uAE08\uC8FC\uBA85", "Account Holder")}
+                          </label>
+                          <input
+                            id="mock-bank-holder"
+                            type="text"
+                            className="block w-full rounded-lg border-[#f0e4e6] bg-white px-4 py-3 text-[#1b0e11] placeholder-[#974e60]/50 focus:border-[#e6194c] focus:ring-[#e6194c]"
+                            placeholder={t("\uD64D \uAE38\uB3D9", "Jane Doe")}
+                            value={bankAccountName}
+                            onChange={(event) => setBankAccountName(event.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-[#1b0e11]" htmlFor="mock-bank-ref">
+                            {t("\uC774\uCCB4 \uC778\uC99D\uBC88\uD638", "Transfer Verification Code")}
+                          </label>
+                          <input
+                            id="mock-bank-ref"
+                            type="text"
+                            inputMode="numeric"
+                            className="block w-full rounded-lg border-[#f0e4e6] bg-white px-4 py-3 text-[#1b0e11] placeholder-[#974e60]/50 focus:border-[#e6194c] focus:ring-[#e6194c]"
+                            placeholder="123456"
+                            value={bankTransferRef}
+                            onChange={(event) => setBankTransferRef(digitsOnly(event.target.value).slice(0, 10))}
+                          />
+                        </div>
+                        <p className="rounded-lg bg-[#fff7f9] px-4 py-3 text-xs text-[#974e60]">
+                          {t(
+                            "\uBAA8\uC758 \uACC4\uC88C\uC774\uCCB4\uB294 \uC778\uC99D\uBC88\uD638 \uC785\uB825 \uD6C4 \uC790\uB3D9 \uC2B9\uC778\uB429\uB2C8\uB2E4.",
+                            "Mock transfer is auto-approved after entering the verification code.",
+                          )}
+                        </p>
+                      </div>
+                    )}
+
+                    {paymentMethod === "wallet" && (
+                      <div className="space-y-4 rounded-xl border border-[#f0e4e6] bg-white p-5">
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-[#1b0e11]" htmlFor="mock-wallet-provider">
+                            {t("\uC804\uC790\uC9C0\uAC11 \uC120\uD0DD", "Wallet Provider")}
+                          </label>
+                          <select
+                            id="mock-wallet-provider"
+                            className="block w-full rounded-lg border-[#f0e4e6] bg-white px-4 py-3 text-[#1b0e11] focus:border-[#e6194c] focus:ring-[#e6194c]"
+                            value={walletProvider}
+                            onChange={(event) => setWalletProvider(event.target.value)}
+                          >
+                            {WALLET_OPTIONS.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-[#1b0e11]" htmlFor="mock-wallet-id">
+                            {t("\uC9C0\uAC11 \uACC4\uC815(\uC774\uBA54\uC77C/\uD578\uB4DC\uD3F0)", "Wallet Account (Email/Phone)")}
+                          </label>
+                          <input
+                            id="mock-wallet-id"
+                            type="text"
+                            className="block w-full rounded-lg border-[#f0e4e6] bg-white px-4 py-3 text-[#1b0e11] placeholder-[#974e60]/50 focus:border-[#e6194c] focus:ring-[#e6194c]"
+                            placeholder="you@example.com"
+                            value={walletIdentifier}
+                            onChange={(event) => setWalletIdentifier(event.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-[#1b0e11]" htmlFor="mock-wallet-otp">
+                            {t("\uC77C\uD68C\uC6A9 \uC778\uC99D\uCF54\uB4DC", "One-Time Passcode")}
+                          </label>
+                          <input
+                            id="mock-wallet-otp"
+                            type="text"
+                            inputMode="numeric"
+                            className="block w-full rounded-lg border-[#f0e4e6] bg-white px-4 py-3 text-[#1b0e11] placeholder-[#974e60]/50 focus:border-[#e6194c] focus:ring-[#e6194c]"
+                            placeholder="000000"
+                            value={walletOtp}
+                            onChange={(event) => setWalletOtp(digitsOnly(event.target.value).slice(0, 6))}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="rounded-lg border border-[#f0e4e6] bg-[#fff9fb] px-4 py-3">
+                      <p className="text-sm font-semibold text-[#1b0e11]">
+                        {t("\uBAA8\uC758 \uACB0\uC81C \uC2B9\uC778 \uAE08\uC561", "Mock Authorization Amount")}: {currency(totalPreview)}
+                      </p>
+                      <p className="mt-1 text-xs text-[#974e60]">
+                        {t(
+                          "\uC81C\uCD9C \uC2DC \uC57D 1\uCD08 \uB0B4 \uBAA8\uC758 \uC2B9\uC778 \uCC98\uB9AC \uD6C4 \uC8FC\uBB38\uC774 \uC644\uB8CC\uB429\uB2C8\uB2E4.",
+                          "When submitted, a mock authorization runs for about 1 second before order completion.",
+                        )}
+                      </p>
+                    </div>
+
+                    <label className="flex items-center gap-3 rounded-lg border border-[#f0e4e6] bg-[#fff7f9] px-4 py-3 text-sm text-[#1b0e11]">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-[#d8b8c3] text-[#e6194c] focus:ring-[#e6194c]"
+                        checked={mockPaymentAgreed}
+                        onChange={(event) => setMockPaymentAgreed(event.target.checked)}
+                      />
+                      <span>
+                        {t(
+                          "\uBAA8\uC758 \uACB0\uC81C \uD655\uC778 \uBC0F \uC8FC\uBB38 \uC0DD\uC131\uC5D0 \uB3D9\uC758\uD569\uB2C8\uB2E4.",
+                          "I understand this is a mock payment and agree to place the order.",
+                        )}
+                      </span>
+                    </label>
+                  </div>
+                )}
               </section>
 
               <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between pt-4">
-                <Link href={localize("/cart")} className="flex items-center justify-center gap-2 text-sm font-medium text-[#1b0e11] hover:text-[#e6194c]">
-                  <span className="material-symbols-outlined text-lg">arrow_back</span>
-                  {t("쇼핑백으로 돌아가기", "Return to Bag")}
-                </Link>
+                {checkoutStep === "shipping" ? (
+                  <Link href={localize("/cart")} className="flex items-center justify-center gap-2 text-sm font-medium text-[#1b0e11] hover:text-[#e6194c]">
+                    <span className="material-symbols-outlined text-lg">arrow_back</span>
+                    {t("\uC1FC\uD551\uBC31\uC73C\uB85C \uB3CC\uC544\uAC00\uAE30", "Return to Bag")}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className="flex items-center justify-center gap-2 text-sm font-medium text-[#1b0e11] hover:text-[#e6194c]"
+                    onClick={() => {
+                      setCheckoutStep("shipping");
+                      setMockPaymentAgreed(false);
+                      setMessage("");
+                    }}
+                  >
+                    <span className="material-symbols-outlined text-lg">arrow_back</span>
+                    {t("\uBC30\uC1A1 \uB2E8\uACC4\uB85C \uB3CC\uC544\uAC00\uAE30", "Back to Shipping")}
+                  </button>
+                )}
 
                 <button
                   type="submit"
                   className="flex items-center justify-center rounded-full bg-[#e6194c] px-8 py-4 text-base font-bold text-white shadow-lg shadow-[#e6194c]/30 transition-all hover:bg-[#b8143d] hover:shadow-[#e6194c]/50 disabled:opacity-60 disabled:cursor-not-allowed"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || (checkoutStep === "payment" && !mockPaymentAgreed)}
                 >
-                  {t("결제 단계로 이동", "Continue to Payment")}
+                  {checkoutStep === "shipping"
+                    ? t("\uACB0\uC81C \uB2E8\uACC4\uB85C \uC774\uB3D9", "Continue to Payment")
+                    : isSubmitting
+                      ? t("\uBAA8\uC758 \uACB0\uC81C \uCC98\uB9AC \uC911...", "Processing Mock Payment...")
+                      : t("\uBAA8\uC758 \uACB0\uC81C \uC644\uB8CC \uD6C4 \uC8FC\uBB38\uD558\uAE30", "Place Order (Mock Payment)")}
                 </button>
               </div>
 
@@ -400,7 +835,7 @@ export function CheckoutView() {
 
               <ul className="divide-y divide-[#f0e4e6]" role="list">
                 {cartLines.map((line) => (
-                  <li key={line.product.slug} className="flex py-6">
+                  <li key={`${line.product.slug}:${line.item.sizeKey ?? "default"}`} className="flex py-6">
                     <div className="relative h-20 w-20 flex-shrink-0">
                       <div className="h-full w-full overflow-hidden rounded-md border border-[#f0e4e6]">
                         <img
@@ -420,6 +855,11 @@ export function CheckoutView() {
                           <p className="ml-4">{currency(line.lineTotal)}</p>
                         </div>
                         <p className="mt-1 text-sm text-[#974e60]">{resolveText(line.product.shortDescription, locale)}</p>
+                        {hasMultipleProductSizes(line.product) && (
+                          <p className="mt-1 text-sm text-[#974e60]">
+                            {t("용량", "Size")}: {getProductSizeLabel(line.product, locale, line.item.sizeKey)}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </li>
@@ -430,7 +870,7 @@ export function CheckoutView() {
                 <input
                   type="text"
                   className="block w-full rounded-lg border-[#f0e4e6] bg-[#f8f6f6] px-4 py-3 text-sm text-[#1b0e11] placeholder-[#974e60]/50 focus:border-[#e6194c] focus:ring-[#e6194c]"
-                  placeholder={t("프로모션 코드", "Discount code")}
+                  placeholder={t("\uD504\uB85C\uBAA8\uC158 \uCF54\uB4DC", "Discount code")}
                   value={couponInput}
                   onChange={(event) => setCouponInput(event.target.value)}
                 />
@@ -468,7 +908,18 @@ export function CheckoutView() {
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-[#974e60]">{t("\uBC30\uC1A1\uBE44", "Shipping")}</p>
-                  <p className="text-sm font-medium text-[#1b0e11]">{t("다음 단계에서 계산", "Calculated next step")}</p>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-[#1b0e11]">
+                      {cartShipping === 0 ? t("\uBB34\uB8CC", "Free") : currency(cartShipping)}
+                    </p>
+                    {cartShipping === 0 && (
+                      <p className="mt-0.5 text-[11px] text-[#974e60]">
+                        {cartFreeShippingReason === "product"
+                          ? t("\uBB34\uB8CC\uBC30\uC1A1 \uC0C1\uD488 \uD3EC\uD568", "Free-shipping item included")
+                          : t("\uBB34\uB8CC\uBC30\uC1A1 \uAE30\uC900 \uCDA9\uC871", "Free-shipping threshold reached")}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-[#974e60]">{t("\uC608\uC0C1 \uC138\uAE08", "Estimated Tax")}</p>

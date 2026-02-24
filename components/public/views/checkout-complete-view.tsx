@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { useStore } from "@/components/providers/store-provider";
 import { EmptyState } from "@/components/public/shared/ui";
 import { CONTENT_COPY, resolveText } from "@/lib/i18n";
+import { getProductPriceBySize, getProductSizeLabel, hasMultipleProductSizes } from "@/lib/product-pricing";
 import { currency, formatDate } from "@/lib/utils";
 
 export function CheckoutCompleteView() {
@@ -69,10 +70,20 @@ export function CheckoutCompleteView() {
         return null;
       }
 
-      return { item, product };
+      return {
+        item,
+        product,
+        unitPrice: getProductPriceBySize(product, item.sizeKey),
+      };
     })
     .filter(
-      (line): line is { item: (typeof order.items)[number]; product: (typeof db.products)[number] } => Boolean(line),
+      (
+        line,
+      ): line is {
+        item: (typeof order.items)[number];
+        product: (typeof db.products)[number];
+        unitPrice: number;
+      } => Boolean(line),
     );
 
   const firstName = currentUser.name.split(" ")[0] ?? currentUser.name;
@@ -130,7 +141,7 @@ export function CheckoutCompleteView() {
             <div className="rounded-2xl border border-[#f3e7ea] bg-white overflow-hidden shadow-sm">
               <ul className="divide-y divide-[#f3e7ea]" role="list">
                 {orderLines.map((line) => (
-                  <li key={line.product.id} className="flex flex-col sm:flex-row p-6 gap-6">
+                  <li key={`${line.product.id}:${line.item.sizeKey ?? "default"}`} className="flex flex-col sm:flex-row p-6 gap-6">
                     <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl border border-[#f3e7ea]">
                       <img
                         alt={typeof line.product.name === "string" ? line.product.name : line.product.name[locale]}
@@ -150,11 +161,18 @@ export function CheckoutCompleteView() {
                               : line.product.shortDescription[locale]}
                           </p>
                         </div>
-                        <p className="text-lg font-medium text-[#1b0e11]">{currency(line.product.price * line.item.quantity)}</p>
+                        <p className="text-lg font-medium text-[#1b0e11]">{currency(line.unitPrice * line.item.quantity)}</p>
                       </div>
 
                       <div className="mt-4 flex items-end justify-between sm:mt-0">
-                        <p className="text-sm text-[#974e60]">{t("\uC218\uB7C9", "Qty")}: {line.item.quantity}</p>
+                        <div className="text-sm text-[#974e60]">
+                          {hasMultipleProductSizes(line.product) && (
+                            <p>
+                              {t("용량", "Size")}: {getProductSizeLabel(line.product, locale, line.item.sizeKey)}
+                            </p>
+                          )}
+                          <p>{t("\uC218\uB7C9", "Qty")}: {line.item.quantity}</p>
+                        </div>
                       </div>
                     </div>
                   </li>

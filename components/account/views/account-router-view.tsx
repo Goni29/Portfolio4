@@ -7,6 +7,7 @@ import { useStore } from "@/components/providers/store-provider";
 import { EmptyState, InputField, Row } from "@/components/public/shared/ui";
 import { BRAND_LABELS, CONTENT_COPY, resolveText } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/locale-routing";
+import { getProductPriceBySize, getProductSizeLabel, hasMultipleProductSizes } from "@/lib/product-pricing";
 import type { Address, Locale } from "@/lib/types";
 import { currency, formatDate, uid } from "@/lib/utils";
 
@@ -676,10 +677,20 @@ function AccountOrderDetailView({ id }: { id: string }) {
       if (!product) {
         return null;
       }
-      return { item, product };
+      return {
+        item,
+        product,
+        unitPrice: getProductPriceBySize(product, item.sizeKey),
+      };
     })
     .filter(
-      (line): line is { item: (typeof order.items)[number]; product: (typeof db.products)[number] } => Boolean(line),
+      (
+        line,
+      ): line is {
+        item: (typeof order.items)[number];
+        product: (typeof db.products)[number];
+        unitPrice: number;
+      } => Boolean(line),
     );
 
   return (
@@ -691,16 +702,21 @@ function AccountOrderDetailView({ id }: { id: string }) {
 
       <div className="mt-6 space-y-3">
         {lines.map((line) => (
-          <div key={line.product.id} className="rounded-lg border border-[#f3e7ea] p-4 flex items-center justify-between gap-4">
+          <div key={`${line.product.id}:${line.item.sizeKey ?? "default"}`} className="rounded-lg border border-[#f3e7ea] p-4 flex items-center justify-between gap-4">
             <div>
               <p className="font-semibold text-slate-900">
                 {typeof line.product.name === "string" ? line.product.name : line.product.name[locale]}
               </p>
+              {hasMultipleProductSizes(line.product) && (
+                <p className="text-sm text-slate-500">
+                  {t("용량", "Size")} {getProductSizeLabel(line.product, locale, line.item.sizeKey)}
+                </p>
+              )}
               <p className="text-sm text-slate-500">
                 {resolveText(CONTENT_COPY.accountQty, locale)} {line.item.quantity}
               </p>
             </div>
-            <p className="font-semibold text-slate-900">{currency(line.product.price * line.item.quantity)}</p>
+            <p className="font-semibold text-slate-900">{currency(line.unitPrice * line.item.quantity)}</p>
           </div>
         ))}
       </div>
@@ -882,7 +898,7 @@ function AccountAddressesView() {
       >
         <h2 className="text-2xl font-bold text-slate-900">{resolveText(CONTENT_COPY.accountAddAddress, locale)}</h2>
         <div className="grid sm:grid-cols-2 gap-3">
-          <InputField label={t("二쇱냼 蹂꾩묶", "Label")} value={form.label} onChange={(value) => setForm((prev) => ({ ...prev, label: value }))} />
+          <InputField label={t("\uC8FC\uC18C \uBCC4\uCE6D", "Label")} value={form.label} onChange={(value) => setForm((prev) => ({ ...prev, label: value }))} />
           <InputField label={t("수령인", "Recipient")} value={form.recipient} onChange={(value) => setForm((prev) => ({ ...prev, recipient: value }))} />
         </div>
         <div className="grid sm:grid-cols-2 gap-3">

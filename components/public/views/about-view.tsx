@@ -1,21 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
 import { useStore } from "@/components/providers/store-provider";
 
 export function AboutView() {
   const { locale } = useStore();
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
-  const galleryRef = useRef<HTMLDivElement | null>(null);
-
-  const scrollGallery = (direction: 1 | -1) => {
-    if (!galleryRef.current) {
-      return;
-    }
-
-    galleryRef.current.scrollBy({ left: direction * 420, behavior: "smooth" });
-  };
 
   return (
     <main className="w-full">
@@ -67,8 +57,7 @@ export function AboutView() {
       <section
         className="relative h-[60vh] md:h-[80vh] w-full parallax-bg flex items-center"
         style={{
-          backgroundImage:
-            "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAHE88m87shOzEBd0kTOmGrEuv8jI9ox_QYf-PZmv7LtGas7nhfdQN6TtICPCybsYky5t92PUx4nIWHFbD5bdwLCKBwskRws5BohbALtaE6ZdNYpAPCfRDik1M9g9cZrnxlYoDBgvJ-ey3POGOyGbKfSeI6x-0f5Q8rAXa8NlTbM1_KB9AlSV3I2b6CXEjWNiVc6BnIDWzwijTuSqsw-nlQcok3u-sq2FQyVyUqSm87TYc9xQXarb8HCAHNO839yM_pl9kMZB5nCyM')",
+          backgroundImage: "url('/brand_flower.png')",
         }}
       >
         <div className="absolute inset-0 bg-black/20" />
@@ -87,7 +76,7 @@ export function AboutView() {
       </section>
 
       <section className="py-24 bg-white overflow-hidden">
-        <div className="px-6 md:px-10 mb-12 flex flex-col md:flex-row justify-between items-end gap-6 max-w-[1440px] mx-auto">
+        <div className="px-6 md:px-10 mb-12 max-w-[1440px] mx-auto">
           <div className="max-w-xl">
             <span className="text-[#e6194c] text-xs font-bold tracking-widest uppercase mb-3 block">{t("챕터 2", "Chapter II")}</span>
             <h3 className="font-serif text-4xl md:text-5xl text-[#1b0e11] mb-4 italic">{t("포뮬러 장인정신", "The Craftsmanship")}</h3>
@@ -98,27 +87,9 @@ export function AboutView() {
               )}
             </p>
           </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className="h-10 w-10 rounded-full border border-[#e9dfe3] flex items-center justify-center hover:bg-[#f7f1f3] transition-colors"
-              onClick={() => scrollGallery(-1)}
-              aria-label={t("이전", "Previous")}
-            >
-              <span className="material-symbols-outlined">arrow_back</span>
-            </button>
-            <button
-              type="button"
-              className="h-10 w-10 rounded-full bg-[#e6194c] text-white flex items-center justify-center hover:bg-[#d11645] transition-colors"
-              onClick={() => scrollGallery(1)}
-              aria-label={t("다음", "Next")}
-            >
-              <span className="material-symbols-outlined">arrow_forward</span>
-            </button>
-          </div>
         </div>
 
-        <div ref={galleryRef} className="flex gap-6 overflow-x-auto px-6 md:px-10 pb-10 no-scrollbar snap-x snap-mandatory">
+        <div className="flex gap-6 overflow-x-auto px-6 md:px-10 pb-10 no-scrollbar snap-x snap-mandatory">
           <div className="min-w-[300px] md:min-w-[400px] snap-center flex flex-col gap-4 group cursor-pointer">
             <div className="aspect-[4/5] rounded-lg overflow-hidden relative">
               <img

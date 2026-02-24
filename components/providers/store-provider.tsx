@@ -12,6 +12,10 @@ import {
 import { loadDb, loadLocale, loadSession, resetToSeed, saveDb, saveLocale, saveSession } from "@/lib/storage";
 import { DEFAULT_LOCALE } from "@/lib/i18n";
 import { stripLocalePrefix } from "@/lib/locale-routing";
+import {
+  getProductPriceBySize,
+  getProductSizeOption,
+} from "@/lib/product-pricing";
 import { createSeedDb, createSeedSession } from "@/lib/storage/seed";
 import type {
   Address,
@@ -46,6 +50,7 @@ interface LoginResult {
 interface CartLine {
   item: CartItem;
   product: Product;
+  unitPrice: number;
   lineTotal: number;
 }
 
@@ -61,15 +66,18 @@ interface StoreContextValue {
   cartCoupon: Coupon | null;
   cartSubtotal: number;
   cartDiscount: number;
+  cartShipping: number;
+  cartFreeShippingReason: "product" | "threshold" | null;
   cartTotal: number;
   login: (email: string, password: string) => LoginResult;
   register: (name: string, email: string, password: string) => LoginResult;
   setLocale: (locale: Locale) => void;
   toggleLocale: () => void;
   logout: () => void;
-  addToCart: (productSlug: string, quantity?: number) => void;
-  updateCartQuantity: (productSlug: string, quantity: number) => void;
-  removeFromCart: (productSlug: string) => void;
+  addToCart: (productSlug: string, quantity?: number, sizeKey?: string) => void;
+  updateCartQuantity: (productSlug: string, quantity: number, sizeKey?: string) => void;
+  updateCartItemSize: (productSlug: string, nextSizeKey: string, currentSizeKey?: string) => void;
+  removeFromCart: (productSlug: string, sizeKey?: string) => void;
   clearCart: () => void;
   applyCoupon: (code: string) => { ok: boolean; message: string };
   clearCoupon: () => void;
@@ -104,10 +112,74 @@ const isCouponValid = (coupon: Coupon): boolean => {
   return coupon.active && new Date(coupon.expiresAt).getTime() >= Date.now();
 };
 
+type FreeShippingReason = "product" | "threshold" | null;
+
+const resolveFreeShippingReason = (
+  subtotal: number,
+  freeShippingThreshold: number,
+  hasFreeShippingProduct: boolean,
+): FreeShippingReason => {
+  if (hasFreeShippingProduct) {
+    return "product";
+  }
+  if (subtotal >= freeShippingThreshold) {
+    return "threshold";
+  }
+  return null;
+};
+
+const getShippingCharge = (settings: StoreDB["settings"], freeShippingReason: FreeShippingReason): number => {
+  if (freeShippingReason) {
+    return 0;
+  }
+  return Math.max(0, settings.shippingFlat);
+};
+
+const buildCartItemKey = (productSlug: string, sizeKey: string): string => {
+  return `${productSlug}::${sizeKey}`;
+};
+
+const normalizeCartByUser = (
+  cartByUser: StoreDB["cartByUser"] | undefined,
+  products: Product[],
+): StoreDB["cartByUser"] => {
+  if (!cartByUser) {
+    return {};
+  }
+
+  const productBySlug = new Map(products.map((product) => [product.slug, product]));
+  const normalizedEntries = Object.entries(cartByUser).map(([userId, items]) => {
+    const merged = new Map<string, CartItem>();
+
+    (items ?? []).forEach((item) => {
+      const product = productBySlug.get(item.productSlug);
+      if (!product) {
+        return;
+      }
+
+      const resolvedSizeKey = getProductSizeOption(product, item.sizeKey).key;
+      const key = buildCartItemKey(item.productSlug, resolvedSizeKey);
+      const existing = merged.get(key);
+      const normalizedQuantity = Number.isFinite(item.quantity) ? Math.max(1, item.quantity) : 1;
+      const nextQuantity = Math.max(1, Math.min((existing?.quantity ?? 0) + normalizedQuantity, 99));
+
+      merged.set(key, {
+        productSlug: item.productSlug,
+        sizeKey: resolvedSizeKey,
+        quantity: nextQuantity,
+      });
+    });
+
+    return [userId, [...merged.values()]];
+  });
+
+  return Object.fromEntries(normalizedEntries);
+};
+
 const withFallback = (db: StoreDB): StoreDB => {
   return {
     ...db,
-    cartByUser: db.cartByUser ?? {},
+    cartByUser: normalizeCartByUser(db.cartByUser, db.products),
     couponByUser: db.couponByUser ?? {},
     inquiries: db.inquiries ?? [],
   };
@@ -291,10 +363,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           return null;
         }
 
+        const unitPrice = getProductPriceBySize(product, item.sizeKey);
         return {
           item,
           product,
-          lineTotal: product.price * item.quantity,
+          unitPrice,
+          lineTotal: unitPrice * item.quantity,
         };
       })
       .filter((line): line is CartLine => Boolean(line));
@@ -319,6 +393,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     return Math.min(cartCoupon.value, cartSubtotal);
   }, [cartCoupon, cartSubtotal]);
+
+  const cartFreeShippingReason = useMemo<FreeShippingReason>(() => {
+    const hasFreeShippingProduct = cartLines.some((line) => Boolean(line.product.freeShipping));
+    return resolveFreeShippingReason(cartSubtotal, db.settings.freeShippingThreshold, hasFreeShippingProduct);
+  }, [cartLines, cartSubtotal, db.settings.freeShippingThreshold]);
+
+  const cartShipping = useMemo(() => {
+    return getShippingCharge(db.settings, cartFreeShippingReason);
+  }, [db.settings, cartFreeShippingReason]);
 
   const cartTotal = useMemo(() => {
     const total = cartSubtotal - cartDiscount;
@@ -356,10 +439,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       mutateDb((prev) => {
         const guestCart = prev.cartByUser.guest ?? [];
         const userCart = prev.cartByUser[user.id] ?? [];
-        const mergedMap = new Map<string, number>();
+        const productBySlug = new Map(prev.products.map((product) => [product.slug, product]));
+        const mergedMap = new Map<string, CartItem>();
 
         [...userCart, ...guestCart].forEach((line) => {
-          mergedMap.set(line.productSlug, (mergedMap.get(line.productSlug) ?? 0) + line.quantity);
+          const product = productBySlug.get(line.productSlug);
+          if (!product) {
+            return;
+          }
+
+          const resolvedSizeKey = getProductSizeOption(product, line.sizeKey).key;
+          const key = buildCartItemKey(line.productSlug, resolvedSizeKey);
+          const existing = mergedMap.get(key);
+          const normalizedQuantity = Number.isFinite(line.quantity) ? Math.max(1, line.quantity) : 1;
+          const nextQuantity = Math.max(1, Math.min((existing?.quantity ?? 0) + normalizedQuantity, 99));
+
+          mergedMap.set(key, {
+            productSlug: line.productSlug,
+            sizeKey: resolvedSizeKey,
+            quantity: nextQuantity,
+          });
         });
 
         return {
@@ -367,7 +466,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           cartByUser: {
             ...prev.cartByUser,
             guest: [],
-            [user.id]: [...mergedMap.entries()].map(([productSlug, quantity]) => ({ productSlug, quantity })),
+            [user.id]: [...mergedMap.values()],
           },
         };
       });
@@ -422,18 +521,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addToCart = useCallback(
-    (productSlug: string, quantity = 1) => {
+    (productSlug: string, quantity = 1, sizeKey?: string) => {
       mutateDb((prev) => {
+        const product = prev.products.find((entry) => entry.slug === productSlug);
+        if (!product) {
+          return prev;
+        }
+
+        const resolvedSizeKey = getProductSizeOption(product, sizeKey).key;
+        const normalizedQuantity = Math.max(1, Math.min(quantity, 99));
         const target = prev.cartByUser[cartOwnerId] ?? [];
-        const found = target.find((line) => line.productSlug === productSlug);
+        const found = target.find((line) => {
+          if (line.productSlug !== productSlug) {
+            return false;
+          }
+
+          return getProductSizeOption(product, line.sizeKey).key === resolvedSizeKey;
+        });
 
         const next = found
           ? target.map((line) =>
-              line.productSlug === productSlug
-                ? { ...line, quantity: Math.min(line.quantity + quantity, 99) }
+              line.productSlug === productSlug &&
+              getProductSizeOption(product, line.sizeKey).key === resolvedSizeKey
+                ? {
+                    ...line,
+                    sizeKey: resolvedSizeKey,
+                    quantity: Math.min(line.quantity + normalizedQuantity, 99),
+                  }
                 : line,
             )
-          : [...target, { productSlug, quantity: Math.max(1, quantity) }];
+          : [...target, { productSlug, sizeKey: resolvedSizeKey, quantity: normalizedQuantity }];
 
         return {
           ...prev,
@@ -448,8 +565,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const updateCartQuantity = useCallback(
-    (productSlug: string, quantity: number) => {
+    (productSlug: string, quantity: number, sizeKey?: string) => {
       mutateDb((prev) => {
+        const product = prev.products.find((entry) => entry.slug === productSlug);
+        if (!product) {
+          return prev;
+        }
+
+        const resolvedSizeKey = getProductSizeOption(product, sizeKey).key;
         const target = prev.cartByUser[cartOwnerId] ?? [];
         const clamped = Math.max(1, Math.min(quantity, 99));
 
@@ -458,7 +581,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           cartByUser: {
             ...prev.cartByUser,
             [cartOwnerId]: target.map((line) =>
-              line.productSlug === productSlug ? { ...line, quantity: clamped } : line,
+              line.productSlug === productSlug &&
+              getProductSizeOption(product, line.sizeKey).key === resolvedSizeKey
+                ? { ...line, sizeKey: resolvedSizeKey, quantity: clamped }
+                : line,
             ),
           },
         };
@@ -467,17 +593,97 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [cartOwnerId, mutateDb],
   );
 
+  const updateCartItemSize = useCallback(
+    (productSlug: string, nextSizeKey: string, currentSizeKey?: string) => {
+      mutateDb((prev) => {
+        const product = prev.products.find((entry) => entry.slug === productSlug);
+        if (!product) {
+          return prev;
+        }
+
+        const resolvedCurrentSizeKey = getProductSizeOption(product, currentSizeKey).key;
+        const resolvedNextSizeKey = getProductSizeOption(product, nextSizeKey).key;
+        if (resolvedCurrentSizeKey === resolvedNextSizeKey) {
+          return prev;
+        }
+
+        const target = prev.cartByUser[cartOwnerId] ?? [];
+        let movingQuantity = 0;
+
+        const withoutCurrent = target.filter((line) => {
+          if (line.productSlug !== productSlug) {
+            return true;
+          }
+
+          const lineSizeKey = getProductSizeOption(product, line.sizeKey).key;
+          if (lineSizeKey !== resolvedCurrentSizeKey) {
+            return true;
+          }
+
+          movingQuantity = Math.min(99, movingQuantity + Math.max(1, Math.min(line.quantity, 99)));
+          return false;
+        });
+
+        if (movingQuantity === 0) {
+          return prev;
+        }
+
+        const hasTargetLine = withoutCurrent.some((line) => {
+          if (line.productSlug !== productSlug) {
+            return false;
+          }
+
+          return getProductSizeOption(product, line.sizeKey).key === resolvedNextSizeKey;
+        });
+
+        const next = hasTargetLine
+          ? withoutCurrent.map((line) =>
+              line.productSlug === productSlug &&
+              getProductSizeOption(product, line.sizeKey).key === resolvedNextSizeKey
+                ? {
+                    ...line,
+                    sizeKey: resolvedNextSizeKey,
+                    quantity: Math.min(line.quantity + movingQuantity, 99),
+                  }
+                : line,
+            )
+          : [...withoutCurrent, { productSlug, sizeKey: resolvedNextSizeKey, quantity: movingQuantity }];
+
+        return {
+          ...prev,
+          cartByUser: {
+            ...prev.cartByUser,
+            [cartOwnerId]: next,
+          },
+        };
+      });
+    },
+    [cartOwnerId, mutateDb],
+  );
+
   const removeFromCart = useCallback(
-    (productSlug: string) => {
-      mutateDb((prev) => ({
-        ...prev,
-        cartByUser: {
-          ...prev.cartByUser,
-          [cartOwnerId]: (prev.cartByUser[cartOwnerId] ?? []).filter(
-            (line) => line.productSlug !== productSlug,
-          ),
-        },
-      }));
+    (productSlug: string, sizeKey?: string) => {
+      mutateDb((prev) => {
+        const product = prev.products.find((entry) => entry.slug === productSlug);
+        if (!product) {
+          return prev;
+        }
+
+        const resolvedSizeKey = getProductSizeOption(product, sizeKey).key;
+        return {
+          ...prev,
+          cartByUser: {
+            ...prev.cartByUser,
+            [cartOwnerId]: (prev.cartByUser[cartOwnerId] ?? []).filter((line) => {
+              if (line.productSlug !== productSlug) {
+                return true;
+              }
+
+              return getProductSizeOption(product, line.sizeKey).key !== resolvedSizeKey;
+            }),
+          },
+        };
+      });
     },
     [cartOwnerId, mutateDb],
   );
@@ -774,7 +980,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             : Math.min(validCoupon.value, subtotal);
       }
 
-      const shipping = subtotal >= db.settings.freeShippingThreshold ? 0 : db.settings.shippingFlat;
+      const hasFreeShippingProduct = cartLines.some((line) => Boolean(line.product.freeShipping));
+      const freeShippingReason = resolveFreeShippingReason(
+        subtotal,
+        db.settings.freeShippingThreshold,
+        hasFreeShippingProduct,
+      );
+      const shipping = getShippingCharge(db.settings, freeShippingReason);
       const taxable = subtotal - discount;
       const tax = Math.round(taxable * db.settings.taxRate * 100) / 100;
       const total = Math.max(0, taxable + shipping + tax);
@@ -782,7 +994,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const order: Order = {
         id: uid("ord"),
         userId: currentUser.id,
-        items: cartItems,
+        items: cartItems.map((item) => {
+          const product = db.products.find((entry) => entry.slug === item.productSlug);
+          if (!product) {
+            return item;
+          }
+
+          return {
+            ...item,
+            sizeKey: getProductSizeOption(product, item.sizeKey).key,
+          };
+        }),
         couponCode: validCoupon?.code,
         subtotal,
         discount,
@@ -1100,6 +1322,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       cartCoupon,
       cartSubtotal,
       cartDiscount,
+      cartShipping,
+      cartFreeShippingReason,
       cartTotal,
       login,
       register,
@@ -1108,6 +1332,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       logout,
       addToCart,
       updateCartQuantity,
+      updateCartItemSize,
       removeFromCart,
       clearCart,
       applyCoupon,
@@ -1146,6 +1371,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     cartCoupon,
     cartSubtotal,
     cartDiscount,
+    cartShipping,
+    cartFreeShippingReason,
     cartTotal,
     login,
     register,
@@ -1154,6 +1381,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     logout,
     addToCart,
     updateCartQuantity,
+    updateCartItemSize,
     removeFromCart,
     clearCart,
     applyCoupon,

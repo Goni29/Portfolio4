@@ -89,6 +89,16 @@ button:focus-visible {
   box-shadow: 0 0 0 3px rgba(230, 25, 76, 0.18);
 }
 
+.header-search-input,
+.admin-menu-search-input {
+  caret-color: #1b0e11;
+}
+
+.header-search-input:focus,
+.admin-menu-search-input:focus {
+  box-shadow: none !important;
+}
+
 span.material-symbols-outlined {
   font-variation-settings:
     "FILL" 0,

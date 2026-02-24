@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useStore } from "@/components/providers/store-provider";
 import { CartDrawer } from "@/components/public/shared/cart-drawer";
 import { LocaleToggle } from "@/components/shared/locale-toggle";
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/shop", labelKey: "navShop" as const },
+  { href: "/routine", labelKey: "navRoutine" as const },
   { href: "/about", labelKey: "navPhilosophy" as const },
   { href: "/journal", labelKey: "navJournal" as const },
   { href: "/contact", label: { ko: "고객문의", en: "Contact Us" } },
@@ -24,9 +25,12 @@ export function PublicShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { ready, currentUser, cartItems, logout, locale, setLocale } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [headerSearchOpen, setHeaderSearchOpen] = useState(false);
+  const [headerSearchQuery, setHeaderSearchQuery] = useState("");
   const [cartOpenPath, setCartOpenPath] = useState<string | null>(null);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+  const headerSearchInputRef = useRef<HTMLInputElement>(null);
 
   const cartCount = cartItems.reduce((sum, line) => sum + line.quantity, 0);
   const { locale: pathLocale, path: routePath } = useMemo(() => stripLocalePrefix(pathname), [pathname]);
@@ -38,6 +42,12 @@ export function PublicShell({ children }: { children: ReactNode }) {
       setLocale(pathLocale);
     }
   }, [locale, pathLocale, setLocale]);
+
+  useEffect(() => {
+    if (headerSearchOpen) {
+      headerSearchInputRef.current?.focus();
+    }
+  }, [headerSearchOpen]);
 
   const isActive = useMemo(
     () => (href: string) => routePath === href || routePath.startsWith(`${href}/`),
@@ -120,13 +130,47 @@ export function PublicShell({ children }: { children: ReactNode }) {
             <div className="flex items-center justify-end gap-6">
               <div className="flex items-center gap-3 sm:gap-5">
                 <LocaleToggle className="hidden sm:inline-flex" locale={locale} onChange={onLocaleChange} />
-                <button
-                  type="button"
-                  className="h-11 w-11 shrink-0 grid place-items-center text-[#1b0e11] hover:opacity-70 transition-opacity"
-                  aria-label={resolveText(BRAND_LABELS.navSearch, locale)}
+                <div
+                  className={cn(
+                    "flex h-11 shrink-0 items-center overflow-hidden rounded-full transition-[width,background-color] duration-300 ease-out",
+                    headerSearchOpen ? "w-40 bg-white/90 sm:w-56" : "w-11 bg-transparent",
+                  )}
                 >
-                  <span className="material-symbols-outlined text-[20px]">search</span>
-                </button>
+                  <button
+                    type="button"
+                    className="grid h-11 w-11 shrink-0 place-items-center text-[#1b0e11] transition-opacity hover:opacity-70"
+                    aria-label={resolveText(BRAND_LABELS.navSearch, locale)}
+                    aria-expanded={headerSearchOpen}
+                    onClick={() => {
+                      if (headerSearchOpen) {
+                        setHeaderSearchQuery("");
+                        setHeaderSearchOpen(false);
+                        return;
+                      }
+                      setHeaderSearchOpen(true);
+                    }}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">search</span>
+                  </button>
+                  <input
+                    ref={headerSearchInputRef}
+                    type="search"
+                    value={headerSearchQuery}
+                    onChange={(event) => setHeaderSearchQuery(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") {
+                        event.preventDefault();
+                        setHeaderSearchQuery("");
+                        setHeaderSearchOpen(false);
+                      }
+                    }}
+                    placeholder={resolveText(BRAND_LABELS.navSearch, locale)}
+                    className={cn(
+                      "header-search-input h-full min-w-0 border-none bg-transparent pr-3 text-sm text-[#1b0e11] placeholder:text-[#8f747d] outline-none focus:ring-0 transition-opacity duration-200",
+                      headerSearchOpen ? "w-full opacity-100" : "pointer-events-none w-0 opacity-0",
+                    )}
+                  />
+                </div>
                 <Link
                   href={localize("/account")}
                   className="h-11 w-11 shrink-0 grid place-items-center text-[#1b0e11] hover:opacity-70 transition-opacity"
@@ -175,14 +219,6 @@ export function PublicShell({ children }: { children: ReactNode }) {
               <span className="material-symbols-outlined text-base">chevron_right</span>
             </Link>
           ))}
-          <Link
-            href={localize("/routine")}
-            className="h-11 px-4 rounded-lg border border-[#e9dde0] flex items-center justify-between text-sm font-medium"
-            onClick={() => setMenuOpen(false)}
-          >
-            <span>{resolveText(BRAND_LABELS.navRoutine, locale)}</span>
-            <span className="material-symbols-outlined text-base">chevron_right</span>
-          </Link>
         </nav>
 
         <div className="my-6 h-px bg-[#e6d8dc]" />

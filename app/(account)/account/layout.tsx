@@ -21,6 +21,11 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
   const { ready, currentUser, logout, locale, setLocale } = useStore();
   const { locale: pathLocale, path: routePath } = useMemo(() => stripLocalePrefix(pathname), [pathname]);
   const localize = (path: string, targetLocale = locale) => withLocalePath(path, targetLocale);
+  const normalizedRoutePath = routePath !== "/" ? routePath.replace(/\/+$/, "") : routePath;
+  const isActiveMenu = (href: string) =>
+    href === "/account"
+      ? normalizedRoutePath === href
+      : normalizedRoutePath === href || normalizedRoutePath.startsWith(`${href}/`);
 
   const isAuthPage = routePath === "/account/login" || routePath === "/account/register";
 
@@ -92,7 +97,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
                   href={localize(item.href)}
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors",
-                    routePath === item.href || routePath.startsWith(`${item.href}/`)
+                    isActiveMenu(item.href)
                       ? "bg-[#fcf8f9] text-[#e6194c] border-l-2 border-[#e6194c] font-medium"
                       : "text-slate-600 hover:bg-slate-50 hover:text-[#e6194c]",
                   )}
