@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Order List Overview - Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "bone-white": "#F9F9F7",
+                        "portfolio-black": "#1A1A1A",
+                        "portfolio-grey": "#666666",
+                        "portfolio-light-grey": "#E5E5E5",
+                        "portfolio-hover": "#F0F0F0",
+                        "status-shipped": "#E3F2FD",
+                        "status-shipped-text": "#1976D2",
+                        "status-processing": "#FFF3E0",
+                        "status-processing-text": "#F57C00",
+                        "status-delivered": "#E8F5E9",
+                        "status-delivered-text": "#388E3C",
+                        "status-cancelled": "#F5F5F5",
+                        "status-cancelled-text": "#757575",
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                        serif: ["Playfair Display", "serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0px", 
+                        sm: "2px",
+                        md: "4px",
+                        lg: "6px",
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #F9F9F7;
+        }::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D1D1D1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #A0A0A0;
+        }
+        .thin-border {
+            border-color: #E5E5E5;
+        }
+    </style>
+</head>
+<body class="bg-bone-white font-sans text-portfolio-black antialiased overflow-hidden">
+<div class="flex h-screen w-full overflow-hidden">
+<aside class="flex w-72 flex-col border-r border-portfolio-light-grey bg-white transition-all duration-300">
+<div class="flex h-24 items-center px-8 border-b border-portfolio-light-grey">
+<div class="flex flex-col">
+<h1 class="font-serif text-2xl font-medium tracking-wide text-portfolio-black">Portfolio.</h1>
+<span class="text-[10px] uppercase tracking-[0.2em] text-portfolio-grey mt-1">Admin Console</span>
+</div>
+</div>
+<nav class="flex-1 overflow-y-auto px-6 py-8 space-y-2">
+<a class="group flex items-center gap-4 px-2 py-3 text-sm font-medium text-portfolio-grey hover:text-portfolio-black transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px] font-light">dashboard</span>
+                    Dashboard
+                </a>
+<a class="group flex items-center gap-4 px-2 py-3 text-sm font-medium text-portfolio-black bg-bone-white border-l-2 border-portfolio-black transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px] font-light">shopping_bag</span>
+                    Orders
+                </a>
+<a class="group flex items-center gap-4 px-2 py-3 text-sm font-medium text-portfolio-grey hover:text-portfolio-black transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px] font-light">sell</span>
+                    Products
+                </a>
+<a class="group flex items-center gap-4 px-2 py-3 text-sm font-medium text-portfolio-grey hover:text-portfolio-black transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px] font-light">group</span>
+                    Customers
+                </a>
+<a class="group flex items-center gap-4 px-2 py-3 text-sm font-medium text-portfolio-grey hover:text-portfolio-black transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px] font-light">bar_chart</span>
+                    Analytics
+                </a>
+<div class="pt-8 mt-4 border-t border-portfolio-light-grey/50">
+<p class="px-2 text-[10px] font-semibold uppercase tracking-widest text-portfolio-grey mb-4">Settings</p>
+<a class="group flex items-center gap-4 px-2 py-3 text-sm font-medium text-portfolio-grey hover:text-portfolio-black transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px] font-light">settings</span>
+                        Store Settings
+                    </a>
+</div>
+</nav>
+<div class="border-t border-portfolio-light-grey p-6">
+<div class="flex items-center gap-4">
+<div class="h-10 w-10 overflow-hidden rounded-full border border-portfolio-light-grey bg-gray-50">
+<img alt="Admin user avatar" class="h-full w-full object-cover grayscale opacity-80 hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaU48WFrEaxn8HdkBZTAVItcynSmFyN5-yeVA41kY4BW9wMnqkZunoYQrrFR0JXQ0mCMJiLEdeDyZJgk2sped2knBJgM_dJpdiGLOnef7bOG45Cb44YHmkCsPUEKrMlqWmcEXGBYYExaISSc5H7FVwmJUTeCi1Tb4Qbax03zmgJ070UzN--Y0w0UwFEvnh14AHL9dEp2aSo0oqE2JoRSIEmO6WfdL35mLSN5ZPLAXMrEmS05xiKiix9ovr5WVG9m8xnhRu6UkHHps"/>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-serif text-portfolio-black">Jane Doe</span>
+<span class="text-xs text-portfolio-grey font-light">Store Manager</span>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex flex-1 flex-col overflow-hidden bg-bone-white relative">
+<header class="flex h-24 shrink-0 items-center justify-between border-b border-portfolio-light-grey bg-bone-white/80 px-10 backdrop-blur-sm sticky top-0 z-10">
+<div class="flex items-center gap-6">
+<h2 class="font-serif text-2xl text-portfolio-black">Order Management</h2>
+<span class="h-6 w-px bg-portfolio-light-grey"></span>
+<span class="text-sm text-portfolio-grey tracking-wide uppercase">All Orders</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative rounded-full p-2 text-portfolio-grey hover:text-portfolio-black transition-colors">
+<span class="material-symbols-outlined text-[22px] font-light">notifications</span>
+<span class="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-portfolio-black"></span>
+</button>
+<button class="flex items-center gap-2 border border-portfolio-black bg-transparent px-6 py-2.5 text-xs uppercase tracking-widest font-medium text-portfolio-black hover:bg-portfolio-black hover:text-white transition-all duration-300">
+<span class="material-symbols-outlined text-[16px]">add</span>
+                        Create Order
+                    </button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto px-10 py-8">
+<div class="mb-10 flex flex-wrap items-center justify-between gap-6">
+<div class="relative w-full max-w-sm">
+<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-portfolio-grey">
+<span class="material-symbols-outlined text-[20px] font-light">search</span>
+</div>
+<input class="block w-full border-0 border-b border-portfolio-light-grey bg-transparent py-3 pl-10 pr-3 text-sm text-portfolio-black placeholder-portfolio-grey focus:border-portfolio-black focus:ring-0 transition-all font-light" placeholder="Search orders..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="group flex items-center gap-2 border-b border-transparent hover:border-portfolio-light-grey px-2 py-2 text-sm text-portfolio-grey hover:text-portfolio-black transition-all">
+<span class="font-medium">Last 30 Days</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+<button class="group flex items-center gap-2 border-b border-transparent hover:border-portfolio-light-grey px-2 py-2 text-sm text-portfolio-grey hover:text-portfolio-black transition-all">
+<span class="font-medium">Status: All</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+<button class="group flex items-center gap-2 px-4 py-2 text-sm font-medium text-portfolio-black hover:bg-white transition-all ml-4">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span class="uppercase text-xs tracking-wider">Export CSV</span>
+</button>
+</div>
+</div>
+<div class="bg-white border border-portfolio-light-grey shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)]">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-portfolio-light-grey text-[11px] uppercase tracking-widest text-portfolio-grey font-medium bg-bone-white/30">
+<th class="px-8 py-5 font-medium w-32">Order ID</th>
+<th class="px-8 py-5 font-medium w-40">Date</th>
+<th class="px-8 py-5 font-medium">Customer</th>
+<th class="px-8 py-5 font-medium w-40">Status</th>
+<th class="px-8 py-5 font-medium w-32 text-right">Total</th>
+<th class="px-8 py-5 font-medium w-32 text-center">Payment</th>
+<th class="px-8 py-5 font-medium w-16 text-center"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-portfolio-light-grey/50 text-sm font-light">
+<tr class="group hover:bg-bone-white transition-colors duration-200">
+<td class="px-8 py-6 whitespace-nowrap font-serif text-portfolio-black">
+<a class="hover:underline underline-offset-4 decoration-portfolio-light-grey" href="#">#ORD-7782</a>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-portfolio-grey">
+                                        Oct 24, 2023 <br/><span class="text-[11px] text-portfolio-grey/60 tracking-wider uppercase">10:42 AM</span>
+</td>
+<td class="px-8 py-6 whitespace-nowrap">
+<div class="flex items-center gap-4">
+<div class="h-9 w-9 rounded-full bg-[#F3F4F6] flex items-center justify-center text-portfolio-black border border-portfolio-light-grey/50">
+<span class="text-xs font-serif">EF</span>
+</div>
+<div class="flex flex-col">
+<span class="text-portfolio-black font-medium">Elena Fisher</span>
+<span class="text-xs text-portfolio-grey/80">elena@example.com</span>
+</div>
+</div>
+</td>
+<td class="px-8 py-6 whitespace-nowrap">
+<span class="inline-flex items-center bg-status-shipped px-3 py-1 text-[11px] uppercase tracking-wider font-medium text-status-shipped-text">
+                                            Shipped
+                                        </span>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-right text-portfolio-black font-serif text-base">
+                                        $342.00
+                                    </td>
+<td class="px-8 py-6 whitespace-nowrap text-center">
+<div class="flex justify-center">
+<span class="inline-flex h-5 w-5 items-center justify-center text-portfolio-grey/40" title="Paid">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</span>
+</div>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-center">
+<button class="rounded p-1 text-portfolio-grey hover:text-portfolio-black transition-colors opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-bone-white transition-colors duration-200">
+<td class="px-8 py-6 whitespace-nowrap font-serif text-portfolio-black">
+<a class="hover:underline underline-offset-4 decoration-portfolio-light-grey" href="#">#ORD-7781</a>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-portfolio-grey">
+                                        Oct 24, 2023 <br/><span class="text-[11px] text-portfolio-grey/60 tracking-wider uppercase">09:15 AM</span>
+</td>
+<td class="px-8 py-6 whitespace-nowrap">
+<div class="flex items-center gap-4">
+<img alt="Customer avatar" class="h-9 w-9 rounded-full object-cover grayscale opacity-90 border border-portfolio-light-grey/50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9zlGVKufzYCrjMNk5kGJg4BFGzSC9Ck08GefWZx2QZ0-P2a9UDe18jrRnxWh_8T8ZR7lll0m5-Hryzps00K_A88u8gTcOuUS1vLbo4ARvleW6EXmAMWiS9Hw1XfsClok2mqY2q2QoAsX6su_P_HT1t3QLCSj15H-nkunOarMcn-8BDT5RSjm5Fqad7YziPFus_XDI7zLUA7GAop-J_XDh73NjARW8hueOElFFidabouxljXiMgfylmb6M7JMuUw9fQJYVwqL3b74"/>
+<div class="flex flex-col">
+<span class="text-portfolio-black font-medium">Nathan Drake</span>
+<span class="text-xs text-portfolio-grey/80">nate@example.com</span>
+</div>
+</div>
+</td>
+<td class="px-8 py-6 whitespace-nowrap">
+<span class="inline-flex items-center bg-status-processing px-3 py-1 text-[11px] uppercase tracking-wider font-medium text-status-processing-text">
+                                            Processing
+                                        </span>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-right text-portfolio-black font-serif text-base">
+                                        $125.50
+                                    </td>
+<td class="px-8 py-6 whitespace-nowrap text-center">
+<div class="flex justify-center">
+<span class="inline-flex h-5 w-5 items-center justify-center text-portfolio-grey/40" title="Paid">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</span>
+</div>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-center">
+<button class="rounded p-1 text-portfolio-grey hover:text-portfolio-black transition-colors opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-bone-white transition-colors duration-200">
+<td class="px-8 py-6 whitespace-nowrap font-serif text-portfolio-black">
+<a class="hover:underline underline-offset-4 decoration-portfolio-light-grey" href="#">#ORD-7780</a>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-portfolio-grey">
+                                        Oct 23, 2023 <br/><span class="text-[11px] text-portfolio-grey/60 tracking-wider uppercase">04:30 PM</span>
+</td>
+<td class="px-8 py-6 whitespace-nowrap">
+<div class="flex items-center gap-4">
+<div class="h-9 w-9 rounded-full bg-[#FAF5F5] flex items-center justify-center text-portfolio-black border border-portfolio-light-grey/50">
+<span class="text-xs font-serif">CR</span>
+</div>
+<div class="flex flex-col">
+<span class="text-portfolio-black font-medium">Chloe Ross</span>
+<span class="text-xs text-portfolio-grey/80">chloe@example.com</span>
+</div>
+</div>
+</td>
+<td class="px-8 py-6 whitespace-nowrap">
+<span class="inline-flex items-center bg-status-delivered px-3 py-1 text-[11px] uppercase tracking-wider font-medium text-status-delivered-text">
+                                            Delivered
+                                        </span>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-right text-portfolio-black font-serif text-base">
+                                        $89.00
+                                    </td>
+<td class="px-8 py-6 whitespace-nowrap text-center">
+<div class="flex justify-center">
+<span class="inline-flex h-5 w-5 items-center justify-center text-portfolio-grey/40" title="Paid">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</span>
+</div>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-center">
+<button class="rounded p-1 text-portfolio-grey hover:text-portfolio-black transition-colors opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-bone-white transition-colors duration-200">
+<td class="px-8 py-6 whitespace-nowrap font-serif text-portfolio-black">
+<a class="hover:underline underline-offset-4 decoration-portfolio-light-grey" href="#">#ORD-7779</a>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-portfolio-grey">
+                                        Oct 23, 2023 <br/><span class="text-[11px] text-portfolio-grey/60 tracking-wider uppercase">02:12 PM</span>
+</td>
+<td class="px-8 py-6 whitespace-nowrap">
+<div class="flex items-center gap-4">
+<img alt="Customer avatar" class="h-9 w-9 rounded-full object-cover grayscale opacity-90 border border-portfolio-light-grey/50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVQxWARm2CzKjm1kcX6guoslc5ykCO9ZbY-mRR-yVzorUo5-XMWsNp_ovKXzAV3jwxKJMHD-2lklVxgpYaAWSM6Am3c--EV5SkyEAyTM6fwxuJA-K8s-AQRDbuiV1RSir41F0sfsv3ktAAskGuWPpB1aBhAuaG5II-xSXt2DYspCaPfoGhqM6W42uOXAmZPEYCPV9swF0BQpkibKlc3wC1bbajdLuIBwHkkih9poH4hlh02wkjqxq4B0PpTiLRmOI9d6JoFB_-MOo"/>
+<div class="flex flex-col">
+<span class="text-portfolio-black font-medium">Sarah Walker</span>
+<span class="text-xs text-portfolio-grey/80">sarah.w@example.com</span>
+</div>
+</div>
+</td>
+<td class="px-8 py-6 whitespace-nowrap">
+<span class="inline-flex items-center bg-status-cancelled px-3 py-1 text-[11px] uppercase tracking-wider font-medium text-status-cancelled-text">
+                                            Cancelled
+                                        </span>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-right text-portfolio-grey line-through decoration-portfolio-grey/30 font-serif text-base">
+                                        $450.00
+                                    </td>
+<td class="px-8 py-6 whitespace-nowrap text-center">
+<div class="flex justify-center">
+<span class="inline-flex h-5 w-5 items-center justify-center text-portfolio-grey/40" title="Refunded">
+<span class="material-symbols-outlined text-[18px]">replay</span>
+</span>
+</div>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-center">
+<button class="rounded p-1 text-portfolio-grey hover:text-portfolio-black transition-colors opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-bone-white transition-colors duration-200">
+<td class="px-8 py-6 whitespace-nowrap font-serif text-portfolio-black">
+<a class="hover:underline underline-offset-4 decoration-portfolio-light-grey" href="#">#ORD-7778</a>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-portfolio-grey">
+                                        Oct 22, 2023 <br/><span class="text-[11px] text-portfolio-grey/60 tracking-wider uppercase">05:45 PM</span>
+</td>
+<td class="px-8 py-6 whitespace-nowrap">
+<div class="flex items-center gap-4">
+<div class="h-9 w-9 rounded-full bg-[#F5F3FF] flex items-center justify-center text-portfolio-black border border-portfolio-light-grey/50">
+<span class="text-xs font-serif">MJ</span>
+</div>
+<div class="flex flex-col">
+<span class="text-portfolio-black font-medium">Michael Jones</span>
+<span class="text-xs text-portfolio-grey/80">mike.j@example.com</span>
+</div>
+</div>
+</td>
+<td class="px-8 py-6 whitespace-nowrap">
+<span class="inline-flex items-center bg-status-processing px-3 py-1 text-[11px] uppercase tracking-wider font-medium text-status-processing-text">
+                                            Processing
+                                        </span>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-right text-portfolio-black font-serif text-base">
+                                        $65.00
+                                    </td>
+<td class="px-8 py-6 whitespace-nowrap text-center">
+<div class="flex justify-center">
+<span class="inline-flex h-5 w-5 items-center justify-center text-portfolio-grey/40" title="Pending">
+<span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
+</span>
+</div>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-center">
+<button class="rounded p-1 text-portfolio-grey hover:text-portfolio-black transition-colors opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-bone-white transition-colors duration-200">
+<td class="px-8 py-6 whitespace-nowrap font-serif text-portfolio-black">
+<a class="hover:underline underline-offset-4 decoration-portfolio-light-grey" href="#">#ORD-7777</a>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-portfolio-grey">
+                                        Oct 22, 2023 <br/><span class="text-[11px] text-portfolio-grey/60 tracking-wider uppercase">11:20 AM</span>
+</td>
+<td class="px-8 py-6 whitespace-nowrap">
+<div class="flex items-center gap-4">
+<img alt="Customer avatar" class="h-9 w-9 rounded-full object-cover grayscale opacity-90 border border-portfolio-light-grey/50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkjY25gU63C6D7kuRWP1lqcf3CPfBSZvzeNpSRcdqbVFac8o8aOA9j6tjRK8ZapQcJri0JhZ3Ujqw6qN8VosO4hRVRlyVJRtL-G31xQksV_YzIdqliz5edtznkeji-IBfONp1GQJUBtJN_2otKul9_ZLOBAU0ebFLbsPaWIui_Grq1ZaCd6-g8AIkTjbTPHN_1f08cD19q0cqirj7MC8C1vmy3oZH39dWiWDTpdOWIV_3H9RTXq9ZhkbGVcASMfP9vDK8MFcbp6dQ"/>
+<div class="flex flex-col">
+<span class="text-portfolio-black font-medium">Victor Sullivan</span>
+<span class="text-xs text-portfolio-grey/80">sully@example.com</span>
+</div>
+</div>
+</td>
+<td class="px-8 py-6 whitespace-nowrap">
+<span class="inline-flex items-center bg-status-delivered px-3 py-1 text-[11px] uppercase tracking-wider font-medium text-status-delivered-text">
+                                            Delivered
+                                        </span>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-right text-portfolio-black font-serif text-base">
+                                        $210.00
+                                    </td>
+<td class="px-8 py-6 whitespace-nowrap text-center">
+<div class="flex justify-center">
+<span class="inline-flex h-5 w-5 items-center justify-center text-portfolio-grey/40" title="Paid">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</span>
+</div>
+</td>
+<td class="px-8 py-6 whitespace-nowrap text-center">
+<button class="rounded p-1 text-portfolio-grey hover:text-portfolio-black transition-colors opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="flex items-center justify-between pt-8 pb-4">
+<div class="flex flex-1 justify-between sm:hidden">
+<a class="relative inline-flex items-center border border-portfolio-light-grey bg-white px-4 py-2 text-sm font-medium text-portfolio-black hover:bg-portfolio-hover" href="#">Previous</a>
+<a class="relative ml-3 inline-flex items-center border border-portfolio-light-grey bg-white px-4 py-2 text-sm font-medium text-portfolio-black hover:bg-portfolio-hover" href="#">Next</a>
+</div>
+<div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+<div>
+<p class="text-xs text-portfolio-grey uppercase tracking-wide">
+                                Showing <span class="font-medium text-portfolio-black">1</span> to <span class="font-medium text-portfolio-black">6</span> of <span class="font-medium text-portfolio-black">97</span> results
+                            </p>
+</div>
+<div>
+<nav aria-label="Pagination" class="isolate inline-flex -space-x-px">
+<a class="relative inline-flex items-center px-2 py-2 text-portfolio-grey hover:text-portfolio-black focus:z-20 focus:outline-offset-0" href="#">
+<span class="sr-only">Previous</span>
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</a>
+<a aria-current="page" class="relative z-10 inline-flex items-center px-4 py-2 text-sm font-serif font-semibold text-portfolio-black underline underline-offset-4 decoration-1 decoration-portfolio-black" href="#">1</a>
+<a class="relative inline-flex items-center px-4 py-2 text-sm font-serif text-portfolio-grey hover:text-portfolio-black focus:z-20 focus:outline-offset-0" href="#">2</a>
+<a class="relative inline-flex items-center px-4 py-2 text-sm font-serif text-portfolio-grey hover:text-portfolio-black focus:z-20 focus:outline-offset-0" href="#">3</a>
+<span class="relative inline-flex items-center px-4 py-2 text-sm font-serif text-portfolio-grey">...</span>
+<a class="relative inline-flex items-center px-4 py-2 text-sm font-serif text-portfolio-grey hover:text-portfolio-black focus:z-20 focus:outline-offset-0" href="#">10</a>
+<a class="relative inline-flex items-center px-2 py-2 text-portfolio-grey hover:text-portfolio-black focus:z-20 focus:outline-offset-0" href="#">
+<span class="sr-only">Next</span>
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</a>
+</nav>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

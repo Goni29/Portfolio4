@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Portfolio - User Account Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e6194c",
+                        "background-light": "#ffffff",
+                        "background-dark": "#211115",
+                        "surface-light": "#fcf8f9",
+                        "surface-dark": "#2a151b",
+                        "border-light": "#f3e7ea",
+                        "border-dark": "#3d1f25",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                        "body": ["Manrope", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col antialiased selection:bg-primary/20 selection:text-primary">
+<div class="bg-primary text-white text-xs font-semibold tracking-widest uppercase text-center py-2 px-4">
+    Complimentary Shipping on Orders Over $75
+</div>
+<header class="sticky top-0 z-50 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm border-b border-border-light dark:border-border-dark">
+<div class="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 h-20 flex items-center justify-between">
+<nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-900 dark:text-white">
+<a class="hover:text-primary transition-colors" href="#">Shop</a>
+<a class="hover:text-primary transition-colors" href="#">Collections</a>
+<a class="hover:text-primary transition-colors" href="#">About</a>
+</nav>
+<button class="md:hidden p-2 -ml-2 text-slate-900 dark:text-white">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="flex items-center justify-center gap-3 absolute left-1/2 transform -translate-x-1/2">
+<div class="size-8 text-primary">
+<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6_319)">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z" fill="currentColor"></path>
+</g>
+<defs>
+<clipPath id="clip0_6_319"><rect fill="white" height="48" width="48"></rect></clipPath>
+</defs>
+</svg>
+</div>
+<h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white uppercase">Portfolio</h1>
+</div>
+<div class="flex items-center gap-2 md:gap-4">
+<button class="p-2 text-slate-900 dark:text-white hover:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<div class="hidden md:flex items-center gap-1 text-sm font-medium text-slate-900 dark:text-white">
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span>Account</span>
+</a>
+</div>
+<button class="p-2 text-slate-900 dark:text-white hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined">shopping_bag</span>
+<span class="absolute top-1 right-0 size-2 bg-primary rounded-full"></span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-grow w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-10 lg:px-20 py-10">
+<div class="flex flex-col lg:flex-row gap-10">
+<aside class="w-full lg:w-64 flex-shrink-0">
+<nav class="flex flex-col gap-1 sticky top-28">
+<div class="mb-8 px-4">
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">My Account</p>
+<h2 class="text-xl font-bold text-slate-900 dark:text-white">Isabella</h2>
+<span class="inline-flex items-center gap-1 text-xs font-bold text-primary mt-1">
+<span class="material-symbols-outlined text-[16px] filled">star</span>
+                        Gold Member
+                    </span>
+</div>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-light dark:bg-surface-dark text-primary font-medium border-l-2 border-primary" href="#">
+<span class="material-symbols-outlined filled">dashboard</span>
+                    Dashboard
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">shopping_bag</span>
+                    My Orders
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">favorite</span>
+                    Wishlist
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">location_on</span>
+                    Addresses
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">credit_card</span>
+                    Payment Methods
+                </a>
+<div class="h-px bg-border-light dark:bg-border-dark my-2 mx-4"></div>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group" href="#">
+<span class="material-symbols-outlined">logout</span>
+                    Log Out
+                </a>
+</nav>
+</aside>
+<section class="flex-1 flex flex-col gap-8">
+<div class="flex flex-col gap-2">
+<h2 class="text-3xl md:text-4xl font-light text-slate-900 dark:text-white">
+                    Welcome back, <span class="font-bold">Isabella.</span>
+</h2>
+<p class="text-slate-500 dark:text-slate-400 max-w-2xl">
+                    Here is what is happening with your beauty portfolio today. You have <span class="text-primary font-medium">320 points</span> until your next Platinum reward.
+                </p>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl p-6 md:p-8">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b border-border-light dark:border-border-dark pb-6">
+<div>
+<div class="flex items-center gap-3 mb-1">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Order #24901</h3>
+<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800 uppercase tracking-wide">
+                                Shipped
+                            </span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400">Placed on October 24, 2023</p>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-lg text-sm font-semibold tracking-wide transition-all shadow-sm hover:shadow-md flex items-center gap-2 w-full md:w-auto justify-center">
+                        Track Package
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="flex flex-col sm:flex-row gap-6">
+<div class="flex -space-x-4 overflow-hidden py-2 px-2">
+<div class="relative group cursor-pointer">
+<div class="w-24 h-24 rounded-lg bg-white dark:bg-white/5 border border-border-light dark:border-border-dark p-2 shadow-sm transition-transform group-hover:-translate-y-1">
+<img alt="Lipstick" class="w-full h-full object-cover rounded-md mix-blend-multiply dark:mix-blend-normal" data-alt="Red lipstick tube standing upright" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQ4i7lrqo9j54Yjpxf2foX-WwLg9sXU4_ihmucywDciBvTM9KgJ1-4xl5WVJX3iP2OjXsO9pyB6mDdK6xDrqvRLJQ7XjTNu06FuyMbWynnKlAnPaYge_VDbXbjsE97V8Guu1yamx42UuqJxKJvGgbgQCBmIBQ8nraf-tQak075881S8GwEWylw97V_6FRgIBvsUDt8DuJ2ua1Zm_V6a2hBcyCNJmS63y-hpHkLe_V6THp9KtFZO1AOLYDwvJ_KYDEAiexqT2oIU8o"/>
+</div>
+</div>
+<div class="relative group cursor-pointer">
+<div class="w-24 h-24 rounded-lg bg-white dark:bg-white/5 border border-border-light dark:border-border-dark p-2 shadow-sm transition-transform group-hover:-translate-y-1">
+<img alt="Serum" class="w-full h-full object-cover rounded-md mix-blend-multiply dark:mix-blend-normal" data-alt="Glass serum bottle with dropper" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6ol-ynMBpYPjlKmHz6rkUrJtDeWEl3p5UV8utcI0sX6PR6k-iPozIxI3T3Uu-1zOfYoAibkrJtQTAL_N1HMbYhv_QXmg3tezsvWcC10Aktr9PnKIBqYzTwnv6RGtF7asP5YXPyxXW4A5m9FDEZBsReVMIDzSr5R2JORdbJGfNGPDab9ZZKNUl66X2v8KgbWeRrxUyn3nOVgyxeV1ttNB7yF8-OwezqUCKoj3X8ArZPdisMhJMNd2EYEqKfP5xQvl8tDJrT0WPRws"/>
+</div>
+</div>
+<div class="relative group cursor-pointer flex items-center justify-center">
+<div class="w-24 h-24 rounded-lg bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm flex items-center justify-center text-slate-400 text-xs font-medium">
+                                +1 more
+                            </div>
+</div>
+</div>
+<div class="flex-1 flex flex-col justify-center sm:border-l sm:border-border-light sm:dark:border-border-dark sm:pl-6">
+<p class="text-sm font-medium text-slate-900 dark:text-white mb-1">Arriving by Friday, Oct 27</p>
+<p class="text-sm text-slate-500 dark:text-slate-400">FedEx Ground • Tracking: 1Z999AA10123456784</p>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-white dark:bg-background-dark border border-border-light dark:border-border-dark rounded-xl p-6 flex flex-col h-full hover:border-primary/30 transition-colors group">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-surface-light dark:bg-surface-dark rounded-lg text-primary">
+<span class="material-symbols-outlined">home_pin</span>
+</div>
+<a class="text-sm font-semibold text-primary hover:text-primary/80 transition-colors" href="#">Edit</a>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Default Shipping</h3>
+<div class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed flex-grow">
+<p>Isabella Rossi</p>
+<p>42 Melrose Place, Apt 4B</p>
+<p>Beverly Hills, CA 90210</p>
+<p>United States</p>
+</div>
+</div>
+<div class="bg-white dark:bg-background-dark border border-border-light dark:border-border-dark rounded-xl p-6 flex flex-col h-full hover:border-primary/30 transition-colors group">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-surface-light dark:bg-surface-dark rounded-lg text-primary">
+<span class="material-symbols-outlined filled">favorite</span>
+</div>
+<a class="text-sm font-semibold text-primary hover:text-primary/80 transition-colors" href="#">View All</a>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Wishlist</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-4">3 items saved for later</p>
+<div class="flex gap-3 mt-auto">
+<div class="size-12 rounded bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-1">
+<img alt="Product" class="w-full h-full object-cover rounded mix-blend-multiply dark:mix-blend-normal" data-alt="Minimalist face cream jar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuZnH7AuIgbJv-TFBKa85ze2VVE8vPSC11WKCcGrVRJKNEs3TFp-TkT_ffyOfRGuHXO7Yk1IPxSSR5ktCZ5IXW3xh4feiQ33V8zIwJ0BdvZctscr2bFJ53dsUayfic11rbyLhAC9Z9pg1r18-82QJHxk128AJuoy1bi2IJkB1EeyWLgwTCxqLtige4iDWIbc96Vukk9HTETCdtiE8Ndob9wM6YSJMIBT3Ve9PDzURa-JpXlkjuhox2ycleKiygy8N0KJcvcuMdN64"/>
+</div>
+<div class="size-12 rounded bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-1">
+<img alt="Product" class="w-full h-full object-cover rounded mix-blend-multiply dark:mix-blend-normal" data-alt="Luxury perfume bottle" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGFOgfbNyEU3_bxxkQvyqFYPdOq7QUNZYonHOTp92ls7AlT_dIn34YGaecQm0_6oLGz-HR2en0sBTg89i_Xw9h9iKBV4Bgqrk9ZJkG8Tlj8UStaxKCh9SSAxCuxgSN4-cI5CUhMY9uuiIyfXIlFUikA76-U2WL4RTXXgwB1e6hqlcJfLb1ksS6Z2bCAkZNU-RP9jyCHUYUhbxT_oKCIaohfznucMBdjG2uv23c0Oxr3kL01VR5IQTPUMXjAeNbY4TaZ-V-GlgOUaU"/>
+</div>
+<div class="size-12 rounded bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-1">
+<img alt="Product" class="w-full h-full object-cover rounded mix-blend-multiply dark:mix-blend-normal" data-alt="Cosmetic makeup palette open" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOnyvdDQBzAuSTvHasE_SctRtBBlpC7P-v8-NGtDKHDF5lTcYSbkEhfWwazt8_q3OUy6RUibaktwmSd8A79HRAjx94hOzk46qzjWurYMCrdH1-kOcCnO3ARlQZGBJ1gZKOEqHA8fkaQXuHazVxwOAMYtgg58mdNgEXRotEFcOFvkmI4h2XI--IC6ZsNhdaIMPpkj7tKchA3Xufo9T8SLhT6idSKlTpRWLhJl8YOQ5CSBd2IUwKMGMV94r-92dQvSioayQUD_55Nrc"/>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-6 border-t border-border-light dark:border-border-dark">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Recommended for you</h3>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="group cursor-pointer">
+<div class="relative overflow-hidden rounded-lg bg-surface-light dark:bg-surface-dark aspect-[3/4] mb-3">
+<img alt="Silk Cream" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="High end skin cream in jar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCurBTJh9GlegOuuuteFVh7oPdmhXRr_lwBBMLZUZqYDZ7Fa9eV_Ff33Zirkmz6pIIJ6vVMJcWzJqYdC5sNv6KDlnYH3_4dL0XWPxS_mqmJqegWRl8ftoAeHjTlpYwT9nKQJtAGtoq3pO2aWSjqcqiur0N47FzZ4Kabfd17OZB16EBbtPZFhjjgCapbK7k8vzKstPksfh3jV0SZ7YuB6RZgjo3rh5dM7-GTkfbqBpOwa0Lb2mRHKEL2g8L8DEGRs7wlgRUx1kgvt7o"/>
+<button class="absolute bottom-3 right-3 size-8 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-md text-slate-900 dark:text-white opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white">Luminous Silk Cream</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">$85.00</p>
+</div>
+<div class="group cursor-pointer">
+<div class="relative overflow-hidden rounded-lg bg-surface-light dark:bg-surface-dark aspect-[3/4] mb-3">
+<img alt="Night Oil" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Luxury facial oil bottle" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfQ4V0vUkXCpvJxuZd6DnJTyvGJQ_yR3ZXk_6WkCBzKWDVy4symoWSM1tXp8TMEUIQkSnIhgWDfQ6nqFktua1JUT-ENPROTTyo-YvuMJP_ZpkxCCy1sPAnc3aqDBRJRvxldaYQcF4FD_KUd9NMyHJm_RcP7U89kk-iLsH_ASxG4-vHIiIsGgRai3LyPWt_63oik0vc2azhF2NE6Ni-6XQoh-r4pyj6nVUz8kD01llMzZtBTIGjNKuVS3rJmzI8h6f82hWRgrpnY8k"/>
+<button class="absolute bottom-3 right-3 size-8 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-md text-slate-900 dark:text-white opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white">Midnight Recovery Oil</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">$120.00</p>
+</div>
+<div class="group cursor-pointer hidden md:block">
+<div class="relative overflow-hidden rounded-lg bg-surface-light dark:bg-surface-dark aspect-[3/4] mb-3">
+<img alt="Serum" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Serum bottle" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6ol-ynMBpYPjlKmHz6rkUrJtDeWEl3p5UV8utcI0sX6PR6k-iPozIxI3T3Uu-1zOfYoAibkrJtQTAL_N1HMbYhv_QXmg3tezsvWcC10Aktr9PnKIBqYzTwnv6RGtF7asP5YXPyxXW4A5m9FDEZBsReVMIDzSr5R2JORdbJGfNGPDab9ZZKNUl66X2v8KgbWeRrxUyn3nOVgyxeV1ttNB7yF8-OwezqUCKoj3X8ArZPdisMhJMNd2EYEqKfP5xQvl8tDJrT0WPRws"/>
+<button class="absolute bottom-3 right-3 size-8 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-md text-slate-900 dark:text-white opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white">Radiance Serum</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">$95.00</p>
+</div>
+<div class="group cursor-pointer hidden md:block">
+<div class="relative overflow-hidden rounded-lg bg-surface-light dark:bg-surface-dark aspect-[3/4] mb-3">
+<img alt="Face Mask" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Face mask jar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuZnH7AuIgbJv-TFBKa85ze2VVE8vPSC11WKCcGrVRJKNEs3TFp-TkT_ffyOfRGuHXO7Yk1IPxSSR5ktCZ5IXW3xh4feiQ33V8zIwJ0BdvZctscr2bFJ53dsUayfic11rbyLhAC9Z9pg1r18-82QJHxk128AJuoy1bi2IJkB1EeyWLgwTCxqLtige4iDWIbc96Vukk9HTETCdtiE8Ndob9wM6YSJMIBT3Ve9PDzURa-JpXlkjuhox2ycleKiygy8N0KJcvcuMdN64"/>
+<button class="absolute bottom-3 right-3 size-8 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-md text-slate-900 dark:text-white opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white">Hydrating Mask</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">$65.00</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<footer class="bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark pt-16 pb-8 text-slate-600 dark:text-slate-300">
+<div class="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+<div>
+<div class="flex items-center gap-2 mb-6">
+<div class="size-6 text-primary">
+<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z" fill="currentColor"></path>
+</svg>
+</div>
+<span class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Portfolio</span>
+</div>
+<p class="text-sm leading-relaxed mb-6 max-w-xs">
+                    Curating the finest beauty essentials for the modern connoisseur. Discover our science-backed formulations and luxury rituals.
+                </p>
+<div class="flex gap-4">
+<a class="text-slate-400 hover:text-primary transition-colors" href="#"><span class="sr-only">Instagram</span><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path></svg></a>
+<a class="text-slate-400 hover:text-primary transition-colors" href="#"><span class="sr-only">Twitter</span><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"></path></svg></a>
+</div>
+</div>
+<div>
+<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Shop</h4>
+<ul class="space-y-3 text-sm">
+<li><a class="hover:text-primary transition-colors" href="#">Best Sellers</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">New Arrivals</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Skincare</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Makeup</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Gift Sets</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Support</h4>
+<ul class="space-y-3 text-sm">
+<li><a class="hover:text-primary transition-colors" href="#">Contact Us</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Shipping &amp; Returns</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">FAQ</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Track Order</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Store Locator</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Newsletter</h4>
+<p class="text-sm mb-4">Subscribe to receive updates, access to exclusive deals, and more.</p>
+<form class="flex flex-col gap-2">
+<input class="w-full rounded-lg border-border-light dark:border-border-dark bg-white dark:bg-white/5 px-4 py-2 text-sm focus:border-primary focus:ring-primary dark:focus:ring-primary" placeholder="Enter your email" type="email"/>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors w-full" type="button">Subscribe</button>
+</form>
+</div>
+</div>
+<div class="border-t border-border-light dark:border-border-dark pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
+<p>© 2023 Portfolio Beauty. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary transition-colors" href="#">Cookie Policy</a>
+</div>
+</div>
+</div>
+</footer>
+
+</body></html>

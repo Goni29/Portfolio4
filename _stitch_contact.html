@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;family=Noto+Serif+KR:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#dc1849",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#211115",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "Pretendard", "sans-serif"],
+                        "serif": ["Noto Serif KR", "serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', 'Pretendard', sans-serif; }
+        .serif-text { font-family: 'Noto Serif KR', serif; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 px-6 lg:px-20 py-4 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<div class="size-6 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-xl font-bold leading-tight tracking-tight serif-text">Portfolio</h2>
+</div>
+<div class="hidden md:flex flex-1 justify-center gap-12">
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">SHOP</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">STORY</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">CONCIERGE</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">MEMBERSHIP</a>
+</div>
+<div class="flex gap-4">
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined">person</span>
+</button>
+</div>
+</header>
+<main class="flex-1">
+<!-- Hero Section -->
+<section class="relative h-[60vh] flex items-center justify-center overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Serene luxury skincare textures on a stone surface" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAq9ZPPQVHPV8WxlnkOFUpdpU0e7CoNfPEe_dTo-tcfsRNA1TqCo0Y0smvnq4TtQ4MHSRFnX6tCM_oMQS79er1crDbPpDbnbyBbb-Y45fYOTcSbUoBNXM2VzbCwGFnuRTbsRD3Z1UUO_tGj3Te7IOwdqLR1hXhyLXZRrNc-xJWSLDx6orjWX4sME0OlvT5FdF2Z8NNI79FPDjdGKii_mA1Xi1qJjif5adZbgq6HV2aL2lGYVkApwTVV4FcKuZBt_fGnwcsAAf-onX8I');"></div>
+<div class="absolute inset-0 bg-black/20"></div>
+<div class="relative z-10 text-center px-4">
+<h1 class="text-white text-5xl md:text-7xl font-light mb-6 serif-text leading-tight">
+                            무엇을 도와드릴까요?
+                        </h1>
+<p class="text-white/90 text-lg md:text-xl font-light max-w-2xl mx-auto leading-relaxed">
+                            Portfolio의 뷰티 컨시어지가 당신의 아름다움을 위한 <br class="hidden md:block"/>최상의 답변을 준비합니다.
+                        </p>
+</div>
+</section>
+<!-- Contact & Info Grid -->
+<section class="max-w-7xl mx-auto px-6 py-24 grid grid-cols-1 lg:grid-cols-12 gap-20">
+<!-- Form Section -->
+<div class="lg:col-span-7">
+<h2 class="text-3xl font-bold mb-12 serif-text">문의하기</h2>
+<form class="space-y-8">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-2">
+<label class="text-xs uppercase tracking-widest font-semibold text-slate-500">성함</label>
+<input class="w-full border-0 border-b border-slate-300 bg-transparent py-3 focus:ring-0 focus:border-primary transition-colors text-lg" placeholder="성함을 입력해주세요" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="text-xs uppercase tracking-widest font-semibold text-slate-500">이메일</label>
+<input class="w-full border-0 border-b border-slate-300 bg-transparent py-3 focus:ring-0 focus:border-primary transition-colors text-lg" placeholder="example@portfolio.com" type="email"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-xs uppercase tracking-widest font-semibold text-slate-500">문의 주제</label>
+<select class="w-full border-0 border-b border-slate-300 bg-transparent py-3 focus:ring-0 focus:border-primary transition-colors text-lg appearance-none">
+<option>제품 문의</option>
+<option>배송 및 주문</option>
+<option>멤버십 혜택</option>
+<option>기타 문의</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="text-xs uppercase tracking-widest font-semibold text-slate-500">메시지</label>
+<textarea class="w-full border-0 border-b border-slate-300 bg-transparent py-3 focus:ring-0 focus:border-primary transition-colors text-lg resize-none" placeholder="문의 내용을 자유롭게 작성해주세요" rows="4"></textarea>
+</div>
+<button class="w-full md:w-auto px-12 py-4 bg-primary text-white font-bold hover:bg-opacity-90 transition-all rounded-lg uppercase tracking-widest text-sm">
+                                문의 보내기
+                            </button>
+</form>
+</div>
+<!-- Concierge Info Section -->
+<div class="lg:col-span-5 space-y-12">
+<div class="p-10 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl shadow-sm">
+<h3 class="text-2xl font-bold mb-8 serif-text">Brand Concierge</h3>
+<div class="space-y-6">
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-primary">call</span>
+<div>
+<p class="text-sm font-semibold text-slate-500 mb-1">고객센터</p>
+<p class="text-lg font-medium">1588-0000</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-primary">mail</span>
+<div>
+<p class="text-sm font-semibold text-slate-500 mb-1">이메일</p>
+<p class="text-lg font-medium">concierge@portfolio.com</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-primary">schedule</span>
+<div>
+<p class="text-sm font-semibold text-slate-500 mb-1">운영 시간</p>
+<p class="text-lg font-medium">평일 10:00 - 18:00</p>
+<p class="text-sm text-slate-400">점심시간 12:00 - 13:00 (주말/공휴일 휴무)</p>
+</div>
+</div>
+</div>
+</div>
+<div class="p-10 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl">
+<h4 class="font-bold mb-4 serif-text">Showroom Location</h4>
+<p class="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+                                Portfolio의 제품을 직접 경험하고 전문가의 상담을 받을 수 있는 쇼룸을 방문해 보세요.
+                            </p>
+<a class="text-primary font-bold inline-flex items-center gap-2 hover:gap-4 transition-all" href="#">
+                                쇼룸 위치 확인하기 <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="bg-slate-50 dark:bg-slate-900/50 py-24">
+<div class="max-w-4xl mx-auto px-6">
+<h2 class="text-3xl font-bold mb-12 text-center serif-text">자주 묻는 질문</h2>
+<div class="space-y-4">
+<!-- Accordion Item 1 -->
+<div class="bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+<button class="w-full px-8 py-6 flex justify-between items-center text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="font-medium">배송은 얼마나 걸리나요?</span>
+<span class="material-symbols-outlined text-slate-400">expand_more</span>
+</button>
+<div class="px-8 pb-6 text-slate-600 dark:text-slate-400 text-sm leading-relaxed hidden">
+                                    결제 완료 후 영업일 기준 2-3일 이내에 출고됩니다. 제주 및 도서산간 지역은 1-2일 정도 추가 소요될 수 있습니다.
+                                </div>
+</div>
+<!-- Accordion Item 2 -->
+<div class="bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+<button class="w-full px-8 py-6 flex justify-between items-center text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="font-medium">교환 및 반품 규정은 어떻게 되나요?</span>
+<span class="material-symbols-outlined text-slate-400">expand_more</span>
+</button>
+</div>
+<!-- Accordion Item 3 -->
+<div class="bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+<button class="w-full px-8 py-6 flex justify-between items-center text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="font-medium">민감성 피부도 사용 가능한가요?</span>
+<span class="material-symbols-outlined text-slate-400">expand_more</span>
+</button>
+</div>
+</div>
+<div class="mt-12 text-center">
+<button class="text-slate-500 hover:text-primary transition-colors text-sm font-medium border-b border-slate-300 pb-1">전체 FAQ 보기</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-white dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 py-20 px-6 lg:px-20">
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
+<div class="col-span-1 md:col-span-1">
+<h2 class="text-2xl font-bold mb-6 serif-text">Portfolio</h2>
+<div class="flex gap-4">
+<a class="text-slate-400 hover:text-primary" href="#"><span class="material-symbols-outlined">language</span></a>
+<a class="text-slate-400 hover:text-primary" href="#"><span class="material-symbols-outlined">share</span></a>
+</div>
+</div>
+<div>
+<h4 class="text-xs uppercase tracking-widest font-bold mb-6">Explore</h4>
+<ul class="space-y-4 text-sm text-slate-500">
+<li><a class="hover:text-primary transition-colors" href="#">브랜드 스토리</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">컬렉션</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">쇼룸 안내</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-xs uppercase tracking-widest font-bold mb-6">Concierge</h4>
+<ul class="space-y-4 text-sm text-slate-500">
+<li><a class="hover:text-primary transition-colors" href="#">공지사항</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">1:1 문의</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">멤버십 프로그램</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-xs uppercase tracking-widest font-bold mb-6">Newsletter</h4>
+<p class="text-xs text-slate-500 mb-4 leading-relaxed">새로운 소식과 특별한 혜택을 가장 먼저 만나보세요.</p>
+<div class="flex border-b border-slate-300 pb-2">
+<input class="bg-transparent border-0 focus:ring-0 text-xs w-full" placeholder="Email Address" type="email"/>
+<button class="text-xs font-bold">JOIN</button>
+</div>
+</div>
+</div>
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-[10px] text-slate-400 uppercase tracking-widest gap-4">
+<p>© 2024 PORTFOLIO BEAUTY. ALL RIGHTS RESERVED.</p>
+<div class="flex gap-8">
+<a class="hover:text-slate-900" href="#">Privacy Policy</a>
+<a class="hover:text-slate-900" href="#">Terms of Service</a>
+</div>
+</div>
+</footer>
+</div>
+</div>
+</body></html>

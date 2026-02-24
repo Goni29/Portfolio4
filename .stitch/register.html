@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Portfolio - Create Account</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#19b3e6",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111d21",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<div class="flex flex-1 min-h-screen w-full">
+<!-- Left Pane: Editorial Image -->
+<div class="hidden lg:block lg:w-1/2 relative overflow-hidden bg-slate-200">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105" data-alt="Close up of a woman with glowing skin applying skincare cream" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuACm6ouhUCoPnA34Fu37z4BmueSqH20TnAw4YnVEzPBz8tAKWAW0gYWhRuf_BnTOVHrv2Dt4oyzfeFeg-jvifqaiaeAhl4VlYWV0tQpgfyX3_t5r3oiyoL7GjLZpbxi3avtoly0DDKr6jpTvMglby8VbD0Z7lYBvdkvhBDYD4oC2o_j3kKCWdos62ypT4wyY2dLKhmlDvfTEtiTWBM7hUa1jRHVA0-SahSgFR67xkAJoxPzy1j7ZtA06uRzTeFIJ_uHjtC6iIUQ4KY');"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+<!-- Brand Tagline Overlay -->
+<div class="absolute bottom-12 left-12 right-12 text-white">
+<p class="text-3xl font-bold tracking-tight mb-2">Refined Beauty.</p>
+<p class="text-lg text-slate-200 font-medium">Join our community for exclusive access to the curated collection.</p>
+</div>
+</div>
+<!-- Right Pane: Registration Form -->
+<div class="w-full lg:w-1/2 flex flex-col bg-white dark:bg-background-dark relative overflow-y-auto">
+<!-- Mobile/Tablet simplified header inside the pane -->
+<header class="flex items-center justify-between px-6 py-6 lg:px-12 lg:py-8">
+<div class="flex items-center gap-3 text-slate-900 dark:text-white">
+<div class="size-8 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6_319)">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z" fill="currentColor"></path>
+</g>
+<defs>
+<clippath id="clip0_6_319"><rect fill="white" height="48" width="48"></rect></clippath>
+</defs>
+</svg>
+</div>
+<h2 class="text-xl font-bold tracking-tight">Portfolio</h2>
+</div>
+<a class="text-sm font-semibold text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors" href="#">
+                    Help
+                </a>
+</header>
+<div class="flex-1 flex flex-col justify-center px-6 lg:px-20 xl:px-32 py-8">
+<div class="w-full max-w-md mx-auto">
+<div class="mb-10">
+<h1 class="text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-3">Create Account</h1>
+<p class="text-slate-500 dark:text-slate-400 text-lg">Join Portfolio for an exclusive beauty experience.</p>
+</div>
+<form action="#" class="space-y-6">
+<!-- Full Name -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-slate-900 dark:text-slate-200" for="name">Full Name</label>
+<input class="w-full h-12 px-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-slate-900 dark:text-white placeholder-slate-400" id="name" placeholder="Enter your full name" type="text"/>
+</div>
+<!-- Email Address -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-slate-900 dark:text-slate-200" for="email">Email Address</label>
+<input class="w-full h-12 px-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-slate-900 dark:text-white placeholder-slate-400" id="email" placeholder="name@example.com" type="email"/>
+</div>
+<!-- Password -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-slate-900 dark:text-slate-200" for="password">Password</label>
+<div class="relative group">
+<input class="w-full h-12 px-4 pr-12 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-slate-900 dark:text-white placeholder-slate-400" id="password" placeholder="Create a password" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-500 mt-1 pl-1">Must be at least 8 characters.</p>
+</div>
+<!-- Subscribe Checkbox -->
+<div class="flex items-start gap-3 py-2">
+<div class="flex items-center h-6">
+<input checked="" class="size-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary dark:bg-slate-800 cursor-pointer" id="subscribe" type="checkbox"/>
+</div>
+<div class="text-sm leading-6">
+<label class="font-medium text-slate-900 dark:text-slate-200 cursor-pointer" for="subscribe">
+                                    Subscribe to the Portfolio Journal
+                                </label>
+<p class="text-slate-500 dark:text-slate-400">Get the latest beauty tips, trends, and exclusive offers.</p>
+</div>
+</div>
+<!-- Submit Button -->
+<button class="w-full h-12 flex items-center justify-center bg-primary hover:bg-[#159cc9] text-white font-bold rounded-lg transition-all shadow-md hover:shadow-lg active:scale-[0.99] mt-2">
+                            Create Account
+                        </button>
+<!-- Sign In Link -->
+<p class="text-center text-sm text-slate-600 dark:text-slate-400 mt-6">
+                            Already have an account? 
+                            <a class="font-bold text-primary hover:text-[#159cc9] transition-colors ml-1" href="#">Sign In</a>
+</p>
+</form>
+</div>
+</div>
+<!-- Simple Footer inside right pane -->
+<footer class="px-6 py-6 lg:px-12 text-center lg:text-left border-t border-slate-100 dark:border-slate-800 mt-auto">
+<p class="text-xs text-slate-400 dark:text-slate-600">
+                    By creating an account, you agree to our 
+                    <a class="underline hover:text-slate-600 dark:hover:text-slate-400" href="#">Terms &amp; Conditions</a> 
+                    and 
+                    <a class="underline hover:text-slate-600 dark:hover:text-slate-400" href="#">Privacy Policy</a>.
+                </p>
+</footer>
+</div>
+</div>
+</body></html>

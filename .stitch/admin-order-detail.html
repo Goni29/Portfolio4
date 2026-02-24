@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Order Detail View - Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e6194c",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#211115",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d1d5db;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #374151;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased selection:bg-primary/20 selection:text-primary">
+<div class="flex min-h-screen w-full flex-col">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a0f12] px-6 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-slate-900 dark:text-white">
+<div class="flex items-center justify-center rounded-lg bg-primary/10 p-2 text-primary">
+<span class="material-symbols-outlined text-2xl">spa</span>
+</div>
+<h2 class="text-lg font-bold tracking-tight">Portfolio Admin</h2>
+</div>
+<!-- Search Bar -->
+<div class="hidden md:flex items-center w-80 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 transition-colors focus-within:ring-2 focus-within:ring-primary/50">
+<span class="material-symbols-outlined text-slate-400">search</span>
+<input class="w-full bg-transparent border-none text-sm focus:ring-0 placeholder:text-slate-400 text-slate-900 dark:text-slate-200 ml-2" placeholder="Search orders, products..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-sm font-medium text-primary bg-primary/5 px-3 py-1.5 rounded-full" href="#">Orders</a>
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors" href="#">Products</a>
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors" href="#">Customers</a>
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors" href="#">Analytics</a>
+</nav>
+<div class="flex items-center gap-3 pl-6 border-l border-slate-200 dark:border-slate-800">
+<button class="relative p-2 text-slate-500 hover:text-primary dark:text-slate-400 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary border-2 border-white dark:border-[#1a0f12]"></span>
+</button>
+<div class="h-9 w-9 rounded-full bg-cover bg-center ring-2 ring-white dark:ring-slate-700 shadow-sm" data-alt="Admin user profile picture" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC67zeTm9Olhp_Wrs2sdsThanro-FAV4DBOStTfg0DXIrmEpPCBf0Z4i_NyjlOE6v3UiY74RKDcd5iEkpb7626p7bcLlSw4w1JjDd8SaCgS5UG2JMp4_PHSIdTHWz_JeYDGKFYpwnPIe8nX7yDY4-r2TdjYuiMrYGaot2oHDYqEnBegdZfJ0M-4gjF4PgaXN2m8EZupHoufiitGyh-mjcPMEXIXBr2wf-8E_SWkBDx6219-l3sXKDar2pb5KI9bN-5fAeTt5u0d3C0');"></div>
+</div>
+</div>
+</header>
+<div class="flex flex-1">
+<!-- Sidebar Navigation (Desktop) -->
+<aside class="hidden xl:flex w-64 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a0f12] pt-6 pb-10">
+<div class="px-4 mb-8">
+<div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+<div class="h-10 w-10 rounded-full bg-cover bg-center" data-alt="Admin avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBKehl16qz-hD1cbMRar3QjfRWhO8Bshr0cVqOeMX_6-80GAz0UEH6TA4NcuWWFysaPlJOQYcAN2eXJabPFmoWU0O-fnWq8TE0Cm7SObc_UILC_0_4q6oPJlFT1W92D6hdX7Vso9b5SPF2KLvfeZo7YPMOBq6JkJGLb3_0QpFL7_7BJ3jGi2-nnD07RH4qlfBlVaq2-poig5_ayfpLkOBxJav1rNz-q2fGaozvO77zS1hG9tZPPzBJwU7NKleIDGphnW17aMAW6j-o');"></div>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Sarah Jenkins</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">Super Admin</span>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-primary dark:hover:text-primary transition-all group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">grid_view</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/5 text-primary dark:text-primary font-medium" href="#">
+<span class="material-symbols-outlined text-primary">shopping_bag</span>
+<span class="text-sm">Orders</span>
+<span class="ml-auto bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">12</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-primary dark:hover:text-primary transition-all group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">inventory_2</span>
+<span class="text-sm font-medium">Products</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-primary dark:hover:text-primary transition-all group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">group</span>
+<span class="text-sm font-medium">Customers</span>
+</a>
+<div class="my-4 border-t border-slate-100 dark:border-slate-800"></div>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-primary dark:hover:text-primary transition-all group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-6 lg:p-10">
+<div class="mx-auto max-w-6xl">
+<!-- Breadcrumbs & Actions Header -->
+<div class="mb-8">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div>
+<nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
+<a class="hover:text-primary transition-colors" href="#">Orders</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-slate-900 dark:text-white font-medium">Order #PT-99283</span>
+</nav>
+<div class="flex items-center gap-4">
+<h1 class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Order #PT-99283</h1>
+<span class="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50">
+<span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                        Processing
+                                    </span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Placed on Oct 24, 2023 at 10:00 AM</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400">
+<span class="material-symbols-outlined mr-2 text-lg">print</span>
+                                    Print Invoice
+                                </button>
+<button class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+                                    Update Status
+                                    <span class="material-symbols-outlined ml-2 text-lg">keyboard_arrow_down</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Layout Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left Column: Order Items & Payment -->
+<div class="lg:col-span-2 space-y-8">
+<!-- Order Items -->
+<div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a0f12] shadow-sm overflow-hidden">
+<div class="border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center bg-slate-50/50 dark:bg-white/[0.02]">
+<h3 class="text-base font-semibold text-slate-900 dark:text-white">Order Items</h3>
+<span class="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">3 Items</span>
+</div>
+<div class="divide-y divide-slate-100 dark:divide-slate-800/50">
+<!-- Item 1 -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+<div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50">
+<img alt="Velvet Matte Lipstick - Rouge Red" class="h-full w-full object-cover" data-alt="Red lipstick product shot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-H4BV5hyNFDsO1SRxFwodHLQy7E1vZ7AYiMwkaX8hrm3Bn0Rz6rETRg1oShgoAnN3KEIVOBFpBkXGsSBgsgTEWaWt1jQYEymi5UREQmEvsnQDRfKzVj9tBA41Vy4itBkbuK7dE6fj604Bih4tmLUpkChx0g-XckSN4GAr3irEcb_oy28PzxGovQglxWOIWWlUITGiSbzsjvwTRN1ER8V8j_NVZspP3PDDhaDb3UsOhkiGhd_5CImucLH0EDLqkD7rSRLkplsGbng"/>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white truncate">Velvet Matte Lipstick</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400">Shade: Rouge Red</p>
+<p class="text-xs font-mono text-slate-400 mt-1">SKU: VL-LIP-001</p>
+</div>
+<div class="flex flex-row sm:flex-col items-center sm:items-end gap-x-6 sm:gap-1 mt-2 sm:mt-0 w-full sm:w-auto justify-between sm:justify-end">
+<div class="text-sm text-slate-500 dark:text-slate-400">
+<span class="sm:hidden">Qty: </span>2 x $32.00
+                                            </div>
+<div class="text-sm font-bold text-slate-900 dark:text-white">$64.00</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+<div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50">
+<img alt="Hydrating Serum Bottle" class="h-full w-full object-cover" data-alt="Blue serum bottle product shot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOoCqflE1bkd3YjYR1Q_kgvDVT9dvXAOFxFFQsGgj7bQscNCZdNau_fHOKzs6yXq85eO0m_3CCXgy49994ZodpKiDpF8nuuiwpaJHPx9zbDX5HxLr1OXjfpthlXDdIyNQ9IFQQWu3slmaF40ASIDtmKEbC-eJqhnwpkXPk2a3Uyy3X9qn6hHeO81gtWx6q1dffpaTKdHBqUN91qkxvQu1WWt2jsf_o05DyoRnnaPUzf4f4O9b6gpHVmbfrBXXRbLheE0xHDzprpUU"/>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white truncate">Hydra-Boost Serum</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400">Size: 30ml</p>
+<p class="text-xs font-mono text-slate-400 mt-1">SKU: HB-SER-022</p>
+</div>
+<div class="flex flex-row sm:flex-col items-center sm:items-end gap-x-6 sm:gap-1 mt-2 sm:mt-0 w-full sm:w-auto justify-between sm:justify-end">
+<div class="text-sm text-slate-500 dark:text-slate-400">
+<span class="sm:hidden">Qty: </span>1 x $56.00
+                                            </div>
+<div class="text-sm font-bold text-slate-900 dark:text-white">$56.00</div>
+</div>
+</div>
+</div>
+<!-- Summary Footer -->
+<div class="bg-slate-50 dark:bg-slate-800/30 px-6 py-6 border-t border-slate-200 dark:border-slate-800">
+<div class="flex flex-col gap-3 max-w-xs ml-auto">
+<div class="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+<span>Subtotal</span>
+<span class="font-medium">$120.00</span>
+</div>
+<div class="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+<span>Shipping (Standard)</span>
+<span class="font-medium">$15.00</span>
+</div>
+<div class="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+<span>Tax (Estimated)</span>
+<span class="font-medium">$0.00</span>
+</div>
+<div class="h-px bg-slate-200 dark:bg-slate-700 my-1"></div>
+<div class="flex justify-between items-center text-base">
+<span class="font-semibold text-slate-900 dark:text-white">Total</span>
+<span class="text-xl font-bold text-primary">$135.00</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Internal Notes -->
+<div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a0f12] shadow-sm p-6">
+<h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">Internal Notes</h3>
+<div class="relative">
+<textarea class="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white text-sm focus:border-primary focus:ring-primary dark:focus:border-primary placeholder:text-slate-400" placeholder="Add a note about this order..." rows="3"></textarea>
+<button class="absolute bottom-2 right-2 p-1.5 bg-white dark:bg-slate-700 rounded-md text-slate-400 hover:text-primary shadow-sm border border-slate-100 dark:border-slate-600 transition-colors">
+<span class="material-symbols-outlined text-lg">send</span>
+</button>
+</div>
+<div class="mt-4 space-y-3">
+<div class="flex gap-3 text-sm">
+<div class="h-8 w-8 rounded-full bg-slate-200 flex-shrink-0 bg-cover bg-center" data-alt="Staff member avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBHHDDepwJyPG3jm7zrrHCAs2Mk5JEp7NGI6pE8NJA8F6hD6K2YgVSLtTUFXrsCJDE_GqWHEfbhoYYBQVxXaVQjedoqLdk9Y8BPpsaoHU4Mwe4mg97VQZuPvHG3vdo1rm8EsAhcMwkYwqbX7rAYv4rH6s48Q2NGQ5GiCdm4XZ_Qrrk9FNAHrphiHArY5Q2V1MMrBhTigqDrf0GVVsGMQttyhYFV1KlTI6NGRSv4G3DFFiwMApLdFYiu4vx3jeDC9H_jF6XbXTkUAYo');"></div>
+<div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg rounded-tl-none border border-slate-100 dark:border-slate-700">
+<div class="flex items-center gap-2 mb-1">
+<span class="font-semibold text-slate-900 dark:text-white text-xs">Mike Sullivan</span>
+<span class="text-xs text-slate-400">Oct 24, 11:30 AM</span>
+</div>
+<p class="text-slate-600 dark:text-slate-300">Customer called to confirm shipping address change. Updated successfully.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Customer & Timeline -->
+<div class="lg:col-span-1 space-y-8">
+<!-- Customer Details -->
+<div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a0f12] shadow-sm">
+<div class="p-6 border-b border-slate-200 dark:border-slate-800">
+<h3 class="text-base font-semibold text-slate-900 dark:text-white">Customer Details</h3>
+</div>
+<div class="p-6 space-y-6">
+<div class="flex items-start gap-4">
+<div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white">Jane Doe</h4>
+<a class="text-sm text-primary hover:underline block mt-0.5" href="mailto:jane.doe@example.com">jane.doe@example.com</a>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">+1 (555) 123-4567</p>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Shipping Address</p>
+<p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                                                123 Beauty Lane<br/>
+                                                Apt 4B<br/>
+                                                Paris, 75001<br/>
+                                                France
+                                            </p>
+</div>
+<div>
+<p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Billing Address</p>
+<p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                                                Same as shipping address
+                                            </p>
+</div>
+<div>
+<p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Payment Method</p>
+<div class="flex items-center gap-2">
+<div class="bg-slate-100 dark:bg-slate-800 rounded px-2 py-1">
+<span class="font-bold text-slate-700 dark:text-slate-300 text-xs tracking-wider">VISA</span>
+</div>
+<span class="text-sm text-slate-700 dark:text-slate-300">•••• 4242</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Timeline -->
+<div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a0f12] shadow-sm">
+<div class="p-6 border-b border-slate-200 dark:border-slate-800">
+<h3 class="text-base font-semibold text-slate-900 dark:text-white">Order Timeline</h3>
+</div>
+<div class="p-6">
+<div class="relative pl-4 border-l-2 border-slate-200 dark:border-slate-800 space-y-8">
+<!-- Active Step -->
+<div class="relative">
+<span class="absolute -left-[21px] top-1 h-3.5 w-3.5 rounded-full border-[3px] border-white dark:border-[#1a0f12] bg-amber-500 ring-2 ring-amber-100 dark:ring-amber-900/50"></span>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Processing</span>
+<span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Order is being packed</span>
+</div>
+</div>
+<!-- Completed Step -->
+<div class="relative">
+<span class="absolute -left-[21px] top-1 h-3.5 w-3.5 rounded-full border-[3px] border-white dark:border-[#1a0f12] bg-primary"></span>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Payment Verified</span>
+<span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Oct 24, 2023 - 10:05 AM</span>
+</div>
+</div>
+<!-- Completed Step -->
+<div class="relative">
+<span class="absolute -left-[21px] top-1 h-3.5 w-3.5 rounded-full border-[3px] border-white dark:border-[#1a0f12] bg-primary"></span>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Order Placed</span>
+<span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Oct 24, 2023 - 10:00 AM</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800/30 px-6 py-4 border-t border-slate-200 dark:border-slate-800 rounded-b-xl">
+<button class="w-full text-center text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                                        View Full History
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

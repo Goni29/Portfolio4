@@ -1,0 +1,133 @@
+﻿77:             setMessage(result.error ?? t("濡쒓렇?몄뿉 ?ㅽ뙣?덉뒿?덈떎.", "Unable to sign in."));
+82:             setMessage(t("愿由ъ옄 怨꾩젙???꾩슂?⑸땲??", "Admin account is required."));
+90:           <p className="text-xs uppercase tracking-[0.2em] text-[#e6194c] font-bold">{t("愿由ъ옄", "Admin")}</p>
+91:           <h1 className="text-4xl font-semibold tracking-tight text-slate-900 mt-2">{t("嚥≪뮄???, "Sign In")}</h1>
+93:         <InputField label={t("??李??, "Email")} value={email} onChange={setEmail} />
+94:         <InputField label={t("鍮꾨?踰덊샇", "Password")} value={password} onChange={setPassword} />
+96:           {t("嚥≪뮄???, "Sign In")}
+108:     pending: { ko: "??疫?, en: "Pending" },
+109:     processing: { ko: "筌ｌ꼶??餓?, en: "Processing" },
+110:     shipped: { ko: "獄쏄퀣??餓?, en: "Shipped" },
+111:     delivered: { ko: "獄쏄퀣???袁⑥┷", en: "Delivered" },
+124:         <SummaryCard label={t("二쇰Ц", "Orders")} value={String(db.orders.length)} href="/admin/orders" />
+125:         <SummaryCard label={t("怨좉컼", "Customers")} value={String(users.length)} href="/admin/customers" />
+126:         <SummaryCard label={t("寃???湲?由щ럭", "Pending Reviews")} value={String(pendingReviews.length)} href="/admin/reviews" />
+131:           <h2 className="text-xl font-semibold text-slate-900">{t("理쒓렐 二쇰Ц", "Recent Orders")}</h2>
+142:             {db.orders.length === 0 && <p className="text-sm text-slate-500">{t("二쇰Ц ?곗씠?곌? ?놁뒿?덈떎.", "No orders yet.")}</p>}
+147:           <h2 className="text-xl font-semibold text-slate-900">{t("??곸겫 筌왖??, "Operational Flags")}</h2>
+149:             <Row label={t("誘멸껐??二쇰Ц", "Unpaid Orders")} value={String(unpaidOrders.length)} />
+151:             <Row label={t("寃???湲?由щ럭", "Draft Reviews")} value={String(pendingReviews.length)} />
+152:             <Row label={t("?쒖꽦 荑좏룿", "Active Coupons")} value={String(db.coupons.filter((coupon) => coupon.active).length)} />
+230:           <InputField label={t("??쀫?筌?, "Name")} value={form.name} onChange={(value) => setForm((prev) => ({ ...prev, name: value }))} />
+233:           label={t("吏㏃? ?ㅻ챸", "Short Description")}
+238:           <InputField label={t("揶쎛野?, "Price")} value={form.price} onChange={(value) => setForm((prev) => ({ ...prev, price: value }))} />
+240:             <label className="text-xs uppercase tracking-[0.15em] font-semibold text-slate-500">{t("移댄뀒怨좊━", "Category")}</label>
+246:               <option value="cleanser">{t("?대젋?", "Cleanser")}</option>
+248:               <option value="moisturizer">{t("紐⑥씠?ㅼ쿂?쇱씠?", "Moisturizer")}</option>
+249:               <option value="sunscreen">{t("?좎뒪?щ┛", "Sunscreen")}</option>
+250:               <option value="mask">{t("筌띾뜆???, "Mask")}</option>
+255:             label={t("而щ젆??csv)", "Collections (csv)")}
+260:         <InputField label={t("?대?吏 URL", "Image URL")} value={form.image} onChange={(value) => setForm((prev) => ({ ...prev, image: value }))} />
+267:               {t("痍⑥냼", "Cancel")}
+350:         <h2 className="text-xl font-semibold text-slate-900">{editingSlug ? t("而щ젆???섏젙", "Edit Collection") : t("?醫됲뇣 ?뚎됱젂??, "New Collection")}</h2>
+360:         <InputField label={t("?덉뼱濡??대?吏 URL", "Hero Image URL")} value={form.heroImage} onChange={(value) => setForm((prev) => ({ ...prev, heroImage: value }))} />
+362:           label={t("?곹뭹 ?щ윭洹?csv)", "Product Slugs (csv)")}
+373:         <h2 className="text-xl font-semibold text-slate-900">{t("?袁⑷퍥 ?뚎됱젂??, "All Collections")}</h2>
+416:     pending: { ko: "??疫?, en: "Pending" },
+417:     processing: { ko: "筌ｌ꼶??餓?, en: "Processing" },
+418:     shipped: { ko: "獄쏄퀣??餓?, en: "Shipped" },
+419:     delivered: { ko: "獄쏄퀣???袁⑥┷", en: "Delivered" },
+423:     pending: { ko: "??疫?, en: "Pending" },
+424:     paid: { ko: "?袁⑥┷", en: "Paid" },
+464:     return <EmptyState title={t("二쇰Ц???놁뒿?덈떎", "No orders")} body={t("寃곗젣媛 ?꾨즺?섎㈃ 二쇰Ц???ш린???쒖떆?⑸땲??", "Orders will appear here after checkout.")} />;
+501:       ? t("筌ㅼ뮄??30??, "Last 30 Days")
+503:         ? t("筌ㅼ뮄??30??, "Last 30 Days")
+504:         : t("筌ㅼ뮄??7??, "Last 7 Days");
+524:             placeholder={t("雅뚯눖揆 野꺜??, "Search orders")}
+548:               <option value="30d">{t("筌ㅼ뮄??30??, "Last 30 Days")}</option>
+549:               <option value="7d">{t("筌ㅼ뮄??7??, "Last 7 Days")}</option>
+550:               <option value="all">{t("?꾩껜 湲곌컙", "All time")}</option>
+586:             {t("二쇰Ц ?앹꽦", "Create Order")}
+596:                 <th className="px-8 py-5 font-medium w-32">{t("二쇰Ц 踰덊샇", "Order ID")}</th>
+597:                 <th className="px-8 py-5 font-medium w-40">{t("雅뚯눖揆??, "Date")}</th>
+598:                 <th className="px-8 py-5 font-medium">{t("怨좉컼", "Customer")}</th>
+600:                 <th className="px-8 py-5 font-medium w-32 text-right">{t("珥앹븸", "Total")}</th>
+601:                 <th className="px-8 py-5 font-medium w-32 text-center">{t("寃곗젣", "Payment")}</th>
+679:                         aria-label={t(`雅뚯눖揆 ${order.id} ?臾믩씜 ??용┛`, `Open actions for ${order.id}`)}
+693:       {pagedOrders.length === 0 && <p className="text-sm text-[#64748B] mt-6">{t("?꾪꽣 議곌굔??留욌뒗 二쇰Ц???놁뒿?덈떎.", "No orders match this filter.")}</p>}
+720:                   ??<span className="font-medium text-[#0F172A]">{filteredOrders.length}</span>椰?餓?" "}
+735:             <nav aria-label={t("??륁뵠筌왖??쇱뵠??, "Pagination")} className="isolate inline-flex -space-x-px">
+769:     pending: { ko: "??疫?, en: "Pending" },
+770:     processing: { ko: "筌ｌ꼶??餓?, en: "Processing" },
+771:     shipped: { ko: "獄쏄퀣??餓?, en: "Shipped" },
+772:     delivered: { ko: "獄쏄퀣???袁⑥┷", en: "Delivered" },
+776:     pending: { ko: "??疫?, en: "Pending" },
+777:     paid: { ko: "?袁⑥┷", en: "Paid" },
+780:     cleanser: "?????",
+781:     serum: "?紐껋쓥",
+783:     sunscreen: "?醫롫뮞????,
+784:     mask: "筌띾뜆???,
+797:     return <EmptyState title={t("二쇰Ц??李얠쓣 ???놁뒿?덈떎", "Order not found")} body={t("?붿껌?섏떊 二쇰Ц ?뺣낫媛 議댁옱?섏? ?딆뒿?덈떎.", "This order does not exist.")} ctaHref="/admin/orders" ctaLabel={t("二쇰Ц 紐⑸줉?쇰줈", "Back to Orders")} />;
+829:                 {t("二쇰Ц", "Orders")}
+833:                 {t("二쇰Ц", "Order")} #{order.id}
+838:                 {t("二쇰Ц", "Order")} #{order.id}
+846:               {t("?臾믩땾??, "Placed on")} {formatDate(order.createdAt, locale)}
+857:               {t("?≪옣 異쒕젰", "Print Invoice")}
+865:                 {t("?怨밴묶 癰궰野?, "Update Status")}
+894:               <h3 className="text-base font-semibold text-slate-900">{t("二쇰Ц ??ぉ", "Order Items")}</h3>
+896:                 {locale === "ko" ? `${lines.length}揶???덀걠` : `${lines.length} Items`}
+932:                   <span>{t("?곹뭹 ?⑷퀎", "Subtotal")}</span>
+936:                   <span>{t("諛곗넚鍮?+ ?멸툑", "Shipping + Tax")}</span>
+947:                   <span className="font-semibold text-slate-900">{t("珥앹븸", "Total")}</span>
+955:             <h3 className="text-base font-semibold text-slate-900 mb-4">{t("?대? 硫붾え", "Internal Notes")}</h3>
+959:                 placeholder={t("??二쇰Ц??????대? 硫붾え瑜?異붽??섏꽭??", "Add an internal note for this order.")}
+981:                 <p className="text-sm text-slate-500">{t("?꾩쭅 ?깅줉???대? 硫붾え媛 ?놁뒿?덈떎.", "No internal notes yet.")}</p>
+988:                         <span className="font-semibold text-slate-900 text-xs">{t("?댁쁺 硫붾え", "Staff Note")}</span>
+1003:               <h3 className="text-base font-semibold text-slate-900">{t("怨좉컼 ?뺣낫", "Customer Details")}</h3>
+1011:                   <h4 className="text-sm font-semibold text-slate-900">{customer?.name ?? t("鍮꾪쉶??怨좉컼", "Guest Customer")}</h4>
+1021:                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t("諛곗넚吏", "Shipping Address")}</p>
+1037:                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t("泥?뎄吏", "Billing Address")}</p>
+1038:                   <p className="text-sm text-slate-700 leading-relaxed">{t("諛곗넚吏? ?숈씪", "Same as shipping address")}</p>
+1041:                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t("寃곗젣 ?섎떒", "Payment Method")}</p>
+1047:                       {paymentStatusLabel(order.paymentStatus)} - {order.couponCode ? `${t("荑좏룿", "Coupon")} ${order.couponCode}` : t("荑좏룿 ?놁쓬", "No coupon")}
+1054:                     placeholder={t("?≪옣踰덊샇", "Tracking number")}
+1074:                     {t("寃곗젣 ?꾨즺 泥섎━", "Mark as paid")}
+1083:               <h3 className="text-base font-semibold text-slate-900">{t("雅뚯눖揆 ???袁⑥뵬??, "Order Timeline")}</h3>
+1091:                     <span className="text-xs text-slate-500 mt-0.5">{t("?꾩옱 二쇰Ц ?곹깭", "Current order state")}</span>
+1097:                     <span className="text-sm font-semibold text-slate-900">{t("寃곗젣", "Payment")} {order.paymentStatus === "paid" ? t("?類ㅼ뵥??, "Verified") : t("??疫?, "Pending")}</span>
+1104:                     <span className="text-sm font-semibold text-slate-900">{t("二쇰Ц ?묒닔", "Order Placed")}</span>
+1116:                 {showFullHistory ? t("?袁⑷퍥 ??????ｋ┛疫?, "Hide Full History") : t("?꾩껜 ?대젰 蹂닿린", "View Full History")}
+1120:                   {t("??곷꽊??, "Tracking")}: {order.trackingNumber || t("??疫?, "Pending")} | {t("?섎텋", "Refund")}: {order.refundRequested ? t("?遺욧퍕??, "Requested") : t("?놁쓬", "No")}
+1138:       <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t("怨좉컼", "Customers")}</h1>
+1149:                   {t("二쇰Ц", "Orders")}: {db.orders.filter((order) => order.userId === user.id).length}
+1152:                   {t("媛?낆씪", "Joined")}: {formatDate(user.createdAt, locale)}
+1157:           {users.length === 0 && <p className="text-sm text-slate-500">{t("?깅줉??怨좉컼???놁뒿?덈떎.", "No customers found.")}</p>}
+1170:       <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t("由щ럭", "Reviews")}</h1>
+1176:               <p className="text-xs uppercase tracking-[0.12em] text-slate-500">{review.approved ? t("?뱀씤??, "Approved") : t("??疫?, "Pending")}</p>
+1238:           <InputField label={t("?쒕ぉ", "Title")} value={form.title} onChange={(value) => setForm((prev) => ({ ...prev, title: value }))} />
+1242:           <InputField label={t("移댄뀒怨좊━", "Category")} value={form.category} onChange={(value) => setForm((prev) => ({ ...prev, category: value }))} />
+1243:           <InputField label={t("而ㅻ쾭 ?대?吏 URL", "Cover Image URL")} value={form.coverImage} onChange={(value) => setForm((prev) => ({ ...prev, coverImage: value }))} />
+1246:           label={t("愿???곹뭹 ?щ윭洹?csv)", "Related Product Slugs (csv)")}
+1251:           <label className="text-xs uppercase tracking-[0.15em] font-semibold text-slate-500">{t("HTML 蹂몃Ц", "HTML Content")}</label>
+1259:           {t("?袁る뼒??????, "Save Article")}
+1332:       <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t("諛곕꼫", "Banners")}</h1>
+1339:               <option value="hero">{t("硫붿씤", "Hero")}</option>
+1348:               <option value="image">{t("?대?吏", "Image")}</option>
+1360:           <InputField label={t("?쒕툕移댄뵾", "Subheadline")} value={form.subheadline} onChange={(value) => setForm((prev) => ({ ...prev, subheadline: value }))} />
+1363:           <InputField label={t("CTA 臾멸뎄", "CTA Text")} value={form.ctaText} onChange={(value) => setForm((prev) => ({ ...prev, ctaText: value }))} />
+1364:           <InputField label={t("CTA 寃쎈줈", "CTA Href")} value={form.ctaHref} onChange={(value) => setForm((prev) => ({ ...prev, ctaHref: value }))} />
+1367:           {t("獄쏄퀡瑗?????, "Save Banner")}
+1376:                 {(banner.key === "hero" ? t("硫붿씤", "Hero") : t("?쒕툕", "Secondary"))} - {banner.type === "image" ? t("?대?吏", "Image") : t("?곸긽", "Video")}
+1423:       <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t("荑좏룿", "Coupons")}</h1>
+1427:           <InputField label={t("肄붾뱶", "Code")} value={form.code} onChange={(value) => setForm((prev) => ({ ...prev, code: value }))} />
+1437:           <InputField label={t("?醫롮뵥揶?, "Value")} value={form.value} onChange={(value) => setForm((prev) => ({ ...prev, value }))} />
+1438:           <InputField label={t("理쒖냼 二쇰Ц湲덉븸", "Min Subtotal")} value={form.minSubtotal} onChange={(value) => setForm((prev) => ({ ...prev, minSubtotal: value }))} />
+1440:             <label className="text-xs uppercase tracking-[0.15em] font-semibold text-slate-500">{t("筌띾슢利??, "Expires")}</label>
+1454:           {t("?묒쥚猷?????, "Save Coupon")}
+1464:                 {(coupon.type === "percent" ? t("?뺣쪧", "Percent") : t("?뺤븸", "Fixed"))} {coupon.value} - {t("理쒖냼", "min")} {currency(coupon.minSubtotal)}
+1507:         <InputField label={t("?⑥쥒而쇽쭪?????李??, "Support Email")} value={form.supportEmail} onChange={(value) => setForm((prev) => ({ ...prev, supportEmail: value }))} />
+1509:           <InputField label={t("疫꿸퀡??獄쏄퀣?싮뜮?, "Shipping Flat")} value={form.shippingFlat} onChange={(value) => setForm((prev) => ({ ...prev, shippingFlat: value }))} />
+1511:             label={t("臾대즺諛곗넚 湲곗? 湲덉븸", "Free Shipping Threshold")}
+1530:               setMessage(t("?ㅼ젙????λ릺?덉뒿?덈떎.", "Settings saved."));
+1540:               setMessage(t("?곗씠?곌? 珥덇린 ?쒕뱶濡?蹂듭썝?섏뿀?듬땲??", "Data reset to seed."));
+1543:             {t("??뺣굡 ?怨쀬뵠???λ뜃由??, "Reset Seed Data")}

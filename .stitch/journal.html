@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Portfolio - Journal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#e6194c",
+              "background-light": "#fcf8f9",
+              "background-dark": "#211115",
+              "surface-light": "#ffffff",
+              "surface-dark": "#2d1b20",
+              "text-main": "#1b0e11",
+              "text-muted": "#974e60",
+            },
+            fontFamily: {
+              "display": ["Manrope", "sans-serif"],
+              "body": ["Manrope", "sans-serif"],
+              "serif": ["Playfair Display", "serif"],
+            },
+            borderRadius: {
+                "DEFAULT": "0.25rem", 
+                "lg": "0.5rem", 
+                "xl": "0.75rem", 
+                "full": "9999px"
+            },
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-gray-100 font-display selection:bg-primary/20">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<header class="sticky top-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-[#f3e7ea] dark:border-gray-800 transition-all duration-300">
+<div class="max-w-[1440px] mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
+<div class="flex items-center gap-4 flex-1">
+<button class="lg:hidden p-2 -ml-2 text-text-main hover:text-primary transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden lg:flex items-center gap-2 group">
+<span class="material-symbols-outlined text-text-muted text-[20px] group-hover:text-primary transition-colors">search</span>
+<input class="bg-transparent border-none p-0 text-sm focus:ring-0 placeholder:text-text-muted w-24 transition-all focus:w-48 text-text-main dark:text-white font-medium" placeholder="Search" type="text"/>
+</div>
+</div>
+<a class="flex items-center justify-center gap-2 group" href="#">
+<h1 class="font-serif text-3xl font-bold tracking-tight text-text-main dark:text-white group-hover:text-primary transition-colors">Portfolio</h1>
+</a>
+<div class="flex items-center justify-end gap-6 flex-1">
+<nav class="hidden lg:flex items-center gap-6 mr-4">
+<a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors" href="#">Shop</a>
+<a class="text-xs font-bold uppercase tracking-widest text-primary border-b border-primary pb-0.5" href="#">Journal</a>
+<a class="text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors" href="#">About</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="text-text-main dark:text-white hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined text-[22px]">shopping_bag</span>
+<span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">2</span>
+</button>
+<button class="text-text-main dark:text-white hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">person</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-grow">
+<section class="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:py-12">
+<div class="relative w-full overflow-hidden rounded-xl bg-surface-dark group cursor-pointer aspect-[4/5] sm:aspect-[16/9] lg:aspect-[21/9]">
+<div class="absolute inset-0 transition-transform duration-700 group-hover:scale-105 bg-cover bg-center" data-alt="Close up of water ripples and droplets on skin" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBIIegpa9qQj6hbUv14ImdJpSIoOGF5iHMpf0ZOlXhB9g-saXkjqyDe4Fg4A-gIEHrdH4qljrMI24eTSjuumcKOUy5kAtjLc5meeEzWj3jmGiYXfcHu2S2qgmHQU7hDB4ZMO6jByz16oJh6DTYJ32eK21bE8gvNgQ4TBAnNpPIaU2qs0GX1YGKn9G-8cRAc-kUq6rSd5GDjqfewHWoBXO5cfCKj8fyMfiobeDSKP-oBrrzdfEGek7LzYIgPEpJ-wtZC2ycmEA1BpOM');">
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+<div class="absolute bottom-0 left-0 w-full p-6 sm:p-10 lg:p-16 flex flex-col items-start gap-4 sm:gap-6">
+<span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md text-white text-xs font-bold tracking-widest uppercase rounded-full border border-white/10">
+                            Featured Story
+                        </span>
+<h1 class="font-serif text-3xl sm:text-5xl lg:text-6xl font-medium text-white leading-tight max-w-4xl tracking-tight">
+                            The Science of Hydration: <br class="hidden sm:block"/>
+<span class="font-serif italic font-light opacity-90">Why Hyaluronic Acid is just the beginning.</span>
+</h1>
+<p class="text-gray-200 max-w-xl text-sm sm:text-base leading-relaxed line-clamp-2 sm:line-clamp-none font-light">
+                            Dive deep into the molecular structure of moisture retention and discover why our new formula is revolutionizing the industry standard for dry skin treatment.
+                        </p>
+<button class="mt-2 flex items-center gap-2 text-white font-bold text-sm tracking-wide border-b border-primary pb-1 hover:text-primary transition-colors uppercase">
+                            Read Full Story <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</section>
+<section class="sticky top-[80px] z-40 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm border-b border-[#f3e7ea] dark:border-gray-800">
+<div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-4">
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+<button class="shrink-0 px-6 py-2 rounded-full bg-text-main dark:bg-white text-white dark:text-background-dark text-xs font-bold uppercase tracking-wider transition-all shadow-sm">
+                            All Stories
+                        </button>
+<button class="shrink-0 px-6 py-2 rounded-full border border-gray-200 dark:border-gray-700 text-text-muted dark:text-gray-400 hover:border-primary hover:text-primary text-xs font-bold uppercase tracking-wider transition-all bg-transparent">
+                            Skincare
+                        </button>
+<button class="shrink-0 px-6 py-2 rounded-full border border-gray-200 dark:border-gray-700 text-text-muted dark:text-gray-400 hover:border-primary hover:text-primary text-xs font-bold uppercase tracking-wider transition-all bg-transparent">
+                            Lifestyle
+                        </button>
+<button class="shrink-0 px-6 py-2 rounded-full border border-gray-200 dark:border-gray-700 text-text-muted dark:text-gray-400 hover:border-primary hover:text-primary text-xs font-bold uppercase tracking-wider transition-all bg-transparent">
+                            Science
+                        </button>
+<button class="shrink-0 px-6 py-2 rounded-full border border-gray-200 dark:border-gray-700 text-text-muted dark:text-gray-400 hover:border-primary hover:text-primary text-xs font-bold uppercase tracking-wider transition-all bg-transparent">
+                            Interviews
+                        </button>
+<button class="shrink-0 px-6 py-2 rounded-full border border-gray-200 dark:border-gray-700 text-text-muted dark:text-gray-400 hover:border-primary hover:text-primary text-xs font-bold uppercase tracking-wider transition-all bg-transparent">
+                            Events
+                        </button>
+</div>
+</div>
+</section>
+<section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-12">
+<div class="columns-1 sm:columns-2 lg:columns-3 gap-8 space-y-8">
+<article class="break-inside-avoid group cursor-pointer flex flex-col gap-4">
+<div class="relative w-full aspect-[3/4] overflow-hidden rounded-sm bg-gray-200 dark:bg-gray-800">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="Woman doing morning skincare routine in sunlight" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCgsl_2HTDXglyMBerBIuYun3CFfsJwyKdJcUMeKwXJjHru4bk31K_Yo7ivzTpd-Ol5J5nfP4qHzF8ga7f2TW8dgGqxlrhpKGY-BlhFkcID-DgnLFFA_cztWoX9KnYZEBdcFSYBvg2KIWXkSIxZ4Sht1IryqvQHCSI4NyT0gLMSxGHIgGlehIU8C-LewhKwdhQ1Ou8nO_6WlBQU7Gw1V2wINZR9Iqqw7ffGN_S5AFwkMaX2ekC1xlOHtLsdTE1BgBvP9L5g-3NC6Iw');">
+</div>
+</div>
+<div class="flex flex-col gap-2 pt-2">
+<div class="flex items-center gap-3 text-[10px] font-bold tracking-[0.2em] text-text-muted uppercase">
+<span class="text-primary">Lifestyle</span>
+<span class="size-0.5 bg-gray-400 rounded-full"></span>
+<span>Oct 12</span>
+</div>
+<h3 class="font-serif text-2xl font-medium leading-snug group-hover:text-primary transition-colors">
+                                Morning Rituals with our Founder
+                            </h3>
+<p class="text-sm text-text-main/70 dark:text-gray-400 line-clamp-2 leading-relaxed font-light">
+                                Discover the 15-minute morning routine that started it all, blending mindfulness with clinical skincare.
+                            </p>
+</div>
+</article>
+<article class="break-inside-avoid group cursor-pointer flex flex-col gap-4">
+<div class="relative w-full aspect-[4/3] overflow-hidden rounded-sm bg-gray-200 dark:bg-gray-800">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="Minimalist arrangement of skincare bottles on stone" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCajrXDrvqoz2mfp9JHioeR0wCSgfQ4h0KY_lUpMDn5xRMX7DR93ZAVikd-XiHtBmDEc3YuhXhaL_z5tD7mVihYsraPHMErK2f-XTsyFdYT-73e0VwPaPJJ8tSiXcLl1yfvuqrXb4XKlYNk_r5THhNT1TfttzKwFCjwSjs4_irXKZ5ZY4mKC4o2roFE_9h3yutlfQftj_WJgXx3HytQPFKbrDA6l38Z6-xaAA-N-o0usy1IgMCpaTtWK_L7_E-8Rxt-w6fDF3Y4LSo');">
+</div>
+</div>
+<div class="flex flex-col gap-2 pt-2">
+<div class="flex items-center gap-3 text-[10px] font-bold tracking-[0.2em] text-text-muted uppercase">
+<span class="text-primary">Education</span>
+<span class="size-0.5 bg-gray-400 rounded-full"></span>
+<span>Oct 10</span>
+</div>
+<h3 class="font-serif text-2xl font-medium leading-snug group-hover:text-primary transition-colors">
+                                5 Steps to Glass Skin
+                            </h3>
+<p class="text-sm text-text-main/70 dark:text-gray-400 line-clamp-2 leading-relaxed font-light">
+                                Achieve that coveted dewy look with these simple, dermatologist-approved layering techniques.
+                            </p>
+</div>
+</article>
+<article class="break-inside-avoid group cursor-pointer flex flex-col gap-4 p-8 bg-surface-light dark:bg-surface-dark rounded-sm border border-[#f3e7ea] dark:border-gray-800 transition-all hover:shadow-lg hover:border-primary/20">
+<div class="flex flex-col gap-5">
+<div class="size-10 rounded-full bg-primary/5 flex items-center justify-center text-primary mb-2">
+<span class="material-symbols-outlined">science</span>
+</div>
+<div class="flex items-center gap-3 text-[10px] font-bold tracking-[0.2em] text-text-muted uppercase">
+<span class="text-primary">Science</span>
+<span class="size-0.5 bg-gray-400 rounded-full"></span>
+<span>Oct 05</span>
+</div>
+<h3 class="font-serif text-2xl italic font-medium leading-snug group-hover:text-primary transition-colors">
+                                "Ingredient Spotlight: Why Bakuchiol is the Retinol Alternative you need."
+                            </h3>
+<p class="text-sm text-text-main/80 dark:text-gray-300 leading-relaxed font-light">
+                                For those with sensitive skin, Bakuchiol offers a plant-based alternative that delivers similar anti-aging benefits without the harsh irritation often associated with traditional retinoids. We break down the clinical studies.
+                            </p>
+<span class="text-primary text-xs font-bold mt-2 flex items-center gap-1 uppercase tracking-wider">Read Analysis <span class="material-symbols-outlined text-[14px]">arrow_forward</span></span>
+</div>
+</article>
+<article class="break-inside-avoid group cursor-pointer flex flex-col gap-4">
+<div class="relative w-full aspect-[3/5] overflow-hidden rounded-sm bg-gray-200 dark:bg-gray-800">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="Model walking on a runway during fashion week" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAhk7iO_7cg3T7tS5CSOlBe5Ced9zqd_CsabLv_LMELa6Bvz7KLpnCYUt4hK9CG6e0fGk1JgZcPvR1cTxQeFB3q1JeWHf1c1fxnE3ocI5asa6vdGem9w3JyFw0xx8p1DfDkNGRk-PnNlEwcfK-3YUAUnaM6S43pQHm6a7UCWa92g383l2itMSAEGaOQY48RCESsB6XDseIJ7d7OQbWyDanWLTmx8RHl_YKWs5NNixnsOExXZvzvsJOkfbWd7aC6mCH-PAKzx2ebRe0');">
+</div>
+<div class="absolute top-4 right-4 bg-white/90 dark:bg-black/80 backdrop-blur px-3 py-1 rounded-sm text-[10px] font-bold uppercase tracking-widest border border-black/5">
+                                Dispatch
+                            </div>
+</div>
+<div class="flex flex-col gap-2 pt-2">
+<div class="flex items-center gap-3 text-[10px] font-bold tracking-[0.2em] text-text-muted uppercase">
+<span class="text-primary">Event</span>
+<span class="size-0.5 bg-gray-400 rounded-full"></span>
+<span>Oct 08</span>
+</div>
+<h3 class="font-serif text-2xl font-medium leading-snug group-hover:text-primary transition-colors">
+                                Paris Fashion Week Dispatch
+                            </h3>
+<p class="text-sm text-text-main/70 dark:text-gray-400 line-clamp-2 leading-relaxed font-light">
+                                Highlights and beauty trends straight from the runway. What to expect for the upcoming Spring season.
+                            </p>
+</div>
+</article>
+<article class="break-inside-avoid group cursor-pointer flex flex-col gap-4">
+<div class="relative w-full aspect-square overflow-hidden rounded-sm bg-gray-200 dark:bg-gray-800">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="Portrait of a woman with glowing skin looking at camera" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDnAYI_XjVBJj-nYkUzHfSeZ2UI8NZCBhZbwwGFjBk4lNesGqs_xvajt7tlllWMuGHCNnJvEbkPTmVmiBMxM_NmH8_J3QEIQdgIfOr02eiZuHMfQTCXcox5SlsIANeuHRcg26M3-wsZPIzkbKX3kaHZisitIH8nvXsoCuZQnei399xPnpoNFAiW7nVh5-hQJerniusMra7fIdeqhry-FXdVKFTFnt0ci2nSGfz7uymn-4zkbVUt_IqPwOVZ15Ad9I2-v_rKaEGCHMw');">
+</div>
+</div>
+<div class="flex flex-col gap-2 pt-2">
+<div class="flex items-center gap-3 text-[10px] font-bold tracking-[0.2em] text-text-muted uppercase">
+<span class="text-primary">Interviews</span>
+<span class="size-0.5 bg-gray-400 rounded-full"></span>
+<span>Sep 28</span>
+</div>
+<h3 class="font-serif text-2xl font-medium leading-snug group-hover:text-primary transition-colors">
+                                In Conversation with Dr. Elena Ross
+                            </h3>
+<p class="text-sm text-text-main/70 dark:text-gray-400 line-clamp-2 leading-relaxed font-light">
+                                The leading dermatologist answers your most burning questions about SPF and blue light protection.
+                            </p>
+</div>
+</article>
+<article class="break-inside-avoid group cursor-pointer flex flex-col relative overflow-hidden rounded-sm bg-background-dark text-white min-h-[400px]">
+<div class="absolute inset-0 bg-gradient-to-br from-gray-900 to-[#1a0f12] opacity-100"></div>
+<div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+<div class="relative p-10 flex flex-col h-full justify-between gap-12 z-10">
+<div class="flex justify-between items-start">
+<span class="text-primary font-bold tracking-[0.2em] text-[10px] uppercase">New Arrival</span>
+<span class="material-symbols-outlined text-white/40">star</span>
+</div>
+<div class="flex flex-col gap-6">
+<h3 class="font-serif text-3xl font-medium leading-tight text-white">
+                                     The Night Reset Serum is Here.
+                                 </h3>
+<p class="text-white/70 text-sm font-light leading-relaxed">
+                                     Recharge your skin while you sleep. Our latest formula is now available.
+                                 </p>
+<button class="w-full py-4 bg-white hover:bg-white/90 text-background-dark font-bold text-xs uppercase tracking-widest rounded-sm transition-colors mt-2">
+                                     Shop Now
+                                 </button>
+</div>
+</div>
+</article>
+<article class="break-inside-avoid group cursor-pointer flex flex-col gap-4">
+<div class="relative w-full aspect-[16/9] overflow-hidden rounded-sm bg-gray-200 dark:bg-gray-800">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="Yoga mat and tea cup in a peaceful room" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCyqLTCZmplDu4Q3C6wkYH0Lg8mI5yEWNI-houSQJtr5DnO7blXbW1E5oq2uwYJvKNtqGa5mFcmNVj3OHbB8_8IuPOusX-v5AowfXN1Dev56Q7gUU6k3dHNq8Z8IfruF7lfqHuYBsFtk_6bxvvxDXsSgWJSiFt8x8SGytSTjZFLmRhrfU15BE3LHN-PWj2t-We-09eMmaN4D8dM5Ckki7ClNKk0JNHH-eo-C05Gbpd-jQuzfGjZOc1WChmC_dVUb4nlZET6A1JoIQo');">
+</div>
+</div>
+<div class="flex flex-col gap-2 pt-2">
+<div class="flex items-center gap-3 text-[10px] font-bold tracking-[0.2em] text-text-muted uppercase">
+<span class="text-primary">Wellness</span>
+<span class="size-0.5 bg-gray-400 rounded-full"></span>
+<span>Sep 15</span>
+</div>
+<h3 class="font-serif text-2xl font-medium leading-snug group-hover:text-primary transition-colors">
+                                Digital Detox: Reclaiming Your Evenings
+                            </h3>
+<p class="text-sm text-text-main/70 dark:text-gray-400 line-clamp-2 leading-relaxed font-light">
+                                Why putting your phone away 2 hours before bed changes your skin health and sleep quality.
+                            </p>
+</div>
+</article>
+</div>
+<div class="mt-20 flex justify-center">
+<button class="px-10 py-3 border border-gray-300 dark:border-gray-700 rounded-full text-xs font-bold uppercase tracking-widest text-text-main dark:text-white hover:border-primary hover:text-primary transition-all hover:px-12">
+                        Load More Articles
+                    </button>
+</div>
+</section>
+<section class="bg-[#fcf8f9] dark:bg-surface-dark py-24 px-4 mt-12 border-t border-[#f3e7ea] dark:border-gray-800">
+<div class="max-w-xl mx-auto text-center flex flex-col items-center gap-6">
+<span class="text-xs font-bold uppercase tracking-[0.3em] text-primary">Newsletter</span>
+<h2 class="font-serif text-4xl sm:text-5xl font-medium text-text-main dark:text-white tracking-tight">
+                        The Portfolio Edit
+                    </h2>
+<p class="text-text-main/60 dark:text-gray-300 font-light text-lg leading-relaxed">
+                        Subscribe for weekly beauty insights, exclusive offers, and science-backed advice delivered to your inbox.
+                    </p>
+<div class="w-full mt-6 relative">
+<div class="flex flex-col sm:flex-row items-center gap-4">
+<input class="w-full bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm focus:ring-0 focus:border-primary placeholder:text-text-muted/50 rounded-sm" placeholder="Enter your email address" type="email"/>
+<button class="w-full sm:w-auto bg-text-main dark:bg-white text-white dark:text-background-dark font-bold uppercase tracking-widest px-8 py-3 rounded-sm transition-colors text-xs hover:bg-primary dark:hover:bg-gray-200 whitespace-nowrap">
+                                Subscribe
+                            </button>
+</div>
+<p class="text-[10px] text-text-muted mt-4 uppercase tracking-wider">By subscribing, you agree to our Privacy Policy.</p>
+</div>
+</div>
+</section>
+</main>
+<footer class="bg-surface-light dark:bg-background-dark border-t border-[#f3e7ea] dark:border-gray-800 pt-20 pb-10 px-6 lg:px-10">
+<div class="max-w-[1440px] mx-auto">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
+<div class="lg:col-span-4 flex flex-col gap-6 pr-0 lg:pr-12">
+<a class="block" href="#">
+<h2 class="font-serif text-3xl font-bold tracking-tight text-text-main dark:text-white">Portfolio</h2>
+</a>
+<p class="text-sm text-text-main/70 dark:text-gray-400 font-light leading-relaxed max-w-sm">
+                            Modern skincare for the scientifically minded. We bridge the gap between clinical efficacy and the luxury experience, delivering clean, effective, and beautiful results.
+                        </p>
+<div class="flex gap-4 mt-2">
+<a class="size-8 rounded-full border border-gray-200 dark:border-gray-700 flex items-center justify-center text-text-main dark:text-white hover:bg-text-main hover:text-white dark:hover:bg-white dark:hover:text-background-dark transition-all" href="#">
+<svg aria-hidden="true" class="size-4" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" fill-rule="evenodd"></path></svg>
+</a>
+<a class="size-8 rounded-full border border-gray-200 dark:border-gray-700 flex items-center justify-center text-text-main dark:text-white hover:bg-text-main hover:text-white dark:hover:bg-white dark:hover:text-background-dark transition-all" href="#">
+<svg aria-hidden="true" class="size-4" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772 4.902 4.902 0 011.772-1.153c.636-.247 1.363-.416 2.427-.465C9.673 2.013 10.03 2 12.315 2zm-1.087 14.276c-3.889 0-7.053-3.164-7.053-7.053S7.339 2.17 11.228 2.17c3.889 0 7.053 3.164 7.053 7.053s-3.164 7.053-7.053 7.053zM12 7a5 5 0 100 10 5 5 0 000-10z" fill-rule="evenodd"></path></svg>
+</a>
+<a class="size-8 rounded-full border border-gray-200 dark:border-gray-700 flex items-center justify-center text-text-main dark:text-white hover:bg-text-main hover:text-white dark:hover:bg-white dark:hover:text-background-dark transition-all" href="#">
+<svg aria-hidden="true" class="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"></path></svg>
+</a>
+</div>
+</div>
+<div class="lg:col-span-2 col-span-1">
+<h4 class="font-bold text-xs uppercase tracking-widest mb-6 text-text-main dark:text-white">Shop</h4>
+<ul class="flex flex-col gap-3 text-sm text-text-muted dark:text-gray-400 font-medium">
+<li><a class="hover:text-primary transition-colors" href="#">Bestsellers</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Cleansers</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Serums</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Moisturizers</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Sets &amp; Gifts</a></li>
+</ul>
+</div>
+<div class="lg:col-span-2 col-span-1">
+<h4 class="font-bold text-xs uppercase tracking-widest mb-6 text-text-main dark:text-white">Learn</h4>
+<ul class="flex flex-col gap-3 text-sm text-text-muted dark:text-gray-400 font-medium">
+<li><a class="hover:text-primary transition-colors" href="#">Journal</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Ingredient Glossary</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Skin Consultation</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Our Science</a></li>
+</ul>
+</div>
+<div class="lg:col-span-2 col-span-1">
+<h4 class="font-bold text-xs uppercase tracking-widest mb-6 text-text-main dark:text-white">Company</h4>
+<ul class="flex flex-col gap-3 text-sm text-text-muted dark:text-gray-400 font-medium">
+<li><a class="hover:text-primary transition-colors" href="#">About Us</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Sustainability</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Careers</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Press</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Contact</a></li>
+</ul>
+</div>
+<div class="lg:col-span-2 col-span-1">
+<h4 class="font-bold text-xs uppercase tracking-widest mb-6 text-text-main dark:text-white">Support</h4>
+<ul class="flex flex-col gap-3 text-sm text-text-muted dark:text-gray-400 font-medium">
+<li><a class="hover:text-primary transition-colors" href="#">FAQ</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Shipping &amp; Returns</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Track Order</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Store Locator</a></li>
+</ul>
+</div>
+</div>
+<div class="flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-wider text-text-muted border-t border-gray-200 dark:border-gray-800 pt-8">
+<p>© 2023 Portfolio Beauty Inc. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="hover:text-text-main transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-text-main transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-text-main transition-colors" href="#">Accessibility</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+
+</body></html>

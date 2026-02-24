@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Portfolio - The Nocturnal Renewal Complex</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e6194c",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#211115",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display transition-colors duration-200">
+<header class="sticky top-0 z-50 w-full bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-primary/10 transition-colors duration-200">
+<div class="max-w-[1440px] mx-auto px-6 h-20 flex items-center justify-between">
+<div class="flex items-center gap-4 flex-1">
+<button class="md:hidden p-2 -ml-2 text-slate-900 dark:text-white hover:text-primary transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-sm font-medium hover:text-primary transition-colors uppercase tracking-wide" href="#">Shop</a>
+<a class="text-sm font-medium hover:text-primary transition-colors uppercase tracking-wide" href="#">About</a>
+<a class="text-sm font-medium hover:text-primary transition-colors uppercase tracking-wide" href="#">Journal</a>
+</div>
+</div>
+<a class="flex flex-col items-center justify-center gap-0 group absolute left-1/2 -translate-x-1/2" href="#">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary !text-2xl group-hover:rotate-12 transition-transform duration-500">spa</span>
+<h2 class="text-2xl font-bold tracking-[0.2em] uppercase font-display text-slate-900 dark:text-white">Portfolio</h2>
+</div>
+</a>
+<div class="flex items-center justify-end gap-2 flex-1">
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-900 dark:text-white">
+<span class="material-symbols-outlined !text-[20px]">search</span>
+</button>
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-900 dark:text-white">
+<span class="material-symbols-outlined !text-[20px]">person</span>
+</button>
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative text-slate-900 dark:text-white">
+<span class="material-symbols-outlined !text-[20px]">shopping_bag</span>
+<span class="absolute top-1.5 right-1.5 size-1.5 bg-primary rounded-full"></span>
+</button>
+</div>
+</div>
+</header>
+<main class="max-w-[1440px] mx-auto">
+<div class="lg:hidden px-6 py-4 flex gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+<a class="hover:text-primary" href="#">Home</a> /
+        <a class="hover:text-primary" href="#">Skincare</a> /
+        <span class="text-slate-900 dark:text-slate-200">Serums</span>
+</div>
+<div class="lg:flex min-h-screen">
+<div class="w-full lg:w-1/2 lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] overflow-y-auto no-scrollbar bg-white dark:bg-background-dark">
+<div class="grid gap-1">
+<div class="relative w-full aspect-[4/5] bg-slate-100 dark:bg-slate-800 overflow-hidden group">
+<img alt="Luxury serum bottle on a minimalist stone pedestal" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYq3sBwemj9sF7Zm7PA1FpwFRgUC_XP_dr2XWLg51lXte2cJs37EQt1ycq2TKQV8eYMEN-VADENltqbl-LdRylSnh_ty8j9eTFroj929bK_JRGG2H2fO8YkUZpDKeUUGQrMpczpLauVididFF0yv9WGeH-Di7Nyts5ZzfTB9kVvq2MFR7rbGpJ02CFFqXUzJmk3L4KN7VP4eE7bI8_xfkwp7DKBVCxZ6WqdQinYoiV3AXErZyha9smFV8Qbefb3YfXe-wPwqKTN1U"/>
+</div>
+<div class="grid grid-cols-2 gap-1">
+<div class="relative aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden group">
+<img alt="Cream texture smear macro shot showing rich consistency" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjV1lSFnrXXHGuwpSPXJpx6mtRyfI6TWwIHzcdIa8KcdnP6913gCofSYchtwp-qBmGodmbTiVBX0SyBO0UINbaXpqaB31dPutjpeZra3MFfVuiP_sJ4yvUttXp7qrmDv7cDs-OrGFwPeCYkvfucQ_IZNwrRtd8R2a__d2y7DFJPDeFwPMKBUrXZf0vjuGa2zZOb54XYMXUgKGeH9-5KQWCOnYXszcVIeBq-nkUPdhvDmGNbgord205N1b2AbRI3PeOGirc3OmwZrY"/>
+</div>
+<div class="relative aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden group">
+<img alt="Product bottle in a modern marble bathroom setting" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0AlmY9RZiIIdBx6It4_f5800ss7W1GBdasYggJQpYCoZSApVugrOoMhHmpV_vcdX696zsO8i4OnuvyysSiEJk9SkcDz77eBFRjw9IGJucmqw-fTGRMx1EQo6YekkdiIxz3lf2pBLgwgHZK8SI1h7ceI5WcB16oc8_3KXUJVWs7OlSMGMEXA4rD2V-YDhQnK3byHuHFSuOASk1fXgxFgdWjlcjvJQTwE31MaJo-fACjjraANOUErYEoWbJp_e5NMMhsklKEgghzp8"/>
+</div>
+</div>
+<div class="relative w-full aspect-[16/9] bg-slate-100 dark:bg-slate-800 overflow-hidden group">
+<img alt="Artistic arrangement of raw botanical ingredients and flowers" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAt5mogCIe_VIZOkv4hiNN8EF5ElJ9kx4DNdC_McMEoEo1aYKWOUWxlzoaCn3iZyLgyQgwOy-EaUoHfehQ9qTG4ztN9gngGrbTPO1O2KcGwuXJA7NRiOhfSG8eTdTZJiSOAMPqGij7p9JuYIMOJ14cTIcwzZQoSjzv6vKQ_yKm2beuHU1Mfus89V09GuZky_b9FBHByyXRiKo0TteIRuLRlwuDj6cqzOpKR8-Jks7xqRyj6aJ4-p466IRkW1kb9GzbLRphjAQR28kg"/>
+<div class="absolute bottom-4 left-4 bg-white/80 dark:bg-black/60 backdrop-blur px-3 py-1 rounded text-xs font-bold uppercase tracking-widest">Natural Origin</div>
+</div>
+</div>
+</div>
+<div class="w-full lg:w-1/2 px-6 py-8 lg:px-16 lg:py-12 flex flex-col gap-10">
+<div class="flex flex-col gap-4">
+<div class="hidden lg:flex gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+<a class="hover:text-primary transition-colors" href="#">Home</a>
+<span>/</span>
+<a class="hover:text-primary transition-colors" href="#">Skincare</a>
+<span>/</span>
+<span class="text-slate-900 dark:text-slate-200">Serums</span>
+</div>
+<div>
+<h1 class="text-3xl lg:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-2 font-display">
+                        The Nocturnal <br/>Renewal Complex
+                    </h1>
+<p class="text-lg text-slate-500 dark:text-slate-400 font-light">Advanced Night Recovery Treatment</p>
+</div>
+<div class="flex items-baseline gap-4 mt-2">
+<span class="text-2xl font-semibold text-slate-900 dark:text-white">$185.00</span>
+<div class="flex items-center gap-1 text-primary text-sm font-medium">
+<span class="material-symbols-outlined !text-sm">star</span>
+<span class="material-symbols-outlined !text-sm">star</span>
+<span class="material-symbols-outlined !text-sm">star</span>
+<span class="material-symbols-outlined !text-sm">star</span>
+<span class="material-symbols-outlined !text-sm">star_half</span>
+<span class="text-slate-600 dark:text-slate-400 ml-1 underline decoration-primary/30 cursor-pointer">4.8 (124 Reviews)</span>
+</div>
+</div>
+</div>
+<div class="prose dark:prose-invert text-slate-600 dark:text-slate-300 leading-relaxed font-light">
+<p>
+                    Awaken to visibly transformed skin. This potent, velvety serum works in harmony with your skin's natural nightly rhythm to repair, hydrate, and illuminate. Infused with our proprietary bio-fermented complex, it targets signs of aging while you sleep.
+                </p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex items-start gap-3 p-4 rounded-lg bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+<div class="p-2 bg-primary/10 rounded-full text-primary">
+<span class="material-symbols-outlined">local_florist</span>
+</div>
+<div>
+<h4 class="font-bold text-sm text-slate-900 dark:text-white">Rosehip Seed Oil</h4>
+<p class="text-xs text-slate-500 mt-1">Deep hydration &amp; repair</p>
+</div>
+</div>
+<div class="flex items-start gap-3 p-4 rounded-lg bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+<div class="p-2 bg-primary/10 rounded-full text-primary">
+<span class="material-symbols-outlined">water_drop</span>
+</div>
+<div>
+<h4 class="font-bold text-sm text-slate-900 dark:text-white">Hyaluronic Acid</h4>
+<p class="text-xs text-slate-500 mt-1">Multi-depth plumping</p>
+</div>
+</div>
+</div>
+<div class="h-px bg-slate-200 dark:bg-slate-800"></div>
+<div class="flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium text-slate-900 dark:text-white">Size</span>
+<div class="flex gap-2">
+<button class="px-4 py-2 border border-slate-900 dark:border-white bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded text-sm font-medium">50ml</button>
+<button class="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-400 rounded text-sm transition-colors">100ml</button>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg h-12 w-32">
+<button class="w-10 h-full flex items-center justify-center text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined !text-lg">remove</span>
+</button>
+<input class="w-full text-center border-none bg-transparent focus:ring-0 p-0 font-medium text-slate-900 dark:text-white" readonly="" type="text" value="1"/>
+<button class="w-10 h-full flex items-center justify-center text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined !text-lg">add</span>
+</button>
+</div>
+<button class="flex-1 bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-primary/20">
+<span>Add to Cart</span>
+<span class="w-px h-4 bg-white/20 mx-2"></span>
+<span>$185.00</span>
+</button>
+</div>
+<div class="flex items-center justify-center gap-6 text-xs text-slate-500 dark:text-slate-400">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined !text-base">local_shipping</span>
+<span>Free Shipping</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined !text-base">verified</span>
+<span>Authenticity Guaranteed</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col divide-y divide-slate-200 dark:divide-slate-800 border-t border-b border-slate-200 dark:border-slate-800 mt-4">
+<details class="group py-4 cursor-pointer">
+<summary class="flex items-center justify-between font-medium list-none text-slate-900 dark:text-white hover:text-primary transition-colors">
+<span>Benefits</span>
+<span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180">expand_more</span>
+</summary>
+<div class="text-sm text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">
+<ul class="list-disc pl-5 space-y-1 marker:text-primary">
+<li>Visibly reduces fine lines and wrinkles in 4 weeks.</li>
+<li>Restores skin's moisture barrier overnight.</li>
+<li>Promotes a more even skin tone and texture.</li>
+<li>Non-comedogenic and suitable for sensitive skin.</li>
+</ul>
+</div>
+</details>
+<details class="group py-4 cursor-pointer">
+<summary class="flex items-center justify-between font-medium list-none text-slate-900 dark:text-white hover:text-primary transition-colors">
+<span>Full Ingredients List</span>
+<span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180">expand_more</span>
+</summary>
+<div class="text-sm text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">
+                        Water/Aqua/Eau, Bifida Ferment Lysate, Peg-8, Propanediol, Bis-Peg-18 Methyl Ether Dimethyl Silane, Methyl Gluceth-20, Glycereth-26, Peg-75, Butylene Glycol, Adansonia Digitata Seed Extract, Tripeptide-32, Sodium Hyaluronate, Yeast Extract, Lactobacillus Ferment, Cola Acuminata (Kola) Seed Extract.
+                    </div>
+</details>
+<details class="group py-4 cursor-pointer">
+<summary class="flex items-center justify-between font-medium list-none text-slate-900 dark:text-white hover:text-primary transition-colors">
+<span>Shipping &amp; Returns</span>
+<span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180">expand_more</span>
+</summary>
+<div class="text-sm text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">
+                        Complimentary shipping on all orders over $50. We accept returns of unopened products within 30 days of purchase.
+                    </div>
+</details>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 py-20 px-6 border-t border-slate-100 dark:border-slate-800">
+<div class="max-w-[1440px] mx-auto">
+<div class="mb-24">
+<div class="text-center mb-12">
+<span class="text-primary font-bold tracking-widest text-xs uppercase mb-2 block">The Ritual</span>
+<h2 class="text-3xl font-bold text-slate-900 dark:text-white">How to Use</h2>
+</div>
+<div class="grid md:grid-cols-3 gap-8 relative">
+<div class="hidden md:block absolute top-12 left-0 w-full h-px bg-slate-200 dark:bg-slate-800 -z-10"></div>
+<div class="flex flex-col items-center text-center group">
+<div class="size-24 rounded-full bg-background-light dark:bg-slate-800 border-4 border-white dark:border-slate-900 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined !text-4xl text-primary">clean_hands</span>
+</div>
+<h3 class="font-bold text-lg mb-2 text-slate-900 dark:text-white">1. Cleanse</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 max-w-[250px]">Start with clean, dry skin. Remove all makeup and impurities.</p>
+</div>
+<div class="flex flex-col items-center text-center group">
+<div class="size-24 rounded-full bg-primary text-white border-4 border-white dark:border-slate-900 flex items-center justify-center mb-6 shadow-lg shadow-primary/30 group-hover:scale-110 transition-transform duration-300 z-10">
+<span class="material-symbols-outlined !text-4xl">water_drop</span>
+</div>
+<h3 class="font-bold text-lg mb-2 text-slate-900 dark:text-white">2. Apply</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 max-w-[250px]">Warm 2-3 drops in palms. Press gently into face and neck.</p>
+</div>
+<div class="flex flex-col items-center text-center group">
+<div class="size-24 rounded-full bg-background-light dark:bg-slate-800 border-4 border-white dark:border-slate-900 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined !text-4xl text-primary">lock</span>
+</div>
+<h3 class="font-bold text-lg mb-2 text-slate-900 dark:text-white">3. Seal</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 max-w-[250px]">Follow with your favorite moisturizer to lock in hydration.</p>
+</div>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-end mb-8 px-2">
+<div>
+<span class="text-primary font-bold tracking-widest text-xs uppercase mb-2 block">Complete The Routine</span>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white">Recommended For You</h2>
+</div>
+<a class="hidden sm:flex items-center gap-1 text-sm font-bold text-slate-900 dark:text-white hover:text-primary transition-colors" href="#">
+                        View All <span class="material-symbols-outlined !text-lg">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="group flex flex-col">
+<div class="relative overflow-hidden rounded-lg bg-background-light dark:bg-slate-800 aspect-[4/5] mb-4">
+<img alt="Minimalist cleanser bottle on white background" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFMeQw9NCKZV6FigmobrKLdOqKNPHU-Z2RF4jrVEkdRAHZhyWkXFaCAobH5rWx2XMf4jNirUc5r0wtzSkcROMrHZI0q5JdqndF-hev9cuzYZQTVddln1PxpB18R2Le51fpTxYQT3OYTdShX15-3qt_afsenl6VSz5y_ou-jcSk041lAjK0YAfx1LtNUQTPa4SY8d3BggwyGSi1D4EyoE7pMBEL078KVY8L2ynLBNeI6L_yRXdLYKFPV1-Wjv5BMqNlJ3gMXn3KMJA"/>
+<button class="absolute bottom-4 right-4 bg-white text-slate-900 p-2 rounded-full shadow-lg translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+<h3 class="font-bold text-slate-900 dark:text-white text-base">Purifying Gel Cleanser</h3>
+<p class="text-sm text-slate-500 mb-2">Daily Detox</p>
+<span class="text-sm font-semibold text-slate-900 dark:text-white">$45.00</span>
+</div>
+<div class="group flex flex-col">
+<div class="relative overflow-hidden rounded-lg bg-background-light dark:bg-slate-800 aspect-[4/5] mb-4">
+<img alt="Eye cream jar with metallic lid" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgwT6XVPVBOT3DN9Gk2muiiFMWnx6W4BqDw-MXXVWZD0kRgB9jiFuqc-f2ZwR_FhinrcvqUUhK1eaa_RwMe3IyR6S6D4PIyqsBcPPaivtNBeaEuAunB9jmH2H2ditLYH6g1mLemaMd2_dHk6R5cUwyFUEyHk00UnXmIaY198902sGnE6StyorRGpMZSSACAK_1g4R1KMDucFC0fGUve9NNh9hwxkZh5Ukjc5u3DlPftjvTc5CIyK8Zlun2CmTjdZ0tYiA_BBgYOyg"/>
+<div class="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider rounded-sm">Best Seller</div>
+<button class="absolute bottom-4 right-4 bg-white text-slate-900 p-2 rounded-full shadow-lg translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+<h3 class="font-bold text-slate-900 dark:text-white text-base">Revitalizing Eye Cream</h3>
+<p class="text-sm text-slate-500 mb-2">Dark Circle Corrector</p>
+<span class="text-sm font-semibold text-slate-900 dark:text-white">$85.00</span>
+</div>
+<div class="group flex flex-col">
+<div class="relative overflow-hidden rounded-lg bg-background-light dark:bg-slate-800 aspect-[4/5] mb-4">
+<img alt="Rich night cream in glass jar" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAx8lMOrt43ST83SVAe-Dt4FYRQ7uAWDe29Bs6vCfcX3nYeOeGm7rwk-MjKi00hiTA5DxJDCuP4lQz7AY64N-Voh_Bl87sys4VJupG-R52BovE0uXvQFxMwWSZjRT2Gj6Eh-juYUQqK2JdyhAC0xLErhm7PaVc-qsXv3g8becwevaCK8kH6teLAAqmO2Nw47EvSZa8r6Up7-FkmPPvYSX88ortcMkFz3K4DXLakKZUDijJJnVT2e9T6Typ_rjKnWO7hNbRAiFbSA8"/>
+<button class="absolute bottom-4 right-4 bg-white text-slate-900 p-2 rounded-full shadow-lg translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+<h3 class="font-bold text-slate-900 dark:text-white text-base">Intense Hydration Cream</h3>
+<p class="text-sm text-slate-500 mb-2">24h Moisture Lock</p>
+<span class="text-sm font-semibold text-slate-900 dark:text-white">$110.00</span>
+</div>
+<div class="group flex flex-col">
+<div class="relative overflow-hidden rounded-lg bg-background-light dark:bg-slate-800 aspect-[4/5] mb-4">
+<img alt="Facial mist spray bottle with botanical background" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgN85rZJMBW8MMZBK9hxHPNgs8kw9gDQK-7VuItwn4WilW1lmd3gaN0dtdo1ysmlktj5Z9Vd4-CBjMl-CFv8UWUWJGLfnRSpEzCCYw0zFKD5t0cLl0l8R0J0tHVxezUhX67wArIG6zie4hSoUV34jQWHrfLT7pep_5d7nBc_UAlky2F2oEvWZ-aYfNLySqS0XIu64NF8hcUWoCkBG8UWBhdgtqW7W_uhYWX2s-bkdSNAS1u7EiGfO-8-yUAve_FWUIZ0Hkd72riCI"/>
+<button class="absolute bottom-4 right-4 bg-white text-slate-900 p-2 rounded-full shadow-lg translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+<h3 class="font-bold text-slate-900 dark:text-white text-base">Botanical Mist</h3>
+<p class="text-sm text-slate-500 mb-2">Instant Refresh</p>
+<span class="text-sm font-semibold text-slate-900 dark:text-white">$38.00</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="bg-background-dark text-white border-t border-slate-800">
+<div class="max-w-[1440px] mx-auto px-6 pt-20 pb-12">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-16">
+<div class="flex flex-col gap-6">
+<a class="flex items-center gap-2 group" href="#">
+<span class="material-symbols-outlined text-primary !text-3xl group-hover:rotate-12 transition-transform duration-500">spa</span>
+<h2 class="text-2xl font-bold tracking-[0.2em] uppercase font-display text-white">Portfolio</h2>
+</a>
+<p class="text-slate-400 text-sm leading-relaxed max-w-xs">
+                    Redefining luxury skincare with nature's most potent botanicals and cutting-edge science. Clean, sustainable, and effective.
+                </p>
+<div class="flex gap-4 mt-2">
+<a class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-slate-400" href="#">
+<span class="material-symbols-outlined !text-[20px]">public</span>
+</a>
+<a class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-slate-400" href="#">
+<span class="material-symbols-outlined !text-[20px]">photo_camera</span>
+</a>
+<a class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-slate-400" href="#">
+<span class="material-symbols-outlined !text-[20px]">videocam</span>
+</a>
+</div>
+</div>
+<div>
+<h3 class="font-bold text-sm tracking-widest uppercase mb-6 text-white">Shop</h3>
+<ul class="flex flex-col gap-4 text-sm text-slate-400">
+<li><a class="hover:text-primary transition-colors" href="#">All Products</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Best Sellers</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">New Arrivals</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Serums &amp; Oils</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Cleansers</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Gift Sets</a></li>
+</ul>
+</div>
+<div>
+<h3 class="font-bold text-sm tracking-widest uppercase mb-6 text-white">Company</h3>
+<ul class="flex flex-col gap-4 text-sm text-slate-400">
+<li><a class="hover:text-primary transition-colors" href="#">Our Story</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Ingredients</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Sustainability</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Journal</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Careers</a></li>
+</ul>
+</div>
+<div>
+<h3 class="font-bold text-sm tracking-widest uppercase mb-6 text-white">Stay in the Know</h3>
+<p class="text-sm text-slate-400 mb-4">Subscribe to receive updates, access to exclusive deals, and more.</p>
+<form class="flex flex-col gap-3">
+<input class="bg-slate-800 border-none rounded-lg py-3 px-4 text-white text-sm focus:ring-1 focus:ring-primary placeholder:text-slate-500" placeholder="Enter your email" type="email"/>
+<button class="bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-lg text-sm transition-colors uppercase tracking-wide">Subscribe</button>
+</form>
+</div>
+</div>
+<div class="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
+<p>© 2024 Portfolio Beauty. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="hover:text-white transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-white transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-white transition-colors" href="#">Shipping Policy</a>
+</div>
+</div>
+</div>
+</footer>
+
+</body></html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Skin Test Questionnaire - Portfolio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+            extend: {
+                colors: {
+                "primary": "#e6194c",
+                "primary-50": "#fdf2f4",
+                "primary-100": "#fce7ec",
+                "primary-200": "#f8d0da",
+                "primary-300": "#f2aab9",
+                "primary-400": "#ea7790",
+                "primary-500": "#e6194c",
+                "primary-600": "#d11140",
+                "primary-700": "#b00c32",
+                "primary-800": "#930e2e",
+                "primary-900": "#7d112b",
+                "primary-950": "#440513",
+                "background-light": "#fcf8f9","background-dark": "#211115",
+                },
+                fontFamily: {
+                "display": ["Manrope", "sans-serif"]
+                },
+                borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f2aab9; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #e6194c; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-primary-950 dark:text-primary-50 font-display antialiased min-h-screen flex flex-col">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary-100 dark:border-primary-900 px-6 md:px-12 py-5 bg-background-light dark:bg-background-dark z-50 sticky top-0">
+<div class="flex items-center gap-12">
+<a class="flex items-center gap-3 text-primary-950 dark:text-primary-50 cursor-pointer group" href="#">
+<div class="size-9 text-primary-600 group-hover:text-primary-500 transition-colors">
+<svg class="w-full h-full" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6_319)">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z" fill="currentColor"></path>
+</g>
+<defs>
+<clipPath id="clip0_6_319"><rect fill="white" height="48" width="48"></rect></clipPath>
+</defs>
+</svg>
+</div>
+<h2 class="text-2xl font-extrabold tracking-tight uppercase">Portfolio</h2>
+</a>
+<nav class="hidden lg:flex items-center gap-8">
+<a class="text-primary-800 dark:text-primary-200 text-sm font-semibold uppercase tracking-wide hover:text-primary-500 transition-colors" href="#">Shop</a>
+<a class="text-primary-800 dark:text-primary-200 text-sm font-semibold uppercase tracking-wide hover:text-primary-500 transition-colors" href="#">Routine</a>
+<a class="text-primary-800 dark:text-primary-200 text-sm font-semibold uppercase tracking-wide hover:text-primary-500 transition-colors" href="#">About</a>
+<a class="text-primary-800 dark:text-primary-200 text-sm font-semibold uppercase tracking-wide hover:text-primary-500 transition-colors" href="#">Journal</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden md:flex items-center group">
+<span class="absolute left-3 text-primary-400 group-focus-within:text-primary-600 transition-colors">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</span>
+<input class="pl-10 pr-4 py-2 bg-transparent border border-primary-200 dark:border-primary-800 rounded-full text-sm text-primary-900 dark:text-primary-100 placeholder-primary-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 w-48 transition-all hover:border-primary-300" placeholder="Search..." type="text"/>
+</div>
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-primary-50 dark:hover:bg-primary-900/30 text-primary-900 dark:text-primary-100 transition-colors relative">
+<span class="material-symbols-outlined text-[24px]">shopping_bag</span>
+<span class="absolute top-1 right-1 size-2 bg-primary-500 rounded-full ring-2 ring-white dark:ring-background-dark"></span>
+</button>
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-primary-50 dark:hover:bg-primary-900/30 text-primary-900 dark:text-primary-100 transition-colors">
+<span class="material-symbols-outlined text-[24px]">account_circle</span>
+</button>
+<button class="lg:hidden flex items-center justify-center size-10 rounded-full hover:bg-primary-50 dark:hover:bg-primary-900/30 text-primary-900 dark:text-primary-100 transition-colors">
+<span class="material-symbols-outlined text-[24px]">menu</span>
+</button>
+</div>
+</header>
+<main class="flex-grow flex flex-col lg:flex-row h-full">
+<aside class="w-full lg:w-4/12 bg-primary-50 dark:bg-primary-900/20 p-8 lg:p-12 flex flex-col justify-between relative overflow-hidden order-1">
+<div class="absolute inset-0 z-0 opacity-80">
+<img class="w-full h-full object-cover" data-alt="Soft pink gradient texture of creamy skincare product" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWjizcIIrNlf_Eleb78vRk7VL_IXlDXVv_34QgunPjWfr2thAleOJ9Ql0whFTuii2PupU2vjxwdU42CAnvh1alANwer8zUZEg_N8s637hf7dGYC8I1V3XideXTJuoVrmKcFVw42hwvoiu4YW0g1u0bP8HwxpwVhJUt0dr9XroAhZ7FxFqVwFrdFXg_ieSqdKgp6bPEotTWQ_T9lx9-U5zGU-whFoUJAwXA-Hdeh23AlHf_EIJW2_iJe2P6Tb6RTha-zx17CKdfp0c"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary-50/90 to-transparent dark:from-background-dark/90"></div>
+</div>
+<div class="relative z-10 pt-4">
+<div class="flex flex-wrap gap-2 mb-8 text-xs font-semibold tracking-wider uppercase">
+<a class="text-primary-600 hover:text-primary-800 transition-colors" href="#">Home</a>
+<span class="text-primary-300">/</span>
+<span class="text-primary-900">Routine</span>
+</div>
+<h1 class="text-4xl lg:text-5xl font-extrabold text-primary-950 dark:text-primary-50 tracking-tight leading-[1.1] mb-6">
+                    Let's decode your skin needs.
+                </h1>
+<p class="text-primary-700 dark:text-primary-200 text-lg leading-relaxed max-w-md">
+                    Discover your bespoke regimen in 2 minutes. We analyze your skin type, environment, and lifestyle to curate the perfect Portfolio.
+                </p>
+</div>
+<div class="relative z-10 mt-12 bg-white/70 dark:bg-black/40 backdrop-blur-md rounded-2xl p-6 border border-white/50 dark:border-white/10 shadow-sm">
+<div class="flex items-start gap-4">
+<div class="p-2 bg-primary-600 rounded-full text-white shadow-md shadow-primary-500/20 shrink-0">
+<span class="material-symbols-outlined text-xl">verified_user</span>
+</div>
+<div>
+<h4 class="font-bold text-primary-900 dark:text-white mb-1">Dermatologist Verified</h4>
+<p class="text-sm text-primary-700 dark:text-primary-300 leading-snug">Our algorithm is developed with leading skin experts to ensure clinical precision.</p>
+</div>
+</div>
+</div>
+</aside>
+<section class="w-full lg:w-8/12 bg-background-light dark:bg-background-dark flex flex-col items-center justify-center p-6 md:p-16 lg:p-24 order-2 relative">
+<div class="w-full max-w-3xl">
+<div class="flex items-end justify-between mb-4">
+<div>
+<span class="text-primary-400 dark:text-primary-500 text-xs font-bold uppercase tracking-widest mb-1 block">Question 1 of 5</span>
+<h2 class="text-primary-950 dark:text-white font-bold text-xl">Skin Type Analysis</h2>
+</div>
+<span class="text-primary-950 dark:text-white font-bold text-xl">20%</span>
+</div>
+<div class="w-full bg-primary-100 dark:bg-primary-900 rounded-full h-1.5 mb-16 overflow-hidden">
+<div class="bg-primary-600 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(230,25,76,0.5)]" style="width: 20%"></div>
+</div>
+<div class="mb-12 text-center md:text-left">
+<h2 class="text-3xl md:text-4xl font-bold text-primary-950 dark:text-white mb-4 leading-tight">How does your skin feel in the morning?</h2>
+<p class="text-lg text-primary-600 dark:text-primary-300">Select the option that best describes your skin before applying any products.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+<label class="group relative cursor-pointer">
+<input class="peer sr-only" name="skin_feel" type="radio" value="tight"/>
+<div class="p-6 rounded-2xl border border-primary-200 dark:border-primary-800 bg-white dark:bg-primary-900/10 hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-md peer-checked:border-primary-600 peer-checked:ring-1 peer-checked:ring-primary-600 peer-checked:bg-primary-50/50 dark:peer-checked:bg-primary-900/30 transition-all duration-200 h-full flex flex-col gap-4">
+<div class="flex items-start justify-between">
+<div class="size-12 rounded-xl bg-primary-50 dark:bg-primary-800/50 flex items-center justify-center text-primary-600 dark:text-primary-300 group-hover:bg-primary-100 dark:group-hover:bg-primary-800 transition-colors">
+<span class="material-symbols-outlined text-[28px]">water_drop</span>
+</div>
+<div class="size-6 rounded-full border-2 border-primary-200 dark:border-primary-700 flex items-center justify-center peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-all">
+<span class="material-symbols-outlined text-white text-[16px] opacity-0 peer-checked:opacity-100">check</span>
+</div>
+</div>
+<div>
+<h3 class="font-bold text-lg text-primary-950 dark:text-primary-50 mb-1">Tight &amp; Dry</h3>
+<p class="text-sm text-primary-600 dark:text-primary-400 leading-relaxed">My face feels stretched and lacks moisture, sometimes flaky.</p>
+</div>
+</div>
+</label>
+<label class="group relative cursor-pointer">
+<input class="peer sr-only" name="skin_feel" type="radio" value="oily"/>
+<div class="p-6 rounded-2xl border border-primary-200 dark:border-primary-800 bg-white dark:bg-primary-900/10 hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-md peer-checked:border-primary-600 peer-checked:ring-1 peer-checked:ring-primary-600 peer-checked:bg-primary-50/50 dark:peer-checked:bg-primary-900/30 transition-all duration-200 h-full flex flex-col gap-4">
+<div class="flex items-start justify-between">
+<div class="size-12 rounded-xl bg-primary-50 dark:bg-primary-800/50 flex items-center justify-center text-primary-600 dark:text-primary-300 group-hover:bg-primary-100 dark:group-hover:bg-primary-800 transition-colors">
+<span class="material-symbols-outlined text-[28px]">wb_sunny</span>
+</div>
+<div class="size-6 rounded-full border-2 border-primary-200 dark:border-primary-700 flex items-center justify-center peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-all">
+<span class="material-symbols-outlined text-white text-[16px] opacity-0 peer-checked:opacity-100">check</span>
+</div>
+</div>
+<div>
+<h3 class="font-bold text-lg text-primary-950 dark:text-primary-50 mb-1">Oily &amp; Shiny</h3>
+<p class="text-sm text-primary-600 dark:text-primary-400 leading-relaxed">Visible shine across the forehead and nose, feels slick to touch.</p>
+</div>
+</div>
+</label>
+<label class="group relative cursor-pointer">
+<input class="peer sr-only" name="skin_feel" type="radio" value="combination"/>
+<div class="p-6 rounded-2xl border border-primary-200 dark:border-primary-800 bg-white dark:bg-primary-900/10 hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-md peer-checked:border-primary-600 peer-checked:ring-1 peer-checked:ring-primary-600 peer-checked:bg-primary-50/50 dark:peer-checked:bg-primary-900/30 transition-all duration-200 h-full flex flex-col gap-4">
+<div class="flex items-start justify-between">
+<div class="size-12 rounded-xl bg-primary-50 dark:bg-primary-800/50 flex items-center justify-center text-primary-600 dark:text-primary-300 group-hover:bg-primary-100 dark:group-hover:bg-primary-800 transition-colors">
+<span class="material-symbols-outlined text-[28px]">contrast</span>
+</div>
+<div class="size-6 rounded-full border-2 border-primary-200 dark:border-primary-700 flex items-center justify-center peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-all">
+<span class="material-symbols-outlined text-white text-[16px] opacity-0 peer-checked:opacity-100">check</span>
+</div>
+</div>
+<div>
+<h3 class="font-bold text-lg text-primary-950 dark:text-primary-50 mb-1">Combination</h3>
+<p class="text-sm text-primary-600 dark:text-primary-400 leading-relaxed">Oily T-zone (forehead, nose) but dry or normal cheeks.</p>
+</div>
+</div>
+</label>
+<label class="group relative cursor-pointer">
+<input class="peer sr-only" name="skin_feel" type="radio" value="balanced"/>
+<div class="p-6 rounded-2xl border border-primary-200 dark:border-primary-800 bg-white dark:bg-primary-900/10 hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-md peer-checked:border-primary-600 peer-checked:ring-1 peer-checked:ring-primary-600 peer-checked:bg-primary-50/50 dark:peer-checked:bg-primary-900/30 transition-all duration-200 h-full flex flex-col gap-4">
+<div class="flex items-start justify-between">
+<div class="size-12 rounded-xl bg-primary-50 dark:bg-primary-800/50 flex items-center justify-center text-primary-600 dark:text-primary-300 group-hover:bg-primary-100 dark:group-hover:bg-primary-800 transition-colors">
+<span class="material-symbols-outlined text-[28px]">spa</span>
+</div>
+<div class="size-6 rounded-full border-2 border-primary-200 dark:border-primary-700 flex items-center justify-center peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-all">
+<span class="material-symbols-outlined text-white text-[16px] opacity-0 peer-checked:opacity-100">check</span>
+</div>
+</div>
+<div>
+<h3 class="font-bold text-lg text-primary-950 dark:text-primary-50 mb-1">Balanced</h3>
+<p class="text-sm text-primary-600 dark:text-primary-400 leading-relaxed">Comfortable, neither too oily nor too dry. Smooth texture.</p>
+</div>
+</div>
+</label>
+</div>
+<div class="flex items-center justify-between pt-8 border-t border-primary-100 dark:border-primary-800">
+<button class="group flex items-center gap-2 text-primary-500 font-semibold hover:text-primary-700 dark:hover:text-primary-300 transition-colors px-4 py-2 rounded-lg">
+<span class="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                        Back
+                    </button>
+<button class="flex items-center gap-3 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3.5 px-8 rounded-full shadow-lg shadow-primary-600/30 transition-all transform hover:-translate-y-0.5 hover:shadow-xl">
+                        Next Step
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</div>
+<div class="mt-8 flex items-start gap-3 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-100 dark:border-primary-800">
+<span class="material-symbols-outlined text-primary-500 mt-0.5">lightbulb</span>
+<p class="text-sm text-primary-700 dark:text-primary-300"><strong>Pro Tip:</strong> Your skin type can change with seasons. We recommend retaking this test every 3 months for optimal results.</p>
+</div>
+</div>
+</section>
+</main>
+<footer class="bg-white dark:bg-background-dark border-t border-primary-100 dark:border-primary-900">
+<div class="max-w-[1400px] mx-auto px-8 md:px-12 py-16">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+<div class="md:col-span-1">
+<div class="flex items-center gap-2 mb-6 text-primary-950 dark:text-primary-50">
+<div class="size-6 text-primary-600">
+<svg class="w-full h-full" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6_319_footer)">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z" fill="currentColor"></path>
+</g>
+<defs>
+<clipPath id="clip0_6_319_footer"><rect fill="white" height="48" width="48"></rect></clipPath>
+</defs>
+</svg>
+</div>
+<h2 class="text-xl font-bold uppercase tracking-wide">Portfolio</h2>
+</div>
+<p class="text-primary-600 dark:text-primary-400 text-sm mb-6 leading-relaxed">
+                        Science-backed skincare tailored to your unique biology. Experience the future of beauty.
+                    </p>
+<div class="flex gap-4">
+<a class="size-8 rounded-full bg-primary-50 dark:bg-primary-900 flex items-center justify-center text-primary-600 dark:text-primary-300 hover:bg-primary-600 hover:text-white transition-colors" href="#">
+<span class="text-xs font-bold">IG</span>
+</a>
+<a class="size-8 rounded-full bg-primary-50 dark:bg-primary-900 flex items-center justify-center text-primary-600 dark:text-primary-300 hover:bg-primary-600 hover:text-white transition-colors" href="#">
+<span class="text-xs font-bold">TT</span>
+</a>
+<a class="size-8 rounded-full bg-primary-50 dark:bg-primary-900 flex items-center justify-center text-primary-600 dark:text-primary-300 hover:bg-primary-600 hover:text-white transition-colors" href="#">
+<span class="text-xs font-bold">YT</span>
+</a>
+</div>
+</div>
+<div>
+<h4 class="font-bold text-primary-900 dark:text-primary-100 mb-6 uppercase text-sm tracking-wider">Shop</h4>
+<ul class="space-y-3 text-sm text-primary-600 dark:text-primary-400">
+<li><a class="hover:text-primary-500 transition-colors" href="#">Best Sellers</a></li>
+<li><a class="hover:text-primary-500 transition-colors" href="#">New Arrivals</a></li>
+<li><a class="hover:text-primary-500 transition-colors" href="#">Sets &amp; Kits</a></li>
+<li><a class="hover:text-primary-500 transition-colors" href="#">Gift Cards</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-primary-900 dark:text-primary-100 mb-6 uppercase text-sm tracking-wider">About</h4>
+<ul class="space-y-3 text-sm text-primary-600 dark:text-primary-400">
+<li><a class="hover:text-primary-500 transition-colors" href="#">Our Story</a></li>
+<li><a class="hover:text-primary-500 transition-colors" href="#">Ingredients</a></li>
+<li><a class="hover:text-primary-500 transition-colors" href="#">Sustainability</a></li>
+<li><a class="hover:text-primary-500 transition-colors" href="#">Careers</a></li>
+</ul>
+</div>
+<div class="md:col-span-1">
+<h4 class="font-bold text-primary-900 dark:text-primary-100 mb-6 uppercase text-sm tracking-wider">Stay in the loop</h4>
+<p class="text-sm text-primary-600 dark:text-primary-400 mb-4">Join our newsletter for expert skin tips and exclusive offers.</p>
+<form class="flex flex-col gap-2">
+<input class="w-full px-4 py-2.5 bg-primary-50 dark:bg-primary-900/30 border border-primary-100 dark:border-primary-800 rounded-lg text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" placeholder="Your email address" type="email"/>
+<button class="w-full py-2.5 bg-primary-900 dark:bg-primary-100 text-white dark:text-primary-900 font-bold text-sm rounded-lg hover:bg-primary-800 dark:hover:bg-white transition-colors">
+                            Subscribe
+                        </button>
+</form>
+</div>
+</div>
+<div class="pt-8 border-t border-primary-100 dark:border-primary-900 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-xs text-primary-400 dark:text-primary-500">© 2024 Portfolio Beauty Inc. All rights reserved.</p>
+<div class="flex gap-6 text-xs text-primary-500 dark:text-primary-400">
+<a class="hover:text-primary-800 dark:hover:text-primary-200 transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary-800 dark:hover:text-primary-200 transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary-800 dark:hover:text-primary-200 transition-colors" href="#">Cookie Settings</a>
+</div>
+</div>
+</div>
+</footer>
+
+</body></html>

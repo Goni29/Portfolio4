@@ -1,0 +1,113 @@
+﻿Active Coupons
+Add an internal note for this order.
+Admin
+Admin account is required.
+All Products
+All time
+Approve
+Back to Orders
+Banners
+Billing Address
+Cancel
+Category
+Cleanser
+Code
+Collections (csv)
+Coupon
+Coupons
+Cover Image URL
+Create
+Create Order
+CTA Href
+CTA Text
+Current order state
+Customer
+Customer Details
+Customers
+Data reset to seed.
+Delete
+Description
+Discount
+Draft Reviews
+Edit
+Edit Collection
+Edit Product
+Excerpt
+Export CSV
+Fixed
+Free Shipping Threshold
+Guest Customer
+Headline
+Hero
+Hero Image URL
+HTML Content
+ID (optional)
+Image
+Image URL
+Internal Notes
+Joined
+Mark as paid
+min
+Min Subtotal
+Moisturizer
+Name
+New Product
+Next
+No
+No coupon
+No customers found.
+No internal notes yet.
+No orders
+No orders match this filter.
+No orders yet.
+Order
+Order ID
+Order Items
+Order not found
+Order Placed
+Orders
+Orders will appear here after checkout.
+Password
+Payment
+Payment Method
+Pending Reviews
+Percent
+Previous
+Print Invoice
+Product Slugs (csv)
+Products
+Qty: 
+Recent Orders
+Refund
+Refund requested
+Refund Requests
+Related Product Slugs (csv)
+Reviews
+Same as shipping address
+Secondary
+Serum
+Settings
+Settings saved.
+Shipping + Tax
+Shipping Address
+Short Description
+Sort Order
+Staff Note
+Status
+Status: All
+Store Name
+Subheadline
+Subtotal
+Sunscreen
+Tax Rate (0-1)
+This order does not exist.
+Title
+Total
+Tracking number
+Type
+Unable to sign in.
+Unpaid Orders
+URL
+Video
+View Full History
+Write Article

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Portfolio - Order Confirmed</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e6194c",
+                        "background-light": "#fcf8f9",
+                        "background-dark": "#211115",
+                        "text-main": "#1b0e11",
+                        "text-muted": "#974e60",
+                        "border-color": "#f3e7ea",
+                    },
+                    fontFamily: {
+                        "display": ["Noto Serif", "serif"],
+                        "sans": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-gray-100 font-display min-h-screen flex flex-col">
+<!-- Header -->
+<header class="sticky top-0 z-50 w-full border-b border-border-color bg-background-light/95 backdrop-blur dark:bg-background-dark/95 dark:border-gray-800">
+<div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+<div class="flex items-center gap-4">
+<a class="flex items-center gap-2 group" href="#">
+<div class="text-primary dark:text-primary transition-transform group-hover:scale-110">
+<svg class="size-6" fill="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"></path>
+</svg>
+</div>
+<span class="text-xl font-bold tracking-tight text-text-main dark:text-white">Portfolio</span>
+</a>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium text-text-main hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors" href="#">Shop</a>
+<a class="text-sm font-medium text-text-main hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors" href="#">New Arrivals</a>
+<a class="text-sm font-medium text-text-main hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors" href="#">Best Sellers</a>
+<a class="text-sm font-medium text-text-main hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors" href="#">Journal</a>
+</nav>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center rounded-lg p-2 text-text-main hover:bg-border-color dark:text-gray-200 dark:hover:bg-gray-800 transition-colors">
+<span class="material-symbols-outlined !text-[24px]">shopping_bag</span>
+</button>
+<button class="flex items-center justify-center rounded-lg p-2 text-text-main hover:bg-border-color dark:text-gray-200 dark:hover:bg-gray-800 transition-colors">
+<span class="material-symbols-outlined !text-[24px]">person</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-grow">
+<div class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+<!-- Hero Section -->
+<div class="flex flex-col items-center text-center mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+<div class="mb-8 relative">
+<div class="absolute -inset-4 bg-primary/5 rounded-full blur-xl"></div>
+<div class="relative size-24 rounded-full bg-primary/10 flex items-center justify-center mb-6 ring-1 ring-primary/20">
+<span class="material-symbols-outlined text-primary !text-[48px]">check_circle</span>
+</div>
+</div>
+<h1 class="text-4xl font-bold tracking-tight text-text-main sm:text-5xl dark:text-white mb-4">Order Confirmed</h1>
+<p class="max-w-xl text-lg text-text-muted dark:text-gray-400 mb-8">
+                    Thank you for your purchase, Sophia. We've received your order and will begin processing it right away. A confirmation email has been sent to sophia@example.com.
+                </p>
+<button class="inline-flex items-center justify-center rounded-full bg-primary px-8 py-3 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 hover:shadow-primary/40 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900">
+                    Continue Shopping
+                </button>
+</div>
+<div class="grid gap-12 lg:grid-cols-12">
+<!-- Order Details Column -->
+<div class="lg:col-span-8 space-y-10">
+<!-- Order Info Header -->
+<div class="border-b border-border-color pb-6 dark:border-gray-800 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+<div>
+<h2 class="text-2xl font-bold text-text-main dark:text-white">Order Details</h2>
+<p class="mt-1 text-sm text-text-muted dark:text-gray-400">Order #7829103 • Placed on October 24, 2023</p>
+</div>
+<a class="text-sm font-medium text-primary hover:text-primary/80 underline decoration-primary/30 underline-offset-4" href="#">Print Invoice</a>
+</div>
+<!-- Items List -->
+<div class="rounded-2xl border border-border-color bg-white dark:bg-gray-800/50 dark:border-gray-700 overflow-hidden shadow-sm">
+<ul class="divide-y divide-border-color dark:divide-gray-700" role="list">
+<!-- Item 1 -->
+<li class="flex flex-col sm:flex-row p-6 gap-6">
+<div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl border border-border-color dark:border-gray-700">
+<img alt="Luxury face serum bottle with gold dropper" class="h-full w-full object-cover object-center" data-alt="Luxury face serum bottle with gold dropper" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDENgquLHOWJhVFW_xlPrghgStlR70sbU_M_jO7WYTNU49JxYh7Qt7rETIa38nuVTkEHM4zYsukjeZOcfRF_eXhz3Cm5pQEY6IkY_9OpPHXLSF2ViTEA21tuhVVUi4EGmuhmsPkw30gO4k8MG3zC3eiogxU4pk8_JC5DUv7q2yhxKVwVridNYIMA3Mdxox_DEQ_A9vtEbKI7SYz1r0agQbosUxKFCYegQmhrpPeocWEQAXVohC8amczVDRvSPBp3z1rDGdXmmN7Y1o"/>
+</div>
+<div class="flex flex-1 flex-col justify-between">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-lg font-medium text-text-main dark:text-white">Radiance Restore Serum</h3>
+<p class="mt-1 text-sm text-text-muted dark:text-gray-400">Size: 30ml</p>
+</div>
+<p class="text-lg font-medium text-text-main dark:text-white">$85.00</p>
+</div>
+<div class="mt-4 flex items-end justify-between sm:mt-0">
+<p class="text-sm text-text-muted dark:text-gray-400">Qty: 1</p>
+</div>
+</div>
+</li>
+<!-- Item 2 -->
+<li class="flex flex-col sm:flex-row p-6 gap-6">
+<div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl border border-border-color dark:border-gray-700">
+<img alt="Minimalist beige jar of face cream" class="h-full w-full object-cover object-center" data-alt="Minimalist beige jar of face cream" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCz3EoCnsafWAxtwNIupSjWEYREol2s0cT22QRwm5fDYDEfBDS4LSrbtRV_zTaaStwDOSDMYo8WxXsw3cnkVvD-89QThNX0F2IxfmF8BfeZyTEUkGl0WiYPMzfeB8munvknKjMZz42PvXHtULKgtf_MmDYx8zcojlM_UlblVa-Dd_lFSOy_TnYmwWDhvL_cGNkeu9qBJay2vrEy34AQjy-tROPs5GxJgVgY0wdO3qBL9seaUvq6NcZQ1x-OEaBQ0xL0DL3ioWJzAIs"/>
+</div>
+<div class="flex flex-1 flex-col justify-between">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-lg font-medium text-text-main dark:text-white">Hydration Boost Cream</h3>
+<p class="mt-1 text-sm text-text-muted dark:text-gray-400">Size: 50ml</p>
+</div>
+<p class="text-lg font-medium text-text-main dark:text-white">$65.00</p>
+</div>
+<div class="mt-4 flex items-end justify-between sm:mt-0">
+<p class="text-sm text-text-muted dark:text-gray-400">Qty: 1</p>
+</div>
+</div>
+</li>
+</ul>
+</div>
+<!-- Shipping & Billing Grid -->
+<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+<!-- Shipping Address -->
+<div class="rounded-2xl bg-white p-6 border border-border-color dark:bg-gray-800/50 dark:border-gray-700 shadow-sm">
+<div class="flex items-center gap-3 mb-4 text-text-main dark:text-white">
+<span class="material-symbols-outlined text-primary">local_shipping</span>
+<h3 class="font-bold text-lg">Shipping Address</h3>
+</div>
+<address class="not-italic text-sm text-text-muted dark:text-gray-400 space-y-1">
+<p class="font-medium text-text-main dark:text-gray-200">Sophia Anderson</p>
+<p>123 Beauty Lane, Apt 4B</p>
+<p>New York, NY 10012</p>
+<p>United States</p>
+<p class="mt-2">+1 (555) 123-4567</p>
+</address>
+</div>
+<!-- Payment Method -->
+<div class="rounded-2xl bg-white p-6 border border-border-color dark:bg-gray-800/50 dark:border-gray-700 shadow-sm">
+<div class="flex items-center gap-3 mb-4 text-text-main dark:text-white">
+<span class="material-symbols-outlined text-primary">credit_card</span>
+<h3 class="font-bold text-lg">Payment Method</h3>
+</div>
+<div class="flex items-center gap-3 text-sm text-text-muted dark:text-gray-400">
+<div class="h-8 w-12 rounded bg-gray-100 flex items-center justify-center border border-gray-200 dark:bg-gray-700 dark:border-gray-600">
+<!-- Simple VISA representation -->
+<span class="font-bold text-[10px] text-blue-800 dark:text-white">VISA</span>
+</div>
+<div>
+<p class="font-medium text-text-main dark:text-gray-200">Visa ending in 4242</p>
+<p>Exp 12/25</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Summary Sidebar -->
+<div class="lg:col-span-4 space-y-6">
+<!-- Cost Breakdown -->
+<div class="rounded-2xl bg-white p-6 border border-border-color dark:bg-gray-800/50 dark:border-gray-700 shadow-sm sticky top-24">
+<h2 class="text-xl font-bold text-text-main dark:text-white mb-6">Order Summary</h2>
+<dl class="space-y-4 text-sm text-text-muted dark:text-gray-400">
+<div class="flex justify-between">
+<dt>Subtotal</dt>
+<dd class="font-medium text-text-main dark:text-gray-200">$150.00</dd>
+</div>
+<div class="flex justify-between">
+<dt>Shipping</dt>
+<dd class="font-medium text-text-main dark:text-gray-200">Free</dd>
+</div>
+<div class="flex justify-between">
+<dt>Tax</dt>
+<dd class="font-medium text-text-main dark:text-gray-200">$12.00</dd>
+</div>
+<div class="border-t border-dashed border-border-color dark:border-gray-600 my-4 pt-4 flex justify-between items-center">
+<dt class="text-base font-bold text-text-main dark:text-white">Total</dt>
+<dd class="text-xl font-bold text-primary">$162.00</dd>
+</div>
+</dl>
+<div class="mt-8 rounded-xl bg-background-light p-4 border border-border-color dark:bg-gray-900/50 dark:border-gray-700">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary">loyalty</span>
+<div>
+<h4 class="text-sm font-bold text-text-main dark:text-white">Join The Portfolio Club</h4>
+<p class="mt-1 text-xs text-text-muted dark:text-gray-400">
+                                        Earn points on this purchase and unlock exclusive benefits.
+                                    </p>
+<button class="mt-3 w-full rounded-lg border border-primary/20 bg-white py-2 text-xs font-bold text-primary hover:bg-primary/5 dark:bg-gray-800 dark:text-white dark:border-gray-600 transition-colors">
+                                        Join for Free
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Help Section -->
+<div class="mt-16 border-t border-border-color pt-10 text-center dark:border-gray-800">
+<h3 class="text-lg font-bold text-text-main dark:text-white mb-2">Need Help?</h3>
+<p class="text-text-muted dark:text-gray-400 text-sm mb-6">
+                    If you have any questions about your order, please contact our support team.
+                </p>
+<div class="flex justify-center gap-6">
+<a class="inline-flex items-center gap-2 text-sm font-medium text-text-main hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">mail</span>
+                        support@portfolio.com
+                    </a>
+<a class="inline-flex items-center gap-2 text-sm font-medium text-text-main hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+                        Live Chat
+                    </a>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="border-t border-border-color bg-white dark:bg-background-dark dark:border-gray-800">
+<div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+<div class="space-y-4">
+<h4 class="text-lg font-bold text-text-main dark:text-white">Portfolio</h4>
+<p class="text-sm text-text-muted dark:text-gray-400 max-w-xs">
+                        Curated beauty essentials for the modern muse. Elevate your routine with our premium selection.
+                    </p>
+</div>
+<div>
+<h4 class="font-bold text-text-main dark:text-white mb-4">Shop</h4>
+<ul class="space-y-2 text-sm text-text-muted dark:text-gray-400">
+<li><a class="hover:text-primary transition-colors" href="#">Skincare</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Makeup</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Fragrance</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Sets</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-text-main dark:text-white mb-4">About</h4>
+<ul class="space-y-2 text-sm text-text-muted dark:text-gray-400">
+<li><a class="hover:text-primary transition-colors" href="#">Our Story</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Sustainability</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Careers</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Press</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-text-main dark:text-white mb-4">Stay in the know</h4>
+<form class="flex gap-2">
+<input class="w-full rounded-lg border-border-color bg-background-light px-3 py-2 text-sm placeholder-text-muted focus:border-primary focus:ring-primary dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Email address" type="email"/>
+<button class="rounded-lg bg-text-main px-3 py-2 text-white hover:bg-primary transition-colors dark:bg-white dark:text-black dark:hover:bg-gray-200" type="button">
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</form>
+</div>
+</div>
+<div class="border-t border-border-color pt-8 flex flex-col md:flex-row justify-between items-center gap-4 dark:border-gray-800">
+<p class="text-xs text-text-muted dark:text-gray-500">© 2024 Portfolio Beauty. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="text-text-muted hover:text-primary dark:text-gray-500 dark:hover:text-white transition-colors" href="#">
+<span class="sr-only">Instagram</span>
+<svg aria-hidden="true" class="h-5 w-5" fill="currentColor" viewbox="0 0 24 24">
+<path clip-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772 4.902 4.902 0 011.772-1.153c.636-.247 1.363-.416 2.427-.465C9.673 2.013 10.03 2 12.48 2h-.165zm-3.77 1.47c-2.159.1-2.408.438-2.585.505a2.498 2.498 0 00-.934.61 2.498 2.498 0 00-.61.934c-.066.177-.405.426-.505 2.585l-.016.372v5.132c.1.916.19 1.637.521 2.378.163.363.385.679.663.957.278.278.594.5.957.663.742.331 1.462.421 2.378.521h5.132c2.159-.1 2.408-.438 2.585-.505a2.498 2.498 0 00.934-.61 2.498 2.498 0 00.61-.934c.066-.177.405-.426.505-2.585l.016-.372V7.124c-.1-.916-.19-1.637-.521-2.378a3.18 3.18 0 00-.663-.957 3.18 3.18 0 00-.957-.663c-.742-.331-1.462-.421-2.378-.521H8.545zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 2.27a2.865 2.865 0 100 5.73 2.865 2.865 0 000-5.73zM17.657 5.286a1.06 1.06 0 110 2.12 1.06 1.06 0 010-2.12z" fill-rule="evenodd"></path>
+</svg>
+</a>
+<a class="text-text-muted hover:text-primary dark:text-gray-500 dark:hover:text-white transition-colors" href="#">
+<span class="sr-only">Facebook</span>
+<svg aria-hidden="true" class="h-5 w-5" fill="currentColor" viewbox="0 0 24 24">
+<path clip-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" fill-rule="evenodd"></path>
+</svg>
+</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>
