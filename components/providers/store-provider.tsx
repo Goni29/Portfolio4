@@ -75,6 +75,7 @@ interface StoreContextValue {
   toggleLocale: () => void;
   logout: () => void;
   addToCart: (productSlug: string, quantity?: number, sizeKey?: string) => void;
+  recordProductView: (productSlug: string) => void;
   updateCartQuantity: (productSlug: string, quantity: number, sizeKey?: string) => void;
   updateCartItemSize: (productSlug: string, nextSizeKey: string, currentSizeKey?: string) => void;
   removeFromCart: (productSlug: string, sizeKey?: string) => void;
@@ -182,6 +183,9 @@ const withFallback = (db: StoreDB): StoreDB => {
     cartByUser: normalizeCartByUser(db.cartByUser, db.products),
     couponByUser: db.couponByUser ?? {},
     inquiries: db.inquiries ?? [],
+    analytics: {
+      productViewsBySlug: db.analytics?.productViewsBySlug ?? {},
+    },
   };
 };
 
@@ -562,6 +566,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       });
     },
     [cartOwnerId, mutateDb],
+  );
+
+  const recordProductView = useCallback(
+    (productSlug: string) => {
+      const normalizedSlug = productSlug.trim();
+      if (!normalizedSlug) {
+        return;
+      }
+
+      mutateDb((prev) => {
+        if (!prev.products.some((entry) => entry.slug === normalizedSlug)) {
+          return prev;
+        }
+
+        const currentViews = prev.analytics?.productViewsBySlug ?? {};
+        return {
+          ...prev,
+          analytics: {
+            productViewsBySlug: {
+              ...currentViews,
+              [normalizedSlug]: (currentViews[normalizedSlug] ?? 0) + 1,
+            },
+          },
+        };
+      });
+    },
+    [mutateDb],
   );
 
   const updateCartQuantity = useCallback(
@@ -1331,6 +1362,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       toggleLocale,
       logout,
       addToCart,
+      recordProductView,
       updateCartQuantity,
       updateCartItemSize,
       removeFromCart,
@@ -1380,6 +1412,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     toggleLocale,
     logout,
     addToCart,
+    recordProductView,
     updateCartQuantity,
     updateCartItemSize,
     removeFromCart,

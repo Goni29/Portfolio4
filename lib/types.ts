@@ -200,6 +200,10 @@ export interface Settings {
   taxRate: number;
 }
 
+export interface Analytics {
+  productViewsBySlug: Record<string, number>;
+}
+
 export interface StoreDB {
   schemaVersion: 1;
   products: Product[];
@@ -212,6 +216,7 @@ export interface StoreDB {
   coupons: Coupon[];
   banners: Banner[];
   settings: Settings;
+  analytics: Analytics;
   cartByUser: Record<string, CartItem[]>;
   couponByUser: Record<string, string | undefined>;
 }

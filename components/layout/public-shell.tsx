@@ -305,10 +305,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
                   {locale === "ko" ? "컬렉션" : "Collections"}
                 </h3>
                 <ul className="space-y-3 text-sm text-slate-500">
-                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/shop")}>{locale === "ko" ? "리추얼 에센셜" : "Ritual Essentials"}</Link></li>
-                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/shop")}>{locale === "ko" ? "나이트 리페어" : "Night Repair"}</Link></li>
-                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/shop")}>{locale === "ko" ? "데일리 디펜스" : "Daily Defense"}</Link></li>
-                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/shop")}>{locale === "ko" ? "기프트 셀렉션" : "Gift Selection"}</Link></li>
+                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/collections/ritual-essentials")}>{locale === "ko" ? "리추얼 에센셜" : "Ritual Essentials"}</Link></li>
+                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/collections/night-repair")}>{locale === "ko" ? "나이트 리페어" : "Night Repair"}</Link></li>
+                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/collections/daily-defense")}>{locale === "ko" ? "데일리 디펜스" : "Daily Defense"}</Link></li>
                 </ul>
               </div>
 
@@ -317,10 +316,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
                   {locale === "ko" ? "브랜드" : "Company"}
                 </h3>
                 <ul className="space-y-3 text-sm text-slate-500">
-                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/about")}>{locale === "ko" ? "브랜드 스토리" : "Our Story"}</Link></li>
-                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/about")}>{locale === "ko" ? "성분 철학" : "Ingredient Philosophy"}</Link></li>
-                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/about")}>{locale === "ko" ? "지속가능성" : "Sustainability"}</Link></li>
-                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/contact")}>{locale === "ko" ? "고객지원" : "Client Care"}</Link></li>
+                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/about")}>{locale === "ko" ? "브랜드 철학" : "Brand Philosophy"}</Link></li>
+                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/journal")}>{locale === "ko" ? "저널" : "Journal"}</Link></li>
+                  <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/contact")}>{locale === "ko" ? "고객문의" : "Contact Us"}</Link></li>
                 </ul>
               </div>
 

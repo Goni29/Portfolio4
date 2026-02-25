@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "@/components/providers/store-provider";
 import { NotFoundView } from "@/components/public/views/not-found-view";
 import { resolveList, resolveText } from "@/lib/i18n";
@@ -19,7 +19,7 @@ const FALLBACK_IMAGE =
 const normalize = (value: string): string => value.trim().toLowerCase();
 
 export function ProductView({ slug }: { slug: string }) {
-  const { db, addToCart, locale } = useStore();
+  const { db, addToCart, locale, recordProductView } = useStore();
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
 
   const [quantity, setQuantity] = useState(1);
@@ -35,6 +35,22 @@ export function ProductView({ slug }: { slug: string }) {
   const activeUnitPrice = product ? getProductPriceBySize(product, activeSizeKey) : 0;
   const showSizeOptions = product ? hasMultipleProductSizes(product) : false;
 
+  const productSlug = product?.slug ?? "";
+
+  useEffect(() => {
+    if (!productSlug || typeof window === "undefined") {
+      return;
+    }
+
+    const storageKey = `portfolio4:viewed:${productSlug}`;
+    if (window.sessionStorage.getItem(storageKey) === "1") {
+      return;
+    }
+
+    window.sessionStorage.setItem(storageKey, "1");
+    recordProductView(productSlug);
+  }, [productSlug, recordProductView]);
+
   if (!product) {
     return <NotFoundView />;
   }
@@ -48,6 +64,7 @@ export function ProductView({ slug }: { slug: string }) {
   const detailImageB = product.images[2] ?? heroImage;
   const detailImageC = product.images[3] ?? detailImageB;
   const gallery = [heroImage, detailImageA, detailImageB, detailImageC];
+  const heroImagePosition = "50% 68%";
 
   const selectedImage = gallery[selectedImageIndex] ?? gallery[0] ?? FALLBACK_IMAGE;
 
@@ -91,7 +108,12 @@ export function ProductView({ slug }: { slug: string }) {
         <div className="mt-6 grid gap-10 lg:grid-cols-2">
           <div>
             <div className="overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800 aspect-[4/5]">
-              <img alt={productName} className="h-full w-full object-cover" src={selectedImage} />
+              <img
+                alt={productName}
+                className="h-full w-full object-cover"
+                src={selectedImage}
+                style={{ objectPosition: heroImagePosition }}
+              />
             </div>
 
             <div className="mt-3 grid grid-cols-4 gap-2">

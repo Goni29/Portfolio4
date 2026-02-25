@@ -64,8 +64,8 @@ function AccountLoginView() {
   const [message, setMessage] = useState("");
 
   return (
-    <div className="flex flex-1 w-full min-h-[calc(100vh-var(--public-header-height))] overflow-hidden bg-white">
-      <div className="hidden lg:flex w-1/2 relative bg-[#f8f9fc] items-center justify-center overflow-hidden">
+    <div className="flex flex-1 w-full min-h-[calc(100vh-var(--public-header-height))] overflow-hidden bg-[#fcf8f9]">
+      <div className="hidden lg:flex w-1/2 relative bg-[#f3e7ea] items-center justify-center overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
           style={{
@@ -80,11 +80,11 @@ function AccountLoginView() {
         </div>
       </div>
 
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 lg:p-24 bg-white relative">
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 lg:p-24 bg-[#fffafb] relative">
         <div className="w-full max-w-[420px] flex flex-col gap-10">
           <div className="text-center flex flex-col items-center gap-2">
             <h1 className="text-4xl sm:text-5xl font-serif text-[#0e121b] font-bold tracking-tight mb-2">{t("Portfolio", "Portfolio")}</h1>
-            <p className="text-[#4e6797] text-sm sm:text-base font-normal">{t("다시 오신 것을 환영합니다. 로그인 정보를 입력해 주세요.", "Welcome back. Please enter your details.")}</p>
+            <p className="text-[#7b5b67] text-sm sm:text-base font-normal">{t("다시 오신 것을 환영합니다. 로그인 정보를 입력해 주세요.", "Welcome back. Please enter your details.")}</p>
           </div>
 
           <form
@@ -106,13 +106,13 @@ function AccountLoginView() {
               <div className="relative group">
                 <input
                   id="account-login-email"
-                  className="w-full px-4 py-3.5 bg-white border border-[#e2e8f0] rounded-lg text-[#0e121b] text-base placeholder:text-[#4e6797]/60 focus:ring-2 focus:ring-[#1754cf]/20 focus:border-[#1754cf] transition-all duration-200 outline-none"
+                  className="w-full px-4 py-3.5 bg-white border border-[#f0d8e1] rounded-lg text-[#0e121b] text-base placeholder:text-[#9b7482]/70 focus:ring-2 focus:ring-[#e6194c]/20 focus:border-[#e6194c] transition-all duration-200 outline-none"
                   placeholder={t("이메일 주소를 입력해 주세요", "name@example.com")}
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                 />
-                <div className="absolute right-3 top-3.5 text-[#4e6797] pointer-events-none group-focus-within:text-[#1754cf] transition-colors">
+                <div className="absolute right-3 top-3.5 text-[#9b7482] pointer-events-none group-focus-within:text-[#e6194c] transition-colors">
                   <span className="material-symbols-outlined text-[20px]">mail</span>
                 </div>
               </div>
@@ -125,14 +125,14 @@ function AccountLoginView() {
               <div className="relative group">
                 <input
                   id="account-login-password"
-                  className="w-full px-4 py-3.5 bg-white border border-[#e2e8f0] rounded-lg text-[#0e121b] text-base placeholder:text-[#4e6797]/60 focus:ring-2 focus:ring-[#1754cf]/20 focus:border-[#1754cf] transition-all duration-200 outline-none"
+                  className="w-full px-4 py-3.5 bg-white border border-[#f0d8e1] rounded-lg text-[#0e121b] text-base placeholder:text-[#9b7482]/70 focus:ring-2 focus:ring-[#e6194c]/20 focus:border-[#e6194c] transition-all duration-200 outline-none"
                   placeholder="********"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                 />
                 <div
-                  className="absolute right-3 top-3.5 text-[#4e6797] cursor-pointer hover:text-[#1754cf] transition-colors"
+                  className="absolute right-3 top-3.5 text-[#9b7482] cursor-pointer hover:text-[#e6194c] transition-colors"
                   role="button"
                   tabIndex={0}
                   aria-label={showPassword ? t("비밀번호 숨기기", "Hide password") : t("비밀번호 보기", "Show password")}
@@ -155,7 +155,7 @@ function AccountLoginView() {
               <label className="flex items-center gap-2 cursor-pointer group">
                 <div className="relative flex items-center">
                   <input
-                    className="peer h-4 w-4 appearance-none rounded border border-[#e2e8f0] bg-white checked:bg-[#1754cf] checked:border-[#1754cf] transition-all cursor-pointer"
+                    className="peer h-4 w-4 appearance-none rounded border border-[#f0d8e1] bg-white checked:bg-[#e6194c] checked:border-[#e6194c] transition-all cursor-pointer"
                     type="checkbox"
                     checked={remember}
                     onChange={(event) => setRemember(event.target.checked)}
@@ -164,11 +164,11 @@ function AccountLoginView() {
                     check
                   </span>
                 </div>
-                <span className="text-sm text-[#4e6797] group-hover:text-[#0e121b] transition-colors">{t("로그인 상태 유지", "Remember me")}</span>
+                <span className="text-sm text-[#8b6675] group-hover:text-[#4c2833] transition-colors">{t("로그인 상태 유지", "Remember me")}</span>
               </label>
               <button
                 type="button"
-                className="text-sm font-medium text-[#1754cf] hover:text-[#1754cf]/80 hover:underline transition-colors"
+                className="text-sm font-medium text-[#e6194c] hover:text-[#e6194c]/80 hover:underline transition-colors"
               >
                 {t("비밀번호를 잊으셨나요?", "Forgot Password?")}
               </button>
@@ -176,7 +176,7 @@ function AccountLoginView() {
 
             <button
               type="submit"
-              className="w-full bg-[#1754cf] hover:bg-[#1754cf]/90 text-white font-semibold h-12 rounded-lg shadow-lg shadow-[#1754cf]/20 transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-2 group"
+              className="w-full bg-[#e6194c] hover:bg-[#cb1743] text-white font-semibold h-12 rounded-lg shadow-lg shadow-[#e6194c]/20 transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-2 group"
             >
               <span>{t("로그인", "Sign In")}</span>
               <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform text-[18px]">
@@ -186,16 +186,16 @@ function AccountLoginView() {
 
             <div className="relative my-2">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-[#e2e8f0]" />
+                <span className="w-full border-t border-[#f0d8e1]" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-[#4e6797]">{t("또는 다음으로 계속", "Or continue with")}</span>
+                <span className="bg-[#fffafb] px-2 text-[#8b6675]">{t("또는 다음으로 계속", "Or continue with")}</span>
               </div>
             </div>
 
             <button
               type="button"
-              className="w-full bg-white border border-[#e2e8f0] hover:bg-[#f8f9fc] text-[#0e121b] font-medium h-12 rounded-lg transition-colors flex items-center justify-center gap-3"
+              className="w-full bg-white border border-[#f0d8e1] hover:bg-[#fdf1f5] text-[#0e121b] font-medium h-12 rounded-lg transition-colors flex items-center justify-center gap-3"
             >
               <img
                 alt={t("구글", "Google")}
@@ -209,9 +209,9 @@ function AccountLoginView() {
           </form>
 
           <div className="text-center mt-4">
-            <p className="text-[#4e6797] text-sm">
+            <p className="text-[#8b6675] text-sm">
               {t("아직 회원이 아니신가요?", "New to Portfolio?")}
-              <Link href={localizePath("/account/register", locale)} className="font-semibold text-[#1754cf] hover:text-[#1754cf]/80 transition-colors ml-1">
+              <Link href={localizePath("/account/register", locale)} className="font-semibold text-[#e6194c] hover:text-[#e6194c]/80 transition-colors ml-1">
                 {t("회원가입", "Create an Account")}
               </Link>
             </p>
@@ -219,7 +219,7 @@ function AccountLoginView() {
         </div>
 
         <div className="absolute bottom-6 text-center w-full px-6">
-          <p className="text-xs text-[#4e6797]/60">{t("(c) 2024 Portfolio Beauty. 모든 권리 보유.", "(c) 2024 Portfolio Beauty. All rights reserved.")}</p>
+          <p className="text-xs text-[#8b6675]/70">{t("(c) 2024 Portfolio Beauty. 모든 권리 보유.", "(c) 2024 Portfolio Beauty. All rights reserved.")}</p>
         </div>
       </div>
     </div>
@@ -238,8 +238,8 @@ function AccountRegisterView() {
   const [message, setMessage] = useState("");
 
   return (
-    <div className="flex flex-1 min-h-[calc(100vh-var(--public-header-height))] w-full bg-[#f6f7f8]">
-      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-slate-200">
+    <div className="flex flex-1 min-h-[calc(100vh-var(--public-header-height))] w-full bg-[#fcf8f9]">
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-[#f3e7ea]">
         <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
           style={{
@@ -255,12 +255,12 @@ function AccountRegisterView() {
           </p>
         </div>
       </div>
-      <div className="w-full lg:w-1/2 flex flex-col bg-white relative overflow-y-auto">
+      <div className="w-full lg:w-1/2 flex flex-col bg-[#fffafb] relative overflow-y-auto">
         <div className="flex-1 flex flex-col justify-center px-6 lg:px-20 xl:px-32 py-8">
           <div className="w-full max-w-md mx-auto">
             <div className="mb-10">
               <h1 className="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">{t("회원가입", "Create Account")}</h1>
-              <p className="text-slate-500 text-lg">{t("Portfolio 멤버십으로 더 특별한 뷰티 경험을 시작해 보세요.", "Join Portfolio for an exclusive beauty experience.")}</p>
+              <p className="text-[#7b5b67] text-lg">{t("Portfolio 멤버십으로 더 특별한 뷰티 경험을 시작해 보세요.", "Join Portfolio for an exclusive beauty experience.")}</p>
             </div>
 
             <form
@@ -281,7 +281,7 @@ function AccountRegisterView() {
                 </label>
                 <input
                   id="account-register-name"
-                  className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#19b3e6]/50 focus:border-[#19b3e6] transition-all text-slate-900 placeholder-slate-400"
+                  className="w-full h-12 px-4 bg-[#fff5f8] border border-[#f0d8e1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e6194c]/25 focus:border-[#e6194c] transition-all text-slate-900 placeholder-[#9b7482]"
                   placeholder={t("이름을 입력해 주세요", "Enter your full name")}
                   type="text"
                   value={name}
@@ -295,7 +295,7 @@ function AccountRegisterView() {
                 </label>
                 <input
                   id="account-register-email"
-                  className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#19b3e6]/50 focus:border-[#19b3e6] transition-all text-slate-900 placeholder-slate-400"
+                  className="w-full h-12 px-4 bg-[#fff5f8] border border-[#f0d8e1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e6194c]/25 focus:border-[#e6194c] transition-all text-slate-900 placeholder-[#9b7482]"
                   placeholder={t("이메일 주소를 입력해 주세요", "name@example.com")}
                   type="email"
                   value={email}
@@ -310,14 +310,14 @@ function AccountRegisterView() {
                 <div className="relative group">
                   <input
                     id="account-register-password"
-                    className="w-full h-12 px-4 pr-12 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#19b3e6]/50 focus:border-[#19b3e6] transition-all text-slate-900 placeholder-slate-400"
+                    className="w-full h-12 px-4 pr-12 bg-[#fff5f8] border border-[#f0d8e1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e6194c]/25 focus:border-[#e6194c] transition-all text-slate-900 placeholder-[#9b7482]"
                     placeholder={t("비밀번호를 설정해 주세요", "Create a password")}
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                   />
                   <button
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#19b3e6] transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9b7482] hover:text-[#e6194c] transition-colors"
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
                     aria-label={showPassword ? t("비밀번호 숨기기", "Hide password") : t("비밀번호 보기", "Show password")}
@@ -327,14 +327,14 @@ function AccountRegisterView() {
                     </span>
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 mt-1 pl-1">{t("비밀번호는 8자 이상으로 입력해 주세요.", "Must be at least 8 characters.")}</p>
+                <p className="text-xs text-[#8b6675] mt-1 pl-1">{t("비밀번호는 8자 이상으로 입력해 주세요.", "Must be at least 8 characters.")}</p>
               </div>
 
               <div className="flex items-start gap-3 py-2">
                 <div className="flex items-center h-6">
                   <input
                     id="account-register-subscribe"
-                    className="size-5 rounded border-slate-300 text-[#19b3e6] focus:ring-[#19b3e6] cursor-pointer"
+                    className="size-5 rounded border-[#e8cfd9] text-[#e6194c] focus:ring-[#e6194c] cursor-pointer"
                     type="checkbox"
                     checked={marketingOptIn}
                     onChange={(event) => setMarketingOptIn(event.target.checked)}
@@ -344,11 +344,11 @@ function AccountRegisterView() {
                   <label className="font-medium text-slate-900 cursor-pointer" htmlFor="account-register-subscribe">
                     {t("Portfolio 저널 뉴스레터 구독", "Subscribe to the Portfolio Journal")}
                   </label>
-                  <p className="text-slate-500">{t("최신 뷰티 인사이트와 트렌드, 멤버 전용 혜택을 받아보세요.", "Get the latest beauty tips, trends, and exclusive offers.")}</p>
+                  <p className="text-[#8b6675]">{t("최신 뷰티 인사이트와 트렌드, 멤버 전용 혜택을 받아보세요.", "Get the latest beauty tips, trends, and exclusive offers.")}</p>
                 </div>
               </div>
 
-              <button className="w-full h-12 flex items-center justify-center bg-[#19b3e6] hover:bg-[#159cc9] text-white font-bold rounded-lg transition-all shadow-md hover:shadow-lg active:scale-[0.99] mt-2">
+              <button className="w-full h-12 flex items-center justify-center bg-[#e6194c] hover:bg-[#cb1743] text-white font-bold rounded-lg transition-all shadow-md shadow-[#e6194c]/20 hover:shadow-lg active:scale-[0.99] mt-2">
                 {t("회원가입 완료", "Create Account")}
               </button>
 
@@ -356,7 +356,7 @@ function AccountRegisterView() {
 
               <p className="text-center text-sm text-slate-600 mt-6">
                 {t("이미 계정이 있으신가요?", "Already have an account?")}
-                <Link href={localizePath("/account/login", locale)} className="font-bold text-[#19b3e6] hover:text-[#159cc9] transition-colors ml-1">
+                <Link href={localizePath("/account/login", locale)} className="font-bold text-[#e6194c] hover:text-[#cb1743] transition-colors ml-1">
                   {t("로그인", "Sign In")}
                 </Link>
               </p>
@@ -364,14 +364,14 @@ function AccountRegisterView() {
           </div>
         </div>
 
-        <footer className="px-6 py-6 lg:px-12 text-center lg:text-left border-t border-slate-100 mt-auto">
-          <p className="text-xs text-slate-400">
+        <footer className="px-6 py-6 lg:px-12 text-center lg:text-left border-t border-[#f0d8e1] mt-auto">
+          <p className="text-xs text-[#9b7482]">
             {t("계정을 생성하면 다음 정책에 동의한 것으로 간주됩니다.", "By creating an account, you agree to our")} {" "}
-            <button type="button" className="underline hover:text-slate-600">
+            <button type="button" className="underline hover:text-[#7b5b67]">
               {t("이용약관", "Terms & Conditions")}
             </button>{" "}
             {t("및", "and")}{" "}
-            <button type="button" className="underline hover:text-slate-600">
+            <button type="button" className="underline hover:text-[#7b5b67]">
               {t("개인정보 처리방침", "Privacy Policy")}
             </button>
             {t("입니다.", ".")}

@@ -14,12 +14,12 @@ const playfair = Playfair_Display({
 });
 
 const notoSansKr = Noto_Sans_KR({
-  subsets: ["korean", "latin"],
+  subsets: ["latin"],
   variable: "--font-noto-sans-kr",
 });
 
 const notoSerifKr = Noto_Serif_KR({
-  subsets: ["korean", "latin"],
+  subsets: ["latin"],
   variable: "--font-noto-serif-kr",
 });
 

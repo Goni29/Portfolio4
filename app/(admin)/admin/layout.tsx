@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 const ADMIN_MENU = [
   { href: "/admin", label: { ko: "대시보드", en: "Dashboard" }, icon: "dashboard" },
+  { href: "/admin/analytics", label: { ko: "통계", en: "Analytics" }, icon: "monitoring" },
   { href: "/admin/orders", label: { ko: "주문", en: "Orders" }, icon: "shopping_bag" },
   { href: "/admin/products", label: { ko: "제품", en: "Products" }, icon: "sell" },
   { href: "/admin/collections", label: { ko: "컬렉션", en: "Collections" }, icon: "category" },
@@ -24,6 +25,7 @@ const ADMIN_MENU = [
 
 const MENU_CONTENT_HINTS: Record<string, string[]> = {
   "/admin": ["dashboard", "overview", "analytics", "summary", "대시보드", "개요", "요약", "통계"],
+  "/admin/analytics": ["analytics", "stats", "revenue", "conversion", "traffic", "통계", "매출", "전환", "조회수", "분석"],
   "/admin/orders": ["orders", "payment", "shipping", "tracking", "refund", "status", "주문", "결제", "배송", "운송장", "환불", "상태"],
   "/admin/products": ["products", "inventory", "stock", "sku", "category", "ingredients", "제품", "재고", "카테고리", "성분"],
   "/admin/collections": ["collections", "curation", "sort", "featured", "컬렉션", "큐레이션", "정렬", "노출"],
@@ -92,6 +94,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         `${db.users.length} customers`,
         `${db.reviews.length} reviews`,
         `${db.inquiries.length} inquiries`,
+      ),
+      "/admin/analytics": buildSearchBlob(
+        MENU_CONTENT_HINTS["/admin/analytics"],
+        `${db.orders.length} orders`,
+        `${db.products.length} products`,
+        `${db.collections.length} collections`,
+        `${Object.values(db.analytics.productViewsBySlug ?? {}).reduce((sum, count) => sum + count, 0)} product views`,
+        db.orders.map((order) => [order.id, order.status, order.paymentStatus, order.total, order.createdAt]),
+        db.products.map((product) => [product.slug, product.name, product.collectionSlugs]),
       ),
       "/admin/orders": buildSearchBlob(
         MENU_CONTENT_HINTS["/admin/orders"],
@@ -334,7 +345,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               className="inline-flex h-9 items-center rounded-lg bg-[#e6194c] px-3 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-[#e6194c]/90"
               onClick={() => {
                 logout();
-                router.push(localize("/admin/login"));
+                router.push(localize("/"));
               }}
             >
               {t("로그아웃", "Sign Out")}

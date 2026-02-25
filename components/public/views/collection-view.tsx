@@ -17,6 +17,7 @@ export function CollectionView({ slug }: { slug: string }) {
   }
 
   const products = db.products.filter((product) => collection.productSlugs.includes(product.slug));
+  const heroObjectPosition = normalize(collection.slug) === "daily-defense" ? "50% 72%" : "50% 50%";
 
   return (
     <>
@@ -25,6 +26,7 @@ export function CollectionView({ slug }: { slug: string }) {
           src={collection.heroImage}
           alt={resolveText(collection.name, locale)}
           className="absolute inset-0 h-full w-full object-cover"
+          style={{ objectPosition: heroObjectPosition }}
         />
         <div className="absolute inset-0 bg-black/30" />
         <div className="relative h-full flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto">

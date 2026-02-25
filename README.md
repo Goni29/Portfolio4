@@ -20,6 +20,17 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Text Encoding Guard (Korean-safe)
+
+This project enforces UTF-8-safe text checks to prevent Korean mojibake (`??`) issues.
+
+- `npm run check:text` scans source files for:
+  - invalid UTF-8 bytes
+  - replacement character (`U+FFFD`)
+  - C1 control characters (`U+0080`-`U+009F`)
+  - suspicious broken Korean literals (for example mixed Hangul and internal `?`)
+- `npm run lint` and `npm run build` run this check automatically before continuing.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

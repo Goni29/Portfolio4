@@ -40,6 +40,8 @@ export function ShopView() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<ActivePanel>("all");
   const [desktopPanel, setDesktopPanel] = useState<DesktopPanel | null>(null);
+  const [desktopPanelLeft, setDesktopPanelLeft] = useState(0);
+  const [desktopPanelRight, setDesktopPanelRight] = useState<number | null>(null);
   const desktopMenuRef = useRef<HTMLDivElement | null>(null);
 
   const sortLabel = (key: (typeof SORTS)[number]) => {
@@ -54,7 +56,7 @@ export function ShopView() {
       cleanser: { ko: "클렌저", en: "Cleanser" },
       serum: { ko: "세럼", en: "Serum" },
       moisturizer: { ko: "모이스처라이저", en: "Moisturizer" },
-      sunscreen: { ko: "선케어", en: "Sunscreen" },
+      sunscreen: { ko: "선스크린", en: "Sunscreen" },
       mask: { ko: "마스크", en: "Mask" },
       tool: { ko: "뷰티 툴", en: "Beauty Tool" },
       all: { ko: "전체", en: "All" },
@@ -68,7 +70,7 @@ export function ShopView() {
 
   const concernLabelText = (key: string) => {
     const labels: Record<string, { ko: string; en: string }> = {
-      hydration: { ko: "수분 부족", en: "Hydration" },
+      hydration: { ko: "수분 공급", en: "Hydration" },
       acne: { ko: "트러블", en: "Acne" },
       aging: { ko: "탄력", en: "Aging" },
       dullness: { ko: "톤 개선", en: "Dullness" },
@@ -176,8 +178,29 @@ export function ShopView() {
     setDrawerOpen(true);
   };
 
-  const toggleDesktopPanel = (panel: DesktopPanel) => {
-    setDesktopPanel((prev) => (prev === panel ? null : panel));
+  const toggleDesktopPanel = (
+    panel: DesktopPanel,
+    anchorElement?: HTMLElement,
+  ) => {
+    if (desktopPanel === panel) {
+      setDesktopPanel(null);
+      setDesktopPanelRight(null);
+      return;
+    }
+
+    if (anchorElement && desktopMenuRef.current) {
+      const menuRect = desktopMenuRef.current.getBoundingClientRect();
+      const anchorRect = anchorElement.getBoundingClientRect();
+      const nextLeft = Math.max(0, anchorRect.left - menuRect.left);
+      setDesktopPanelLeft(nextLeft);
+      if (panel === "sort") {
+        setDesktopPanelRight(Math.max(0, menuRect.right - anchorRect.right));
+      } else {
+        setDesktopPanelRight(null);
+      }
+    }
+
+    setDesktopPanel(panel);
   };
 
   const applyDesktopFilter = (next: Partial<ShopFilters>) => {
@@ -228,13 +251,32 @@ export function ShopView() {
   const quickAddFromCard = (product: Product) => {
     addToCart(product.slug, 1, getDefaultProductSizeKey(product));
   };
+  const filledStarStyle = { fontVariationSettings: "'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 20" } as const;
+  const emptyStarStyle = { fontVariationSettings: "'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20" } as const;
+
+  const desktopTriggerClass = (isActive: boolean) =>
+    [
+      "group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all whitespace-nowrap",
+      isActive
+        ? "border-[#e6194c]/45 bg-[#fff0f4] text-[#8a1d3d] shadow-[0_6px_14px_rgba(230,25,76,0.14)]"
+        : "border-[#e6d7dd] bg-white/90 text-slate-700 hover:border-[#e6194c]/45 hover:bg-[#fff6f8]",
+    ].join(" ");
+
+  const desktopDropdownClass =
+    "absolute top-[calc(100%+10px)] z-50 rounded-2xl border border-[#ecd3dc] bg-white/95 p-1.5 shadow-[0_20px_34px_rgba(53,18,31,0.18)] backdrop-blur";
+
+  const desktopOptionClass = (isActive: boolean) =>
+    [
+      "w-full rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
+      isActive ? "bg-[#fff0f4] text-[#bf0f42] font-semibold" : "text-slate-700 hover:bg-[#fcf2f6]",
+    ].join(" ");
 
   return (
     <>
       <section className="px-6 lg:px-12 pt-12 pb-8">
         <div className="max-w-[960px] mx-auto text-center space-y-4">
           <span className="text-[#e6194c] text-sm font-bold tracking-widest uppercase">
-            {t("뉴 시즌 컬렉션", "New Arrivals")}
+            {t("신상품", "New Arrivals")}
           </span>
           <h2 className="text-4xl md:text-5xl font-serif font-medium tracking-tight text-slate-900 dark:text-white">
             {t("시그니처 컬렉션", "The Collection")}
@@ -242,66 +284,100 @@ export function ShopView() {
         </div>
       </section>
 
-      <section className="sticky top-[var(--public-header-height)] z-40 border-y border-stone-200 dark:border-stone-800 bg-[#f8f6f6]/95 dark:bg-[#211115]/95 backdrop-blur-sm">
+      <section className="sticky top-[var(--public-header-height)] z-40 border-y border-[#f0dde4] bg-[#fff7fa]/95 backdrop-blur-md">
         <div className="px-6 lg:px-12 py-3">
-          <div ref={desktopMenuRef} className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap gap-2 md:gap-3 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+          <div
+            ref={desktopMenuRef}
+            className="relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#eed7df] bg-white/85 px-3 py-3 shadow-[0_10px_24px_rgba(86,32,46,0.07)] md:px-4"
+          >
+            <div className="flex flex-wrap items-center gap-2 md:gap-3 overflow-x-auto no-scrollbar pb-1 md:pb-0">
               <button
                 type="button"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:border-[#e6194c] transition-colors"
-                onClick={() => (window.innerWidth >= 768 ? toggleDesktopPanel("category") : openPanel("category"))}
+                className={desktopTriggerClass(desktopPanel === "category")}
+                onClick={(event) =>
+                  window.innerWidth >= 768
+                    ? toggleDesktopPanel("category", event.currentTarget)
+                    : openPanel("category")
+                }
               >
                 {categoryLabel}
-                <span className="material-symbols-outlined text-[18px]">keyboard_arrow_down</span>
+                <span
+                  className={`material-symbols-outlined text-[18px] transition-transform ${desktopPanel === "category" ? "rotate-180 text-[#e6194c]" : "text-slate-500"}`}
+                >
+                  keyboard_arrow_down
+                </span>
               </button>
               <button
                 type="button"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:border-[#e6194c] transition-colors"
-                onClick={() => (window.innerWidth >= 768 ? toggleDesktopPanel("concern") : openPanel("concern"))}
+                className={desktopTriggerClass(desktopPanel === "concern")}
+                onClick={(event) =>
+                  window.innerWidth >= 768
+                    ? toggleDesktopPanel("concern", event.currentTarget)
+                    : openPanel("concern")
+                }
               >
                 {concernLabel}
-                <span className="material-symbols-outlined text-[18px]">keyboard_arrow_down</span>
+                <span
+                  className={`material-symbols-outlined text-[18px] transition-transform ${desktopPanel === "concern" ? "rotate-180 text-[#e6194c]" : "text-slate-500"}`}
+                >
+                  keyboard_arrow_down
+                </span>
               </button>
               <button
                 type="button"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:border-[#e6194c] transition-colors"
-                onClick={() =>
-                  window.innerWidth >= 768 ? toggleDesktopPanel("collection") : openPanel("collection")
+                className={desktopTriggerClass(desktopPanel === "collection")}
+                onClick={(event) =>
+                  window.innerWidth >= 768
+                    ? toggleDesktopPanel("collection", event.currentTarget)
+                    : openPanel("collection")
                 }
               >
                 {collectionLabel}
-                <span className="material-symbols-outlined text-[18px]">keyboard_arrow_down</span>
+                <span
+                  className={`material-symbols-outlined text-[18px] transition-transform ${desktopPanel === "collection" ? "rotate-180 text-[#e6194c]" : "text-slate-500"}`}
+                >
+                  keyboard_arrow_down
+                </span>
               </button>
               <button
                 type="button"
-                className="text-sm font-medium text-slate-500 hover:text-[#e6194c] transition-colors whitespace-nowrap hidden md:block"
+                className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-[#ebd4dc] bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#7b5a66] transition-colors hover:border-[#e6194c]/45 hover:text-[#e6194c]"
                 onClick={resetFilters}
               >
+                <span className="material-symbols-outlined text-[16px]">restart_alt</span>
                 {t("초기화", "Clear All")}
               </button>
             </div>
 
-            <div className="flex items-center gap-4 ml-auto">
-              <span className="text-sm text-slate-500 dark:text-slate-400 hidden sm:inline-block">
+            <div className="ml-auto flex items-center gap-2 sm:gap-3">
+              <span className="hidden sm:inline-flex items-center rounded-full border border-[#efd8e0] bg-white/80 px-3 py-1 text-xs font-semibold text-[#7a5763]">
                 {filtered.length} {t("개 상품", "Products")}
               </span>
               <button
                 type="button"
-                className="flex items-center gap-2 text-sm font-medium hover:text-[#e6194c] transition-colors"
-                onClick={() => (window.innerWidth >= 768 ? toggleDesktopPanel("sort") : openPanel("sort"))}
+                className={desktopTriggerClass(desktopPanel === "sort")}
+                onClick={(event) =>
+                  window.innerWidth >= 768
+                    ? toggleDesktopPanel("sort", event.currentTarget)
+                    : openPanel("sort")
+                }
               >
-                {t("정렬", "Sort")}
-                <span className="material-symbols-outlined text-[18px]">sort</span>
+                <span className="material-symbols-outlined text-[18px]">tune</span>
+                <span className="hidden sm:inline">{sortLabel(sort)}</span>
+                <span className="sm:hidden">{t("정렬", "Sort")}</span>
               </button>
             </div>
 
             {desktopPanel === "category" && (
-              <div className="absolute left-6 top-[calc(100%+8px)] z-50 w-[220px] rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">
-                <button type="button" className="w-full px-4 py-2 text-left text-sm hover:bg-stone-50" onClick={() => applyDesktopFilter({ category: "all" })}>
+              <div
+                className={`${desktopDropdownClass} w-[240px]`}
+                style={{ left: desktopPanelLeft }}
+              >
+                <button type="button" className={desktopOptionClass(filters.category === "all")} onClick={() => applyDesktopFilter({ category: "all" })}>
                   {t("전체", "All")}
                 </button>
                 {categories.map((option) => (
-                  <button key={option} type="button" className="w-full px-4 py-2 text-left text-sm hover:bg-stone-50" onClick={() => applyDesktopFilter({ category: option })}>
+                  <button key={option} type="button" className={desktopOptionClass(filters.category === option)} onClick={() => applyDesktopFilter({ category: option })}>
                     {categoryLabelText(option)}
                   </button>
                 ))}
@@ -309,12 +385,15 @@ export function ShopView() {
             )}
 
             {desktopPanel === "concern" && (
-              <div className="absolute left-[240px] top-[calc(100%+8px)] z-50 w-[220px] rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">
-                <button type="button" className="w-full px-4 py-2 text-left text-sm hover:bg-stone-50" onClick={() => applyDesktopFilter({ concern: "all" })}>
+              <div
+                className={`${desktopDropdownClass} w-[240px]`}
+                style={{ left: desktopPanelLeft }}
+              >
+                <button type="button" className={desktopOptionClass(filters.concern === "all")} onClick={() => applyDesktopFilter({ concern: "all" })}>
                   {t("전체", "All")}
                 </button>
                 {concerns.map((option) => (
-                  <button key={option} type="button" className="w-full px-4 py-2 text-left text-sm hover:bg-stone-50" onClick={() => applyDesktopFilter({ concern: option })}>
+                  <button key={option} type="button" className={desktopOptionClass(filters.concern === option)} onClick={() => applyDesktopFilter({ concern: option })}>
                     {concernLabelText(option)}
                   </button>
                 ))}
@@ -322,12 +401,15 @@ export function ShopView() {
             )}
 
             {desktopPanel === "collection" && (
-              <div className="absolute left-[474px] top-[calc(100%+8px)] z-50 w-[240px] rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">
-                <button type="button" className="w-full px-4 py-2 text-left text-sm hover:bg-stone-50" onClick={() => applyDesktopFilter({ collection: "all" })}>
+              <div
+                className={`${desktopDropdownClass} w-[260px]`}
+                style={{ left: desktopPanelLeft }}
+              >
+                <button type="button" className={desktopOptionClass(filters.collection === "all")} onClick={() => applyDesktopFilter({ collection: "all" })}>
                   {t("전체", "All")}
                 </button>
                 {collections.map((option) => (
-                  <button key={option.slug} type="button" className="w-full px-4 py-2 text-left text-sm hover:bg-stone-50" onClick={() => applyDesktopFilter({ collection: option.slug })}>
+                  <button key={option.slug} type="button" className={desktopOptionClass(filters.collection === option.slug)} onClick={() => applyDesktopFilter({ collection: option.slug })}>
                     {option.name}
                   </button>
                 ))}
@@ -335,9 +417,12 @@ export function ShopView() {
             )}
 
             {desktopPanel === "sort" && (
-              <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-[220px] rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">
+              <div
+                className={`${desktopDropdownClass} w-[230px]`}
+                style={desktopPanelRight === null ? { left: desktopPanelLeft } : { right: desktopPanelRight }}
+              >
                 {SORTS.map((option) => (
-                  <button key={option} type="button" className="w-full px-4 py-2 text-left text-sm hover:bg-stone-50" onClick={() => applyDesktopSort(option)}>
+                  <button key={option} type="button" className={desktopOptionClass(sort === option)} onClick={() => applyDesktopSort(option)}>
                     {sortLabel(option)}
                   </button>
                 ))}
@@ -369,7 +454,7 @@ export function ShopView() {
                       onClick={() => quickAddFromCard(product)}
                     >
                       <span className="material-symbols-outlined text-[18px]">shopping_bag</span>
-                      {t("바로담기", "Add to Bag")}
+                      {t("바로 담기", "Add to Bag")}
                     </button>
                   </div>
                 </div>
@@ -393,15 +478,15 @@ export function ShopView() {
                     {product.reviewCount > 0 && (
                       <div className="flex items-center text-[12px] text-yellow-400">
                         {Array.from({ length: 5 }, (_, iconIndex) => {
-                          const value = iconIndex + 1;
-                          let icon = "star_outline";
-                          if (roundedRating >= value) {
-                            icon = "star";
-                          } else if (roundedRating + 0.5 === value) {
-                            icon = "star_half";
-                          }
+                          const fillLevel = Math.max(0, Math.min(1, roundedRating - iconIndex));
+                          const icon = fillLevel >= 1 ? "star" : fillLevel >= 0.5 ? "star_half" : "star";
+                          const colorClass = fillLevel > 0 ? "text-amber-400" : "text-slate-300";
                           return (
-                            <span key={`${product.id}-star-${value}`} className="material-symbols-outlined text-[14px]">
+                            <span
+                              key={`${product.id}-star-${iconIndex + 1}`}
+                              className={`material-symbols-outlined text-[14px] leading-none ${colorClass}`}
+                              style={fillLevel > 0 ? filledStarStyle : emptyStarStyle}
+                            >
                               {icon}
                             </span>
                           );

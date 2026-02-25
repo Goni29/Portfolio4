@@ -6,6 +6,9 @@ import type { Locale, LocalizedText, LocalizedValue, SessionState, StoreDB } fro
 const DB_KEY = "db";
 const SESSION_KEY = "session";
 const LOCALE_KEY = "locale";
+const DAILY_DEFENSE_HERO_IMAGE = "/collection3.png";
+const LEGACY_DAILY_DEFENSE_HERO_IMAGE =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuB8rFCb4eSLAWGesmzQsJof9VGrcq6ERudpGqWqeBUNVHSR4Iu9f3n06QyE_jp4I0qE3RmqwlHwIDRR8GCsS-CUZ6rOaJAomYRDtbgkDNu9jhLM34hg-VtVEYXkD1NH9wcEjFvW9hjrcBZBZaKAkRq8NWN0pV9Kee4p8HWkdC2kw8ZVWEjP-VOjB732bogXlQx8KukHn0faV14PzbCBlETcA-Klm2PgTbVkD7BhvZ5L6NqyKFWGZbQYvE73W7bpKBZILGqfIjAr5To";
 
 const hasHangul = (value: string): boolean => /[가-힣]/.test(value);
 const hasNonAscii = (value: string): boolean => /[^\u0000-\u007f]/.test(value);
@@ -16,7 +19,7 @@ const isLikelyBrokenKorean = (value: string): boolean => {
     return false;
   }
 
-  if (trimmed.includes("�")) {
+  if (trimmed.includes("\uFFFD")) {
     return true;
   }
 
@@ -152,6 +155,56 @@ const migrateLegacyAccountEmailDomain = (db: StoreDB): StoreDB => {
   };
 };
 
+const migrateDailyDefenseHeroImage = (db: StoreDB): StoreDB => {
+  return {
+    ...db,
+    collections: db.collections.map((collection) => {
+      if (collection.slug !== "daily-defense") {
+        return collection;
+      }
+
+      if (
+        collection.heroImage === LEGACY_DAILY_DEFENSE_HERO_IMAGE ||
+        collection.heroImage.trim() === ""
+      ) {
+        return {
+          ...collection,
+          heroImage: DAILY_DEFENSE_HERO_IMAGE,
+        };
+      }
+
+      return collection;
+    }),
+  };
+};
+
+const migrateAnalytics = (db: StoreDB): StoreDB => {
+  const rawViews = db.analytics?.productViewsBySlug;
+  const normalizedViews: Record<string, number> = {};
+
+  if (rawViews && typeof rawViews === "object") {
+    Object.entries(rawViews).forEach(([slug, value]) => {
+      if (typeof slug !== "string" || slug.trim() === "") {
+        return;
+      }
+
+      const parsed = Math.floor(Number(value));
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        return;
+      }
+
+      normalizedViews[slug] = parsed;
+    });
+  }
+
+  return {
+    ...db,
+    analytics: {
+      productViewsBySlug: normalizedViews,
+    },
+  };
+};
+
 export const loadDb = (): StoreDB => {
   const seed = createSeedDb();
   const saved = readLocal<StoreDB>(DB_KEY, seed);
@@ -161,7 +214,11 @@ export const loadDb = (): StoreDB => {
     return seed;
   }
 
-  const normalized = migrateLegacyAccountEmailDomain(normalizeDbLocalizedFields(saved, seed));
+  const normalized = migrateAnalytics(
+    migrateDailyDefenseHeroImage(
+      migrateLegacyAccountEmailDomain(normalizeDbLocalizedFields(saved, seed)),
+    ),
+  );
   writeLocal(DB_KEY, normalized);
   return normalized;
 };

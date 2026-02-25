@@ -28,6 +28,7 @@ export function HomeView() {
     locale === "ko"
       ? "정제된 포뮬러와 감각적인 제형으로, 일상의 루틴을 하이엔드 스킨케어 경험으로 완성하세요."
       : hero?.subheadline ?? "Discover precision skincare crafted for a refined daily ritual.";
+  const heroCtaHref = !hero?.ctaHref || hero.ctaHref === "/shop" ? "/collections" : hero.ctaHref;
   const heroCtaText = locale === "ko" ? "에디트 컬렉션 보기" : hero?.ctaText || resolveText(BRAND_LABELS.ctaDiscover, locale);
   const featured = db.products.filter((product) => product.isFeatured).slice(0, 3);
   const journals = [...db.articles].sort((a, b) => +new Date(b.publishedAt) - +new Date(a.publishedAt)).slice(0, 3);
@@ -69,7 +70,7 @@ export function HomeView() {
             {heroSubheadline}
           </p>
           <Link
-            href={hero?.ctaHref ?? "/shop"}
+            href={heroCtaHref}
             className="group bg-white/10 backdrop-blur-md border border-white/30 hover:bg-white hover:text-[#1b0e11] text-white px-8 py-4 rounded-full transition-all duration-300 flex items-center gap-2"
           >
             <span className="text-sm font-bold tracking-wider uppercase">
@@ -107,14 +108,21 @@ export function HomeView() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featured.map((product) => (
               <article key={product.id} className="group relative flex flex-col gap-4">
+                <Link
+                  href={`/product/${product.slug}`}
+                  className="absolute inset-0 z-10"
+                  aria-label={
+                    locale === "ko"
+                      ? `${resolveText(product.name, locale)} 상세 보기`
+                      : `View ${resolveText(product.name, locale)} details`
+                  }
+                />
                 <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-[#f3e7ea]">
-                  <Link href={`/product/${product.slug}`} className="block h-full w-full">
-                    <img
-                      src={product.images[0]}
-                      alt={resolveText(product.name, locale)}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  </Link>
+                  <img
+                    src={product.images[0]}
+                    alt={resolveText(product.name, locale)}
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
                   {product.badge && (
                     <span className="absolute top-4 left-4 bg-white/90 backdrop-blur text-[10px] font-bold tracking-wider uppercase px-2 py-1 rounded-sm text-[#1b0e11]">
@@ -123,7 +131,7 @@ export function HomeView() {
                   )}
                   <button
                     type="button"
-                    className="absolute bottom-4 right-4 h-10 w-10 bg-[#e6194c] text-white rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#cb1743] shadow-lg"
+                    className="absolute bottom-4 right-4 z-20 h-10 w-10 bg-[#e6194c] text-white rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#cb1743] shadow-lg"
                     onClick={() => addToCart(product.slug, 1)}
                     aria-label={resolveText(BRAND_LABELS.ctaAddToBag, locale)}
                   >

@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "check:text": "node scripts/check-text-integrity.mjs",
+    "build": "npm run check:text && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "npm run check:text && eslint"
   },
   "dependencies": {
     "next": "16.1.6",

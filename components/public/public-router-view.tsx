@@ -5,6 +5,7 @@ import { ArticleView } from "@/components/public/views/article-view";
 import { CheckoutCompleteView } from "@/components/public/views/checkout-complete-view";
 import { CheckoutView } from "@/components/public/views/checkout-view";
 import { CollectionView } from "@/components/public/views/collection-view";
+import { CollectionsView } from "@/components/public/views/collections-view";
 import { ContactView } from "@/components/public/views/contact-view";
 import { HomeView } from "@/components/public/views/home-view";
 import { JournalView } from "@/components/public/views/journal-view";
@@ -23,7 +24,7 @@ export function PublicRouterView({ segments }: { segments: string[] }) {
   }
 
   if (segments[0] === "collections" && segments.length === 1) {
-    return <ShopView />;
+    return <CollectionsView />;
   }
 
   if (segments[0] === "collections" && segments[1]) {

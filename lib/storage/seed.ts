@@ -418,8 +418,7 @@ const collections: Collection[] = [
       "가볍게 밀착되어 일상에서 편안한 보호를 완성하는 데이 루틴.",
       "Lightweight daytime defense with elegant wearability.",
     ),
-    heroImage:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuB8rFCb4eSLAWGesmzQsJof9VGrcq6ERudpGqWqeBUNVHSR4Iu9f3n06QyE_jp4I0qE3RmqwlHwIDRR8GCsS-CUZ6rOaJAomYRDtbgkDNu9jhLM34hg-VtVEYXkD1NH9wcEjFvW9hjrcBZBZaKAkRq8NWN0pV9Kee4p8HWkdC2kw8ZVWEjP-VOjB732bogXlQx8KukHn0faV14PzbCBlETcA-Klm2PgTbVkD7BhvZ5L6NqyKFWGZbQYvE73W7bpKBZILGqfIjAr5To",
+    heroImage: "/collection3.png",
     productSlugs: ["mineral-veil-spf50", "enzyme-polish-cleanser", "clarity-gel-cream"],
     sortOrder: 3,
   },
@@ -647,7 +646,7 @@ const banners: Banner[] = [
     headline: "The New Standard",
     subheadline: "Refined radiance for the modern ritual.",
     ctaText: "Explore the Edit",
-    ctaHref: "/shop",
+    ctaHref: "/collections",
     active: true,
   },
   {
@@ -681,6 +680,9 @@ export const createSeedDb = (): StoreDB => ({
     shippingFlat: 8,
     freeShippingThreshold: 120,
     taxRate: 0.08,
+  },
+  analytics: {
+    productViewsBySlug: {},
   },
   cartByUser: {
     guest: [],

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,10 @@ export function AdminRouterView({ segments }: { segments: string[] }) {
 
   if (segments[0] === "products") {
     return <AdminProductsView />;
+  }
+
+  if (segments[0] === "analytics") {
+    return <AdminAnalyticsView />;
   }
 
   if (segments[0] === "collections") {
@@ -121,17 +125,252 @@ function AdminDashboardView() {
   const pendingReviews = db.reviews.filter((review) => !review.approved);
   const unpaidOrders = db.orders.filter((order) => order.paymentStatus !== "paid");
   const openInquiries = db.inquiries.filter((inquiry) => inquiry.status !== "resolved");
+  const paidOrders = db.orders.filter((order) => order.paymentStatus === "paid" && order.status !== "cancelled");
+  const totalRevenue = paidOrders.reduce((sum, order) => sum + order.total, 0);
+  const paidOrderCount = paidOrders.length;
+  const averageOrderValue = paidOrderCount > 0 ? totalRevenue / paidOrderCount : 0;
+  const totalUnitsSold = paidOrders.reduce(
+    (sum, order) => sum + order.items.reduce((orderSum, item) => orderSum + Math.max(1, item.quantity), 0),
+    0,
+  );
+  const totalProductViews = Object.values(db.analytics.productViewsBySlug).reduce(
+    (sum, count) => sum + count,
+    0,
+  );
+  const orderToViewRate = totalProductViews > 0 ? (paidOrderCount / totalProductViews) * 100 : 0;
+  const unitToViewRate = totalProductViews > 0 ? (totalUnitsSold / totalProductViews) * 100 : 0;
+
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+  const toTimestamp = (value: string): number => {
+    const parsed = new Date(value).getTime();
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const monthRevenue = paidOrders.reduce((sum, order) => {
+    return toTimestamp(order.createdAt) >= currentMonthStart ? sum + order.total : sum;
+  }, 0);
+  const previousMonthRevenue = paidOrders.reduce((sum, order) => {
+    const createdAt = toTimestamp(order.createdAt);
+    return createdAt >= previousMonthStart && createdAt < currentMonthStart ? sum + order.total : sum;
+  }, 0);
+  const monthRevenueGrowthRate =
+    previousMonthRevenue > 0 ? ((monthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100 : null;
+  const monthRevenueHint =
+    monthRevenueGrowthRate === null
+      ? t("\uC804\uC6D4 \uBE44\uAD50 \uB370\uC774\uD130 \uC5C6\uC74C", "No previous-month baseline")
+      : `${monthRevenueGrowthRate >= 0 ? "+" : ""}${monthRevenueGrowthRate.toFixed(1)}% ${t("\uC804\uC6D4 \uB300\uBE44", "vs last month")}`;
+
+  const productBySlug = new Map(db.products.map((product) => [product.slug, product]));
+  const productMetricsBySlug = new Map(
+    db.products.map((product) => [
+      product.slug,
+      {
+        views: db.analytics.productViewsBySlug[product.slug] ?? 0,
+        unitsSold: 0,
+        revenue: 0,
+        orderCount: 0,
+      },
+    ]),
+  );
+
+  paidOrders.forEach((order) => {
+    const countedProducts = new Set<string>();
+    order.items.forEach((item) => {
+      const product = productBySlug.get(item.productSlug);
+      const metrics = productMetricsBySlug.get(item.productSlug);
+      if (!product || !metrics) {
+        return;
+      }
+
+      const quantity = Math.max(1, item.quantity);
+      const unitPrice = getProductPriceBySize(product, item.sizeKey);
+
+      metrics.unitsSold += quantity;
+      metrics.revenue += unitPrice * quantity;
+
+      if (!countedProducts.has(item.productSlug)) {
+        metrics.orderCount += 1;
+        countedProducts.add(item.productSlug);
+      }
+    });
+  });
+
+  const productStats = db.products.map((product) => {
+    const metrics = productMetricsBySlug.get(product.slug) ?? {
+      views: 0,
+      unitsSold: 0,
+      revenue: 0,
+      orderCount: 0,
+    };
+
+    return {
+      slug: product.slug,
+      name: resolveText(product.name, locale),
+      views: metrics.views,
+      unitsSold: metrics.unitsSold,
+      orderCount: metrics.orderCount,
+      revenue: metrics.revenue,
+      unitConversionRate: metrics.views > 0 ? (metrics.unitsSold / metrics.views) * 100 : 0,
+    };
+  });
+
+  const topViewedProducts = [...productStats]
+    .filter((entry) => entry.views > 0 || entry.unitsSold > 0)
+    .sort((a, b) => b.views - a.views || b.unitsSold - a.unitsSold)
+    .slice(0, 5);
+
+  const topRevenueProducts = [...productStats]
+    .filter((entry) => entry.revenue > 0 || entry.unitsSold > 0)
+    .sort((a, b) => b.revenue - a.revenue || b.unitsSold - a.unitsSold)
+    .slice(0, 5);
+
+  const dayKeys = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(now);
+    day.setHours(0, 0, 0, 0);
+    day.setDate(day.getDate() - (6 - index));
+    return day.toISOString().slice(0, 10);
+  });
+  const dailyRevenueMap: Record<string, number> = Object.fromEntries(dayKeys.map((key) => [key, 0]));
+  const dailyOrderCountMap: Record<string, number> = Object.fromEntries(dayKeys.map((key) => [key, 0]));
+
+  paidOrders.forEach((order) => {
+    const dayKey = order.createdAt.slice(0, 10);
+    if (!(dayKey in dailyRevenueMap)) {
+      return;
+    }
+
+    dailyRevenueMap[dayKey] += order.total;
+    dailyOrderCountMap[dayKey] += 1;
+  });
+
+  const dailyRevenue = dayKeys.map((key) => ({
+    key,
+    label: key.slice(5),
+    revenue: dailyRevenueMap[key],
+    orders: dailyOrderCountMap[key],
+  }));
+  const maxDailyRevenue = Math.max(1, ...dailyRevenue.map((entry) => entry.revenue));
 
   return (
     <div className="grid gap-6">
       <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t("대시보드", "Dashboard")}</h1>
-      <div className="grid sm:grid-cols-2 xl:grid-cols-5 gap-4">
+      <div className="grid sm:grid-cols-2 xl:grid-cols-6 gap-4">
         <SummaryCard label={t("제품", "Products")} value={String(db.products.length)} href="/admin/products" />
+        <SummaryCard label={t("통계", "Analytics")} value={String(totalProductViews)} href="/admin/analytics" />
         <SummaryCard label={t("주문", "Orders")} value={String(db.orders.length)} href="/admin/orders" />
         <SummaryCard label={t("고객", "Customers")} value={String(users.length)} href="/admin/customers" />
         <SummaryCard label={t("검수 대기 리뷰", "Pending Reviews")} value={String(pendingReviews.length)} href="/admin/reviews" />
         <SummaryCard label={t("\uBB38\uC758", "Inquiries")} value={String(db.inquiries.length)} href="/admin/inquiries" />
       </div>
+
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+        <h2 className="text-xl font-semibold text-slate-900">{t("\uB9E4\uCD9C \uBC0F \uD2B8\uB798\uD53D \uD1B5\uACC4", "Sales & Traffic Analytics")}</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+          <AnalyticsCard
+            label={t("\uB204\uC801 \uB9E4\uCD9C", "Total Revenue")}
+            value={currency(totalRevenue)}
+            hint={t("\uACB0\uC81C \uC644\uB8CC \uAE30\uC900", "Paid orders only")}
+          />
+          <AnalyticsCard
+            label={t("\uC774\uBC88 \uB2EC \uB9E4\uCD9C", "This Month Revenue")}
+            value={currency(monthRevenue)}
+            hint={monthRevenueHint}
+          />
+          <AnalyticsCard
+            label={t("\uACB0\uC81C \uC644\uB8CC \uC8FC\uBB38", "Paid Orders")}
+            value={String(paidOrderCount)}
+            hint={t("\uC804\uCCB4 \uC8FC\uBB38 \uAE30\uC900", "Across all orders")}
+          />
+          <AnalyticsCard
+            label={t("\uD3C9\uADE0 \uAC1D\uB2E8\uAC00", "Average Order Value")}
+            value={currency(averageOrderValue)}
+            hint={t("\uACB0\uC81C \uC644\uB8CC \uAE30\uC900", "Paid orders only")}
+          />
+          <AnalyticsCard
+            label={t("\uC0C1\uD488 \uC870\uD68C\uC218", "Product Views")}
+            value={String(totalProductViews)}
+            hint={t("\uC0C1\uD488 \uC0C1\uC138 \uD398\uC774\uC9C0 \uAE30\uC900", "Product detail page visits")}
+          />
+          <AnalyticsCard
+            label={t("\uC870\uD68C \uB300\uBE44 \uD310\uB9E4 \uC218\uB7C9", "Units per View")}
+            value={`${unitToViewRate.toFixed(1)}%`}
+            hint={`${t("\uC8FC\uBB38 \uC804\uD658\uC728", "Order conversion")}: ${orderToViewRate.toFixed(1)}%`}
+          />
+        </div>
+      </section>
+
+      <div className="grid lg:grid-cols-2 gap-6">
+        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-slate-900">{t("\uCD5C\uADFC 7\uC77C \uB9E4\uCD9C \uD750\uB984", "Last 7 Days Revenue")}</h2>
+          <div className="mt-5 grid gap-3">
+            {dailyRevenue.map((entry) => (
+              <div key={entry.key} className="grid grid-cols-[52px_minmax(0,1fr)_126px] items-center gap-3">
+                <p className="text-xs font-semibold text-slate-500">{entry.label}</p>
+                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-[#e6194c]"
+                    style={{
+                      width: `${entry.revenue > 0 ? Math.max(8, (entry.revenue / maxDailyRevenue) * 100) : 0}%`,
+                    }}
+                  />
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-semibold text-slate-700">{currency(entry.revenue)}</p>
+                  <p className="text-[11px] text-slate-500">
+                    {entry.orders} {t("\uAC74", "orders")}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-slate-900">{t("\uC0C1\uC704 \uC870\uD68C \uC0C1\uD488", "Top Viewed Products")}</h2>
+          <div className="mt-4 grid gap-3">
+            {topViewedProducts.length === 0 && (
+              <p className="text-sm text-slate-500">{t("\uC870\uD68C \uB370\uC774\uD130\uAC00 \uC544\uC9C1 \uC5C6\uC2B5\uB2C8\uB2E4.", "No product view data yet.")}</p>
+            )}
+            {topViewedProducts.map((entry) => (
+              <article key={`view-${entry.slug}`} className="rounded-lg border border-slate-200 p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-slate-900 line-clamp-1">{entry.name}</p>
+                  <p className="text-xs font-semibold text-[#e6194c]">{entry.views.toLocaleString()}</p>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                  <span>{t("\uD310\uB9E4 \uC218\uB7C9", "Units")}: {entry.unitsSold}</span>
+                  <span>{t("\uC8FC\uBB38 \uAC74\uC218", "Orders")}: {entry.orderCount}</span>
+                  <span>{t("\uC804\uD658\uC728", "Conversion")}: {entry.unitConversionRate.toFixed(1)}%</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+        <h2 className="text-xl font-semibold text-slate-900">{t("\uC0C1\uC704 \uB9E4\uCD9C \uC0C1\uD488", "Top Revenue Products")}</h2>
+        <div className="mt-4 grid gap-3">
+          {topRevenueProducts.length === 0 && (
+            <p className="text-sm text-slate-500">{t("\uB9E4\uCD9C \uB370\uC774\uD130\uAC00 \uC544\uC9C1 \uC5C6\uC2B5\uB2C8\uB2E4.", "No sales data yet.")}</p>
+          )}
+          {topRevenueProducts.map((entry) => (
+            <article key={`revenue-${entry.slug}`} className="rounded-lg border border-slate-200 p-3">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-semibold text-slate-900 line-clamp-1">{entry.name}</p>
+                <p className="text-xs font-semibold text-[#e6194c]">{currency(entry.revenue)}</p>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                <span>{t("\uD310\uB9E4 \uC218\uB7C9", "Units")}: {entry.unitsSold}</span>
+                <span>{t("\uC8FC\uBB38 \uAC74\uC218", "Orders")}: {entry.orderCount}</span>
+                <span>{t("\uC870\uD68C\uC218", "Views")}: {entry.views}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <div className="grid lg:grid-cols-2 gap-6">
         <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
@@ -161,6 +400,382 @@ function AdminDashboardView() {
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+type AnalyticsRange = "7d" | "30d" | "90d" | "all";
+
+function AdminAnalyticsView() {
+  const { db, locale } = useStore();
+  const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
+  const [range, setRange] = useState<AnalyticsRange>("30d");
+  const [analysisNow] = useState<number>(() => Date.now());
+
+  const rangeDays = range === "all" ? null : Number(range.replace("d", ""));
+  const rangeStart = rangeDays ? analysisNow - rangeDays * 24 * 60 * 60 * 1000 : null;
+  const toTimestamp = (value: string): number => {
+    const parsed = new Date(value).getTime();
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  const isInRange = (value: string): boolean => {
+    const timestamp = toTimestamp(value);
+    if (timestamp <= 0) {
+      return false;
+    }
+    return rangeStart === null || timestamp >= rangeStart;
+  };
+
+  const ordersInRange = db.orders.filter((order) => isInRange(order.createdAt));
+  const paidOrders = ordersInRange.filter((order) => order.paymentStatus === "paid" && order.status !== "cancelled");
+  const cancelledOrders = ordersInRange.filter((order) => order.status === "cancelled");
+  const refundRequestedOrders = ordersInRange.filter((order) => order.refundRequested);
+  const unpaidOrders = ordersInRange.filter((order) => order.paymentStatus !== "paid");
+
+  const grossSales = paidOrders.reduce((sum, order) => sum + order.subtotal, 0);
+  const discountTotal = paidOrders.reduce((sum, order) => sum + order.discount, 0);
+  const netSales = paidOrders.reduce((sum, order) => sum + (order.subtotal - order.discount), 0);
+  const totalRevenue = paidOrders.reduce((sum, order) => sum + order.total, 0);
+  const paidOrderCount = paidOrders.length;
+  const aov = paidOrderCount > 0 ? totalRevenue / paidOrderCount : 0;
+  const totalUnitsSold = paidOrders.reduce(
+    (sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + Math.max(1, item.quantity), 0),
+    0,
+  );
+  const unitsPerOrder = paidOrderCount > 0 ? totalUnitsSold / paidOrderCount : 0;
+
+  const totalProductViews = Object.values(db.analytics.productViewsBySlug).reduce(
+    (sum, count) => sum + count,
+    0,
+  );
+  const orderConversionRate = totalProductViews > 0 ? (paidOrderCount / totalProductViews) * 100 : 0;
+  const unitConversionRate = totalProductViews > 0 ? (totalUnitsSold / totalProductViews) * 100 : 0;
+
+  const cancellationRate = ordersInRange.length > 0 ? (cancelledOrders.length / ordersInRange.length) * 100 : 0;
+  const refundRequestRate = ordersInRange.length > 0 ? (refundRequestedOrders.length / ordersInRange.length) * 100 : 0;
+
+  const newCustomers = db.users.filter((user) => user.role === "user" && isInRange(user.createdAt)).length;
+  const paidOrderCountByUser = new Map<string, number>();
+  paidOrders.forEach((order) => {
+    paidOrderCountByUser.set(order.userId, (paidOrderCountByUser.get(order.userId) ?? 0) + 1);
+  });
+  const activeCustomers = paidOrderCountByUser.size;
+  const repeatCustomers = [...paidOrderCountByUser.values()].filter((count) => count >= 2).length;
+  const repeatCustomerRate = activeCustomers > 0 ? (repeatCustomers / activeCustomers) * 100 : 0;
+
+  const productBySlug = new Map(db.products.map((product) => [product.slug, product]));
+  const productStatsMap = new Map(
+    db.products.map((product) => [
+      product.slug,
+      {
+        slug: product.slug,
+        name: resolveText(product.name, locale),
+        views: db.analytics.productViewsBySlug[product.slug] ?? 0,
+        unitsSold: 0,
+        revenue: 0,
+        orderCount: 0,
+      },
+    ]),
+  );
+
+  paidOrders.forEach((order) => {
+    const countedProducts = new Set<string>();
+    order.items.forEach((item) => {
+      const product = productBySlug.get(item.productSlug);
+      const stats = productStatsMap.get(item.productSlug);
+      if (!product || !stats) {
+        return;
+      }
+
+      const quantity = Math.max(1, item.quantity);
+      const unitPrice = getProductPriceBySize(product, item.sizeKey);
+
+      stats.unitsSold += quantity;
+      stats.revenue += unitPrice * quantity;
+      if (!countedProducts.has(item.productSlug)) {
+        stats.orderCount += 1;
+        countedProducts.add(item.productSlug);
+      }
+    });
+  });
+
+  const productStats = [...productStatsMap.values()].map((entry) => ({
+    ...entry,
+    unitConversionRate: entry.views > 0 ? (entry.unitsSold / entry.views) * 100 : 0,
+  }));
+
+  const topRevenueProducts = [...productStats]
+    .filter((entry) => entry.revenue > 0 || entry.unitsSold > 0)
+    .sort((a, b) => b.revenue - a.revenue || b.unitsSold - a.unitsSold)
+    .slice(0, 8);
+  const topViewedProducts = [...productStats]
+    .filter((entry) => entry.views > 0 || entry.unitsSold > 0)
+    .sort((a, b) => b.views - a.views || b.revenue - a.revenue)
+    .slice(0, 8);
+  const lowConversionProducts = [...productStats]
+    .filter((entry) => entry.views >= 10)
+    .sort((a, b) => a.unitConversionRate - b.unitConversionRate || b.views - a.views)
+    .slice(0, 5);
+
+  const collectionStats = db.collections
+    .map((collection) => {
+      const slugs = db.products
+        .filter((product) => product.collectionSlugs.includes(collection.slug))
+        .map((product) => product.slug);
+
+      const metrics = slugs.reduce(
+        (acc, slug) => {
+          const stats = productStatsMap.get(slug);
+          if (!stats) {
+            return acc;
+          }
+          return {
+            views: acc.views + stats.views,
+            unitsSold: acc.unitsSold + stats.unitsSold,
+            revenue: acc.revenue + stats.revenue,
+            orderCount: acc.orderCount + stats.orderCount,
+          };
+        },
+        { views: 0, unitsSold: 0, revenue: 0, orderCount: 0 },
+      );
+
+      return {
+        slug: collection.slug,
+        name: resolveText(collection.name, locale),
+        ...metrics,
+        unitConversionRate: metrics.views > 0 ? (metrics.unitsSold / metrics.views) * 100 : 0,
+      };
+    })
+    .sort((a, b) => b.revenue - a.revenue || b.unitsSold - a.unitsSold);
+
+  const trendLength = range === "all" ? 30 : Math.max(7, rangeDays ?? 30);
+  const dayKeys = Array.from({ length: trendLength }, (_, index) => {
+    const day = new Date(analysisNow);
+    day.setHours(0, 0, 0, 0);
+    day.setDate(day.getDate() - (trendLength - 1 - index));
+    return day.toISOString().slice(0, 10);
+  });
+  const dailyRevenueMap: Record<string, number> = Object.fromEntries(dayKeys.map((key) => [key, 0]));
+  const dailyOrdersMap: Record<string, number> = Object.fromEntries(dayKeys.map((key) => [key, 0]));
+
+  paidOrders.forEach((order) => {
+    const key = order.createdAt.slice(0, 10);
+    if (!(key in dailyRevenueMap)) {
+      return;
+    }
+    dailyRevenueMap[key] += order.total;
+    dailyOrdersMap[key] += 1;
+  });
+
+  const trendData = dayKeys.map((key) => ({
+    key,
+    label: key.slice(5),
+    revenue: dailyRevenueMap[key],
+    orders: dailyOrdersMap[key],
+  }));
+  const maxTrendRevenue = Math.max(1, ...trendData.map((entry) => entry.revenue));
+
+  const rangeLabel =
+    range === "7d"
+      ? t("최근 7일", "Last 7 days")
+      : range === "30d"
+        ? t("최근 30일", "Last 30 days")
+        : range === "90d"
+          ? t("최근 90일", "Last 90 days")
+          : t("전체 기간", "All time");
+
+  return (
+    <div className="grid gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t("통계", "Analytics")}</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {t("매출, 전환율, 고객 행동 지표를 추적합니다.", "Track revenue, conversion, and customer behavior metrics.")}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs uppercase tracking-[0.14em] font-semibold text-slate-500">{t("기간", "Range")}</label>
+          <select
+            className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm"
+            value={range}
+            onChange={(event) => setRange(event.target.value as AnalyticsRange)}
+          >
+            <option value="7d">{t("7일", "7 days")}</option>
+            <option value="30d">{t("30일", "30 days")}</option>
+            <option value="90d">{t("90일", "90 days")}</option>
+            <option value="all">{t("\uC804\uCCB4", "All")}</option>
+          </select>
+        </div>
+      </div>
+
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-xl font-semibold text-slate-900">{t("핵심 지표", "Key Metrics")}</h2>
+          <p className="text-xs text-slate-500">{rangeLabel}</p>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <AnalyticsCard label={t("결제 완료 매출", "Total Revenue")} value={currency(totalRevenue)} hint={t("결제 완료 주문 기준", "Paid orders only")} />
+          <AnalyticsCard label={t("할인 전 총매출", "Gross Sales")} value={currency(grossSales)} hint={t("할인 적용 전", "Before discounts")} />
+          <AnalyticsCard label={t("순매출", "Net Sales")} value={currency(netSales)} hint={t("할인 적용 후", "After discounts")} />
+          <AnalyticsCard label={t("할인 금액", "Discount Amount")} value={currency(discountTotal)} hint={t("프로모션 포함", "Promotions included")} />
+          <AnalyticsCard label={t("결제 완료 주문", "Paid Orders")} value={String(paidOrderCount)} />
+          <AnalyticsCard label={t("평균 객단가", "Average Order Value")} value={currency(aov)} />
+          <AnalyticsCard label={t("판매 수량", "Units Sold")} value={String(totalUnitsSold)} />
+          <AnalyticsCard label={t("주문당 수량", "Units / Order")} value={unitsPerOrder.toFixed(2)} />
+          <AnalyticsCard label={t("상품 조회수", "Product Views")} value={String(totalProductViews)} hint={t("누적 조회수", "Lifetime views")} />
+          <AnalyticsCard label={t("주문 전환율", "Order Conversion")} value={`${orderConversionRate.toFixed(1)}%`} />
+          <AnalyticsCard label={t("조회당 판매수", "Units per View")} value={`${unitConversionRate.toFixed(1)}%`} />
+          <AnalyticsCard label={t("신규 고객", "New Customers")} value={String(newCustomers)} hint={t("선택 기간 가입", "Joined in selected range")} />
+        </div>
+      </section>
+
+      <div className="grid lg:grid-cols-2 gap-6 items-start">
+        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-slate-900">{t("매출 추이", "Revenue Trend")}</h2>
+          <div className="mt-5 grid gap-3">
+            {trendData.map((entry) => (
+              <div key={entry.key} className="grid grid-cols-[54px_minmax(0,1fr)_138px] items-center gap-3">
+                <p className="text-xs font-semibold text-slate-500">{entry.label}</p>
+                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-[#e6194c]"
+                    style={{
+                      width: `${entry.revenue > 0 ? Math.max(8, (entry.revenue / maxTrendRevenue) * 100) : 0}%`,
+                    }}
+                  />
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-semibold text-slate-700">{currency(entry.revenue)}</p>
+                  <p className="text-[11px] text-slate-500">
+                    {entry.orders} {t("주문", "orders")}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 self-start h-fit">
+          <h2 className="text-xl font-semibold text-slate-900">{t("운영 리스크", "Operational Risks")}</h2>
+          <div className="mt-5 grid gap-3">
+            <Row label={t("전체 주문", "All Orders")} value={String(ordersInRange.length)} />
+            <Row label={t("미결제 주문", "Unpaid Orders")} value={String(unpaidOrders.length)} />
+            <Row label={t("취소 주문", "Cancelled Orders")} value={String(cancelledOrders.length)} />
+            <Row label={t("취소율", "Cancellation Rate")} value={`${cancellationRate.toFixed(1)}%`} />
+            <Row label={t("환불 요청", "Refund Requests")} value={String(refundRequestedOrders.length)} />
+            <Row label={t("환불 요청률", "Refund Request Rate")} value={`${refundRequestRate.toFixed(1)}%`} />
+            <Row label={t("결제 고객 수", "Paying Customers")} value={String(activeCustomers)} />
+            <Row label={t("재구매 고객", "Repeat Customers")} value={`${repeatCustomers} (${repeatCustomerRate.toFixed(1)}%)`} />
+          </div>
+        </section>
+      </div>
+
+      <div className="grid xl:grid-cols-2 gap-6">
+        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-slate-900">{t("매출 상위 상품", "Top Revenue Products")}</h2>
+          <div className="mt-4 grid gap-3">
+            {topRevenueProducts.length === 0 && (
+              <p className="text-sm text-slate-500">{t("선택 기간의 매출 데이터가 없습니다.", "No sales data for this range.")}</p>
+            )}
+            {topRevenueProducts.map((entry) => (
+              <article key={`analytics-revenue-${entry.slug}`} className="rounded-lg border border-slate-200 p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-slate-900 line-clamp-1">{entry.name}</p>
+                  <p className="text-xs font-semibold text-[#e6194c]">{currency(entry.revenue)}</p>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                  <span>{t("수량", "Units")}: {entry.unitsSold}</span>
+                  <span>{t("주문", "Orders")}: {entry.orderCount}</span>
+                  <span>{t("조회수", "Views")}: {entry.views}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-slate-900">{t("조회수 상위 상품", "Top Viewed Products")}</h2>
+          <div className="mt-4 grid gap-3">
+            {topViewedProducts.length === 0 && (
+              <p className="text-sm text-slate-500">{t("조회 데이터가 아직 없습니다.", "No view data yet.")}</p>
+            )}
+            {topViewedProducts.map((entry) => (
+              <article key={`analytics-view-${entry.slug}`} className="rounded-lg border border-slate-200 p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-slate-900 line-clamp-1">{entry.name}</p>
+                  <p className="text-xs font-semibold text-[#e6194c]">{entry.views.toLocaleString()}</p>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                  <span>{t("수량", "Units")}: {entry.unitsSold}</span>
+                  <span>{t("전환율", "Conversion")}: {entry.unitConversionRate.toFixed(1)}%</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+        <h2 className="text-xl font-semibold text-slate-900">{t("컬렉션 성과", "Collection Performance")}</h2>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[760px] text-sm">
+            <thead>
+              <tr className="text-left text-slate-500 border-b border-slate-200">
+                <th className="py-2 pr-3">{t("컬렉션", "Collection")}</th>
+                <th className="py-2 pr-3">{t("조회수", "Views")}</th>
+                <th className="py-2 pr-3">{t("수량", "Units")}</th>
+                <th className="py-2 pr-3">{t("주문", "Orders")}</th>
+                <th className="py-2 pr-3">{t("매출", "Revenue")}</th>
+                <th className="py-2">{t("전환율", "Conversion")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {collectionStats.map((entry) => (
+                <tr key={`analytics-collection-${entry.slug}`} className="border-b border-slate-100 last:border-b-0">
+                  <td className="py-3 pr-3 font-semibold text-slate-900">{entry.name}</td>
+                  <td className="py-3 pr-3 text-slate-600">{entry.views.toLocaleString()}</td>
+                  <td className="py-3 pr-3 text-slate-600">{entry.unitsSold.toLocaleString()}</td>
+                  <td className="py-3 pr-3 text-slate-600">{entry.orderCount.toLocaleString()}</td>
+                  <td className="py-3 pr-3 text-slate-900 font-medium">{currency(entry.revenue)}</td>
+                  <td className="py-3 text-slate-600">{entry.unitConversionRate.toFixed(1)}%</td>
+                </tr>
+              ))}
+              {collectionStats.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-6 text-center text-slate-500">
+                    {t("컬렉션 통계 데이터가 없습니다.", "No collection analytics available.")}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+        <h2 className="text-xl font-semibold text-slate-900">{t("개선이 필요한 상품", "Products to Improve")}</h2>
+        <p className="text-sm text-slate-500 mt-1">
+          {t("조회수가 의미 있게 있지만 전환이 낮은 상품입니다.", "Products with meaningful views but low conversion.")}
+        </p>
+        <div className="mt-4 grid gap-3">
+          {lowConversionProducts.length === 0 && (
+            <p className="text-sm text-slate-500">{t("조건에 맞는 상품이 없습니다.", "No products match this condition.")}</p>
+          )}
+          {lowConversionProducts.map((entry) => (
+            <article key={`analytics-low-conv-${entry.slug}`} className="rounded-lg border border-slate-200 p-3">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-semibold text-slate-900 line-clamp-1">{entry.name}</p>
+                <p className="text-xs font-semibold text-amber-600">{entry.unitConversionRate.toFixed(1)}%</p>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                <span>{t("조회수", "Views")}: {entry.views}</span>
+                <span>{t("수량", "Units")}: {entry.unitsSold}</span>
+                <span>{t("매출", "Revenue")}: {currency(entry.revenue)}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
@@ -256,7 +871,7 @@ function AdminProductsView() {
             >
               <option value="cleanser">{t("클렌저", "Cleanser")}</option>
               <option value="serum">{t("세럼", "Serum")}</option>
-              <option value="moisturizer">{t("크림", "Moisturizer")}</option>
+              <option value="moisturizer">{t("모이스처라이저", "Moisturizer")}</option>
               <option value="sunscreen">{t("선스크린", "Sunscreen")}</option>
               <option value="mask">{t("마스크", "Mask")}</option>
               <option value="tool">{t("툴", "Tool")}</option>
@@ -374,7 +989,7 @@ function AdminCollectionsView() {
         <h2 className="text-xl font-semibold text-slate-900">{editingSlug ? t("컬렉션 수정", "Edit Collection") : t("신규 컬렉션", "New Collection")}</h2>
         <div className="grid sm:grid-cols-2 gap-3">
           <InputField label={t("슬러그", "Slug")} value={form.slug} onChange={(value) => setForm((prev) => ({ ...prev, slug: value }))} />
-          <InputField label={t("이름", "Name")} value={form.name} onChange={(value) => setForm((prev) => ({ ...prev, name: value }))} />
+          <InputField label={t("제품명", "Name")} value={form.name} onChange={(value) => setForm((prev) => ({ ...prev, name: value }))} />
         </div>
         <InputField
           label={t("설명", "Description")}
@@ -700,7 +1315,7 @@ function AdminOrdersView() {
                       <button
                         className="rounded p-1 text-[#64748B] hover:text-[#0F172A] transition-colors opacity-0 group-hover:opacity-100"
                         type="button"
-                        aria-label={t(`주문 ${order.id} 작업 열기`, `Open actions for ${order.id}`)}
+                        aria-label={t(`二쇰Ц ${order.id} ?묒뾽 ?닿린`, `Open actions for ${order.id}`)}
                         onClick={() => router.push(`/admin/orders/${order.id}`)}
                       >
                         <span className="material-symbols-outlined text-[20px]">more_horiz</span>
@@ -739,20 +1354,13 @@ function AdminOrdersView() {
         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
           <div>
             <p className="text-xs text-[#64748B] uppercase tracking-wide">
-              {locale === "ko" ? (
-                <>
-                  총 <span className="font-medium text-[#0F172A]">{filteredOrders.length}</span>건 중{" "}
-                  <span className="font-medium text-[#0F172A]">{filteredOrders.length === 0 ? 0 : start + 1}</span>-
-                  <span className="font-medium text-[#0F172A]">{Math.min(start + pageSize, filteredOrders.length)}</span> 표시
-                </>
-              ) : (
-                <>
-                  Showing <span className="font-medium text-[#0F172A]">{filteredOrders.length === 0 ? 0 : start + 1}</span>{" "}
-                  to{" "}
-                  <span className="font-medium text-[#0F172A]">{Math.min(start + pageSize, filteredOrders.length)}</span>{" "}
-                  of <span className="font-medium text-[#0F172A]">{filteredOrders.length}</span> results
-                </>
-              )}
+              {t("총", "Showing")}{" "}
+              <span className="font-medium text-[#0F172A]">{filteredOrders.length === 0 ? 0 : start + 1}</span>{" "}
+              {t("부터", "to")}{" "}
+              <span className="font-medium text-[#0F172A]">{Math.min(start + pageSize, filteredOrders.length)}</span>{" "}
+              {t("표시 / 전체", "of")}{" "}
+              <span className="font-medium text-[#0F172A]">{filteredOrders.length}</span>{" "}
+              {t("건", "results")}
             </p>
           </div>
           <div>
@@ -797,16 +1405,16 @@ function AdminOrderDetailView({ id }: { id: string }) {
     cancelled: { ko: "취소", en: "Cancelled" },
   };
   const paymentLabelMap: Record<Order["paymentStatus"], { ko: string; en: string }> = {
-    pending: { ko: "대기", en: "Pending" },
-    paid: { ko: "완료", en: "Paid" },
+    pending: { ko: "결제 대기", en: "Pending" },
+    paid: { ko: "결제 완료", en: "Paid" },
   };
   const categoryLabelMap: Record<Product["category"], string> = {
     cleanser: "클렌저",
     serum: "세럼",
-    moisturizer: "크림",
+    moisturizer: "모이스처라이저",
     sunscreen: "선스크린",
     mask: "마스크",
-    tool: "툴",
+    tool: "도구",
   };
   const orderStatusLabel = (status: Order["status"]) => statusLabelMap[status][locale];
   const paymentStatusLabel = (status: Order["paymentStatus"]) => paymentLabelMap[status][locale];
@@ -929,7 +1537,7 @@ function AdminOrderDetailView({ id }: { id: string }) {
             <div className="border-b border-slate-200 px-6 py-4 flex justify-between items-center bg-slate-50/50">
               <h3 className="text-base font-semibold text-slate-900">{t("주문 품목", "Order Items")}</h3>
               <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
-                {locale === "ko" ? `${lines.length}개 품목` : `${lines.length} Items`}
+                {locale === "ko" ? `${lines.length}媛??덈ぉ` : `${lines.length} Items`}
               </span>
             </div>
 
@@ -985,7 +1593,7 @@ function AdminOrderDetailView({ id }: { id: string }) {
                 )}
                 <div className="h-px bg-slate-200 my-1" />
                 <div className="flex justify-between items-center text-base">
-                  <span className="font-semibold text-slate-900">{t("총액", "Total")}</span>
+                  <span className="font-semibold text-slate-900">{t("합계", "Total")}</span>
                   <span className="text-xl font-bold text-[#e6194c]">{currency(order.total)}</span>
                 </div>
               </div>
@@ -1135,7 +1743,7 @@ function AdminOrderDetailView({ id }: { id: string }) {
                 <div className="relative">
                   <span className="absolute -left-[21px] top-1 h-3.5 w-3.5 rounded-full border-[3px] border-white bg-[#e6194c]" />
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-slate-900">{t("결제 상태", "Payment")} {order.paymentStatus === "paid" ? t("확인됨", "Verified") : t("대기", "Pending")}</span>
+                    <span className="text-sm font-semibold text-slate-900">{t("결제", "Payment")} {order.paymentStatus === "paid" ? t("확인됨", "Verified") : t("대기", "Pending")}</span>
                     <span className="text-xs text-slate-500 mt-0.5">{formatDate(order.createdAt, locale)}</span>
                   </div>
                 </div>
@@ -1377,7 +1985,7 @@ function AdminBannersView() {
           <div>
             <label className="text-xs uppercase tracking-[0.15em] font-semibold text-slate-500">{t("키", "Key")}</label>
             <select className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm mt-2" value={form.key} onChange={(event) => setForm((prev) => ({ ...prev, key: event.target.value }))}>
-              <option value="hero">{t("메인", "Hero")}</option>
+              <option value="hero">{t("硫붿씤", "Hero")}</option>
               <option value="secondary">{t("서브", "Secondary")}</option>
             </select>
           </div>
@@ -1414,7 +2022,7 @@ function AdminBannersView() {
           <article key={banner.id} className="rounded-xl border border-slate-200 p-4 flex items-center justify-between gap-3">
             <div>
               <p className="font-semibold">
-                {(banner.key === "hero" ? t("메인", "Hero") : t("서브", "Secondary"))} - {banner.type === "image" ? t("이미지", "Image") : t("영상", "Video")}
+                {(banner.key === "hero" ? t("硫붿씤", "Hero") : t("서브", "Secondary"))} - {banner.type === "image" ? t("이미지", "Image") : t("영상", "Video")}
               </p>
               <p className="text-sm text-slate-500">{banner.headline}</p>
             </div>
@@ -1502,7 +2110,7 @@ function AdminCouponsView() {
             <div>
               <p className="font-semibold">{coupon.code}</p>
               <p className="text-sm text-slate-500">
-                {(coupon.type === "percent" ? t("정률", "Percent") : t("정액", "Fixed"))} {coupon.value} - {t("최소", "min")} {currency(coupon.minSubtotal)}
+                {(coupon.type === "percent" ? t("정률", "Percent") : t("정액", "Fixed"))} {coupon.value} - {t("理쒖냼", "min")} {currency(coupon.minSubtotal)}
               </p>
             </div>
             <div className="flex gap-2">
@@ -1754,6 +2362,16 @@ function AdminSettingsView() {
   );
 }
 
+function AnalyticsCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <article className="rounded-xl border border-[#f7e9ef] bg-[#fff8fb] px-4 py-4">
+      <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-slate-500">{label}</p>
+      <p className="text-2xl font-semibold tracking-tight text-slate-900 mt-2">{value}</p>
+      {hint && <p className="text-xs text-slate-500 mt-2">{hint}</p>}
+    </article>
+  );
+}
+
 function SummaryCard({ label, value, href }: { label: string; value: string; href: string }) {
   return (
     <Link href={href} className="rounded-xl border border-slate-200 bg-white shadow-sm p-5 hover:border-[#e6194c] transition">
@@ -1762,5 +2380,7 @@ function SummaryCard({ label, value, href }: { label: string; value: string; hre
     </Link>
   );
 }
+
+
 
 
