@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { PublicShell } from "@/components/layout/public-shell";
 import { useStore } from "@/components/providers/store-provider";
 import { stripLocalePrefix, withLocalePath } from "@/lib/locale-routing";
@@ -19,6 +19,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { ready, currentUser, logout, locale, setLocale } = useStore();
+  const isSigningOutRef = useRef(false);
   const { locale: pathLocale, path: routePath } = useMemo(() => stripLocalePrefix(pathname), [pathname]);
   const localize = (path: string, targetLocale = locale) => withLocalePath(path, targetLocale);
   const normalizedRoutePath = routePath !== "/" ? routePath.replace(/\/+$/, "") : routePath;
@@ -44,6 +45,9 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
       return;
     }
     if (!isAuthPage && !currentUser) {
+      if (isSigningOutRef.current) {
+        return;
+      }
       router.replace(withLocalePath("/account/login", locale));
       return;
     }
@@ -109,8 +113,9 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
                 type="button"
                 className="mt-3 h-10 px-4 rounded-lg border border-[#f3e7ea] text-sm font-semibold text-slate-600 hover:text-[#e6194c] transition-colors"
                 onClick={() => {
+                  isSigningOutRef.current = true;
                   logout();
-                  router.push(localize("/"));
+                  router.replace(localize("/"));
                 }}
               >
                 {locale === "ko" ? "\uB85C\uADF8\uC544\uC6C3" : "Sign Out"}

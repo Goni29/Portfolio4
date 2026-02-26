@@ -17,6 +17,8 @@ const FALLBACK_IMAGE =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCYq3sBwemj9sF7Zm7PA1FpwFRgUC_XP_dr2XWLg51lXte2cJs37EQt1ycq2TKQV8eYMEN-VADENltqbl-LdRylSnh_ty8j9eTFroj929bK_JRGG2H2fO8YkUZpDKeUUGQrMpczpLauVididFF0yv9WGeH-Di7Nyts5ZzfTB9kVvq2MFR7rbGpJ02CFFqXUzJmk3L4KN7VP4eE7bI8_xfkwp7DKBVCxZ6WqdQinYoiV3AXErZyha9smFV8Qbefb3YfXe-wPwqKTN1U";
 
 const normalize = (value: string): string => value.trim().toLowerCase();
+const filledStarStyle = { fontVariationSettings: "'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 20" } as const;
+const emptyStarStyle = { fontVariationSettings: "'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20" } as const;
 
 export function ProductView({ slug }: { slug: string }) {
   const { db, addToCart, locale, recordProductView } = useStore();
@@ -63,12 +65,12 @@ export function ProductView({ slug }: { slug: string }) {
   const detailImageA = product.images[1] ?? heroImage;
   const detailImageB = product.images[2] ?? heroImage;
   const detailImageC = product.images[3] ?? detailImageB;
-  const gallery = [heroImage, detailImageA, detailImageB, detailImageC];
+  const gallery = Array.from(new Set([heroImage, detailImageA, detailImageB, detailImageC])).slice(0, 2);
   const heroImagePosition = "50% 68%";
 
   const selectedImage = gallery[selectedImageIndex] ?? gallery[0] ?? FALLBACK_IMAGE;
 
-  const roundedRating = Math.round(product.rating * 2) / 2;
+  const roundedRating = Math.max(0, Math.min(5, Math.round(product.rating * 2) / 2));
   const benefitLines = [
     ...resolveList(product.howToUse, locale),
     ...product.ingredients.map((ingredient) => resolveText(ingredient.benefit, locale)),
@@ -116,7 +118,7 @@ export function ProductView({ slug }: { slug: string }) {
               />
             </div>
 
-            <div className="mt-3 grid grid-cols-4 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2">
               {gallery.map((image, index) => (
                 <button
                   key={`${product.slug}-image-${index}`}
@@ -155,18 +157,18 @@ export function ProductView({ slug }: { slug: string }) {
                   {t("무료배송", "Free Shipping")}
                 </span>
               )}
-              <div className="flex items-center gap-1 text-[#e6194c] text-sm font-medium">
+              <div className="flex items-center gap-1 text-sm font-medium">
                 {Array.from({ length: 5 }, (_, index) => {
-                  const value = index + 1;
-                  let icon = "star_outline";
-                  if (roundedRating >= value) {
-                    icon = "star";
-                  } else if (roundedRating + 0.5 === value) {
-                    icon = "star_half";
-                  }
+                  const fillLevel = Math.max(0, Math.min(1, roundedRating - index));
+                  const icon = fillLevel >= 1 ? "star" : fillLevel >= 0.5 ? "star_half" : "star";
+                  const colorClass = fillLevel > 0 ? "text-[#e6194c]" : "text-slate-300";
 
                   return (
-                    <span key={`${product.id}-rating-${value}`} className="material-symbols-outlined !text-sm">
+                    <span
+                      key={`${product.id}-rating-${index + 1}`}
+                      className={`material-symbols-outlined !text-sm leading-none ${colorClass}`}
+                      style={fillLevel > 0 ? filledStarStyle : emptyStarStyle}
+                    >
                       {icon}
                     </span>
                   );

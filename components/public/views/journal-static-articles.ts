@@ -151,7 +151,7 @@ export const STATIC_JOURNAL_ARTICLES: StaticJournalArticle[] = [
       "<p>나이트 리셋 세럼은 수면 시간 동안 피부 회복 리듬을 지원하도록 설계된 신제품입니다.</p><p>가벼운 텍스처지만 깊은 보습을 제공해 다음 날 아침 피부 결을 매끈하게 정돈해 줍니다.</p><p>최적의 효과를 위해 저녁 클렌징 직후 첫 번째 트리트먼트 단계에서 사용해 보세요.</p>",
       "<p>The Night Reset Serum is engineered to support skin recovery while you sleep.</p><p>Its lightweight texture delivers dense hydration and helps smooth visible texture by morning.</p><p>For best results, apply as the first treatment step after evening cleansing.</p>",
     ),
-    category: "Science",
+    category: "Event",
     publishedAt: "2025-10-03T10:00:00.000Z",
     coverImage:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuCgsl_2HTDXglyMBerBIuYun3CFfsJwyKdJcUMeKwXJjHru4bk31K_Yo7ivzTpd-Ol5J5nfP4qHzF8ga7f2TW8dgGqxlrhpKGY-BlhFkcID-DgnLFFA_cztWoX9KnYZEBdcFSYBvg2KIWXkSIxZ4Sht1IryqvQHCSI4NyT0gLMSxGHIgGlehIU8C-LewhKwdhQ1Ou8nO_6WlBQU7Gw1V2wINZR9Iqqw7ffGN_S5AFwkMaX2ekC1xlOHtLsdTE1BgBvP9L5g-3NC6Iw",

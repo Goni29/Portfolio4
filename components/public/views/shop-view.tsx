@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "@/components/providers/store-provider";
 import { Drawer } from "@/components/ui/drawer";
@@ -30,9 +31,21 @@ const DEFAULT_FILTERS: ShopFilters = {
 const SORTS = ["newest", "priceAsc", "priceDesc", "best"] as const;
 const SHOP_PAGE_SIZE = 8;
 
+const resolveSearchText = (
+  value: Product["name"] | Product["shortDescription"] | Product["description"],
+): string => {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return `${value.ko} ${value.en}`;
+};
+
 export function ShopView() {
+  const searchParams = useSearchParams();
   const { db, addToCart, locale } = useStore();
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
+  const searchQuery = (searchParams.get("q") ?? "").trim().toLowerCase();
 
   const [filters, setFilters] = useState<ShopFilters>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<(typeof SORTS)[number]>("newest");
@@ -131,7 +144,16 @@ export function ShopView() {
       const concernPass = filters.concern === "all" || product.concerns.includes(filters.concern as Concern);
       const collectionPass = filters.collection === "all" || product.collectionSlugs.includes(filters.collection);
       const pricePass = product.price >= filters.minPrice && product.price <= filters.maxPrice;
-      return categoryPass && skinTypePass && concernPass && collectionPass && pricePass;
+      const searchable = [
+        product.slug,
+        resolveSearchText(product.name),
+        resolveSearchText(product.shortDescription),
+        resolveSearchText(product.description),
+      ]
+        .join(" ")
+        .toLowerCase();
+      const queryPass = !searchQuery || searchable.includes(searchQuery);
+      return categoryPass && skinTypePass && concernPass && collectionPass && pricePass && queryPass;
     });
 
     const sorted = [...result];
@@ -153,7 +175,7 @@ export function ShopView() {
       sorted.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
     }
     return sorted;
-  }, [db.products, filters, sort]);
+  }, [db.products, filters, sort, searchQuery]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / SHOP_PAGE_SIZE));
   const paged = filtered.slice(0, page * SHOP_PAGE_SIZE);

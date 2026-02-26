@@ -23,7 +23,7 @@ const NAV_ITEMS = [
 export function PublicShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { ready, currentUser, cartItems, logout, locale, setLocale } = useStore();
+  const { ready, currentUser, cartItems, db, logout, locale, setLocale } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [headerSearchOpen, setHeaderSearchOpen] = useState(false);
   const [headerSearchQuery, setHeaderSearchQuery] = useState("");
@@ -31,11 +31,25 @@ export function PublicShell({ children }: { children: ReactNode }) {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
   const headerSearchInputRef = useRef<HTMLInputElement>(null);
+  const headerSearchWrapRef = useRef<HTMLDivElement>(null);
 
   const cartCount = cartItems.reduce((sum, line) => sum + line.quantity, 0);
   const { locale: pathLocale, path: routePath } = useMemo(() => stripLocalePrefix(pathname), [pathname]);
   const localize = useCallback((path: string) => withLocalePath(path, locale), [locale]);
   const accountHref = localize(ready && currentUser?.role === "admin" ? "/admin" : "/account");
+
+  const submitHeaderSearch = useCallback(() => {
+    const trimmed = headerSearchQuery.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.set("q", trimmed);
+    router.push(`${localize("/shop")}?${params.toString()}`);
+    setHeaderSearchQuery("");
+    setHeaderSearchOpen(false);
+  }, [headerSearchQuery, localize, router]);
 
   useEffect(() => {
     if (pathLocale && pathLocale !== locale) {
@@ -47,6 +61,23 @@ export function PublicShell({ children }: { children: ReactNode }) {
     if (headerSearchOpen) {
       headerSearchInputRef.current?.focus();
     }
+  }, [headerSearchOpen]);
+
+  useEffect(() => {
+    if (!headerSearchOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!headerSearchWrapRef.current?.contains(event.target as Node)) {
+        setHeaderSearchOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
   }, [headerSearchOpen]);
 
   const isActive = useMemo(
@@ -70,6 +101,22 @@ export function PublicShell({ children }: { children: ReactNode }) {
   };
 
   const cartOpen = routePath === "/cart" || cartOpenPath === routePath;
+  const trimmedHeaderSearchQuery = headerSearchQuery.trim();
+  const headerSearchResults = useMemo(() => {
+    if (!trimmedHeaderSearchQuery) {
+      return [];
+    }
+
+    const keyword = trimmedHeaderSearchQuery.toLowerCase();
+    return db.products
+      .filter((product) => {
+        const name = resolveText(product.name, locale);
+        const shortDescription = resolveText(product.shortDescription, locale);
+        const searchable = `${product.slug} ${name} ${shortDescription}`.toLowerCase();
+        return searchable.includes(keyword);
+      })
+      .slice(0, 5);
+  }, [db.products, locale, trimmedHeaderSearchQuery]);
 
   const closeCart = () => {
     setCartOpenPath(null);
@@ -130,46 +177,103 @@ export function PublicShell({ children }: { children: ReactNode }) {
             <div className="flex items-center justify-end gap-6">
               <div className="flex items-center gap-3 sm:gap-5">
                 <LocaleToggle className="hidden sm:inline-flex" locale={locale} onChange={onLocaleChange} />
-                <div
-                  className={cn(
-                    "flex h-11 shrink-0 items-center overflow-hidden rounded-full transition-[width,background-color] duration-300 ease-out",
-                    headerSearchOpen ? "w-40 bg-white/90 sm:w-56" : "w-11 bg-transparent",
-                  )}
-                >
-                  <button
-                    type="button"
-                    className="grid h-11 w-11 shrink-0 place-items-center text-[#1b0e11] transition-opacity hover:opacity-70"
-                    aria-label={resolveText(BRAND_LABELS.navSearch, locale)}
-                    aria-expanded={headerSearchOpen}
-                    onClick={() => {
-                      if (headerSearchOpen) {
-                        setHeaderSearchQuery("");
-                        setHeaderSearchOpen(false);
-                        return;
-                      }
-                      setHeaderSearchOpen(true);
-                    }}
-                  >
-                    <span className="material-symbols-outlined text-[20px]">search</span>
-                  </button>
-                  <input
-                    ref={headerSearchInputRef}
-                    type="search"
-                    value={headerSearchQuery}
-                    onChange={(event) => setHeaderSearchQuery(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Escape") {
-                        event.preventDefault();
-                        setHeaderSearchQuery("");
-                        setHeaderSearchOpen(false);
-                      }
-                    }}
-                    placeholder={resolveText(BRAND_LABELS.navSearch, locale)}
+                <div ref={headerSearchWrapRef} className="relative">
+                  <div
                     className={cn(
-                      "header-search-input h-full min-w-0 border-none bg-transparent pr-3 text-sm text-[#1b0e11] placeholder:text-[#8f747d] outline-none focus:ring-0 transition-opacity duration-200",
-                      headerSearchOpen ? "w-full opacity-100" : "pointer-events-none w-0 opacity-0",
+                      "flex h-11 shrink-0 items-center overflow-hidden rounded-full transition-[width,background-color] duration-300 ease-out",
+                      headerSearchOpen ? "w-40 bg-white/90 sm:w-56" : "w-11 bg-transparent",
                     )}
-                  />
+                  >
+                    <button
+                      type="button"
+                      className="grid h-11 w-11 shrink-0 place-items-center text-[#1b0e11] transition-opacity hover:opacity-70"
+                      aria-label={resolveText(BRAND_LABELS.navSearch, locale)}
+                      aria-expanded={headerSearchOpen}
+                      onClick={() => {
+                        if (!headerSearchOpen) {
+                          setHeaderSearchOpen(true);
+                          return;
+                        }
+
+                        if (headerSearchQuery.trim()) {
+                          submitHeaderSearch();
+                          return;
+                        }
+
+                        if (headerSearchOpen) {
+                          setHeaderSearchQuery("");
+                          setHeaderSearchOpen(false);
+                        }
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-[20px]">search</span>
+                    </button>
+                    <input
+                      ref={headerSearchInputRef}
+                      type="search"
+                      value={headerSearchQuery}
+                      onChange={(event) => setHeaderSearchQuery(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          submitHeaderSearch();
+                          return;
+                        }
+
+                        if (event.key === "Escape") {
+                          event.preventDefault();
+                          setHeaderSearchQuery("");
+                          setHeaderSearchOpen(false);
+                        }
+                      }}
+                      placeholder={resolveText(BRAND_LABELS.navSearch, locale)}
+                      className={cn(
+                        "header-search-input h-full min-w-0 border-none bg-transparent pr-3 text-sm text-[#1b0e11] placeholder:text-[#8f747d] outline-none focus:ring-0 transition-opacity duration-200",
+                        headerSearchOpen ? "w-full opacity-100" : "pointer-events-none w-0 opacity-0",
+                      )}
+                    />
+                  </div>
+
+                  {headerSearchOpen && trimmedHeaderSearchQuery && (
+                    <div className="absolute left-1/2 top-[calc(100%+8px)] z-[70] w-[min(24rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-2xl border border-[#efd9e1] bg-white/95 shadow-[0_18px_42px_rgba(54,17,31,0.2)] backdrop-blur">
+                      {headerSearchResults.length > 0 ? (
+                        <ul className="divide-y divide-[#f2e6ea]">
+                          {headerSearchResults.map((product) => (
+                            <li key={product.id}>
+                              <Link
+                                href={localize(`/product/${product.slug}`)}
+                                className="flex items-center gap-3 px-3 py-3 transition-colors hover:bg-[#fff1f5]"
+                                onClick={() => {
+                                  setHeaderSearchQuery("");
+                                  setHeaderSearchOpen(false);
+                                }}
+                              >
+                                <div className="relative h-12 w-12 overflow-hidden rounded-lg border border-[#f1e3e8] bg-[#fbf5f7]">
+                                  <img
+                                    src={product.images[0]}
+                                    alt={resolveText(product.name, locale)}
+                                    className="h-full w-full object-cover"
+                                  />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-semibold text-[#1b0e11]">
+                                    {resolveText(product.name, locale)}
+                                  </p>
+                                  <p className="truncate text-xs text-[#8c6a74]">
+                                    {resolveText(product.shortDescription, locale)}
+                                  </p>
+                                </div>
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="px-4 py-5 text-center text-sm text-[#8c6a74]">
+                          {locale === "ko" ? "일치하는 상품이 없습니다." : "No matching products."}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <Link
                   href={localize("/account")}

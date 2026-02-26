@@ -58,7 +58,7 @@ function AccountLoginView() {
   const { login, locale } = useStore();
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
   const [email, setEmail] = useState(locale === "ko" ? "" : "user@portfolio.com");
-  const [password, setPassword] = useState("User123!");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [message, setMessage] = useState("");
@@ -69,8 +69,7 @@ function AccountLoginView() {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
           style={{
-            backgroundImage:
-              "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDNUDTShfYRsycptElm5NNhOaefNeFiyoREgpX0GSOFc9GSXXyksiZBEFvGdU8jj-PHTInI2eeaNW40YqjPIyzKiFxrexvEKp6oCvk69FomHnOZoJ7WVBvE7Q8AsT39QR_fcvR1xdDHDT_8wxVKW4FPIlvVsQatbtvTgt85IkvNvORP1zwm-Uo5AMs2uh724IGbmvvMZWYm6NvnJZCILmgO2FtwhTkhxbcs7ZAjZVJaDmnwq05Hgw6n15-bflgan37g1YKGa8wjLbo')",
+            backgroundImage: "url('/login.png')",
           }}
         >
           <div className="absolute inset-0 bg-black/10" />
@@ -196,11 +195,19 @@ function AccountLoginView() {
             <button
               type="button"
               className="w-full bg-white border border-[#f0d8e1] hover:bg-[#fdf1f5] text-[#0e121b] font-medium h-12 rounded-lg transition-colors flex items-center justify-center gap-3"
+              onClick={() =>
+                setMessage(
+                  t(
+                    "구글 로그인은 포트폴리오 데모용 기능입니다. 현재는 이메일 로그인만 지원합니다.",
+                    "Google Sign-In is a portfolio demo feature. Please use email login for now.",
+                  ),
+                )
+              }
             >
               <img
                 alt={t("구글", "Google")}
-                className="w-5 h-5"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXIuXe6oyMbhSk08HYKGK7QqzQZP0EXTXz-Jdtp7YYuGW0KavgKaDMkXIbkkkPNKS3cgQacmCtq5Uxnwf42mLKCmSj5urSRqcy4VpshfybrxYn1D4kTWOaY-CxY3LqV_AkrniNUeH9vOa2wMEy7rqTX0wEV7FTehCHz8fDr144A62K8wH-k_hh1Aip9fZOVEcJGRVHY37ptpOF5ZPf80maJeedrxkyH56TcgrUFoDpCx1xCz97RUEQUS33XSWkZaCvuHFa19bG-Zc"
+                className="w-5 h-5 shrink-0"
+                src="/google-logo.svg"
               />
               <span>{t("구글 계정으로 로그인", "Sign in with Google")}</span>
             </button>
@@ -230,7 +237,7 @@ function AccountRegisterView() {
   const router = useRouter();
   const { register, locale } = useStore();
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
-  const [name, setName] = useState(locale === "ko" ? "새 고객" : "New Customer");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

@@ -9,6 +9,16 @@ const LOCALE_KEY = "locale";
 const DAILY_DEFENSE_HERO_IMAGE = "/collection3.png";
 const LEGACY_DAILY_DEFENSE_HERO_IMAGE =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuB8rFCb4eSLAWGesmzQsJof9VGrcq6ERudpGqWqeBUNVHSR4Iu9f3n06QyE_jp4I0qE3RmqwlHwIDRR8GCsS-CUZ6rOaJAomYRDtbgkDNu9jhLM34hg-VtVEYXkD1NH9wcEjFvW9hjrcBZBZaKAkRq8NWN0pV9Kee4p8HWkdC2kw8ZVWEjP-VOjB732bogXlQx8KukHn0faV14PzbCBlETcA-Klm2PgTbVkD7BhvZ5L6NqyKFWGZbQYvE73W7bpKBZILGqfIjAr5To";
+const PRODUCT_DETAIL_IMAGE_PATCHES: Record<string, { thumbnail: string; mainImage?: string }> = {
+  "bio-cellulose-mask": { mainImage: "/mask.png", thumbnail: "/mask1.png" },
+  "velvet-cloud-cream": { mainImage: "/cream.png", thumbnail: "/cream1.png" },
+  "clarity-gel-cream": { thumbnail: "/cream2.png" },
+  "midnight-recovery-oil": { thumbnail: "/oil1.png" },
+  "luminous-silk-serum": { thumbnail: "/serum1.png" },
+  "rose-quartz-roller": { thumbnail: "/roller.png" },
+  "mineral-veil-spf50": { mainImage: "/suncream.png", thumbnail: "/suncream1.png" },
+  "enzyme-polish-cleanser": { mainImage: "/form.png", thumbnail: "/form1.png" },
+};
 
 const hasHangul = (value: string): boolean => /[가-힣]/.test(value);
 const hasNonAscii = (value: string): boolean => /[^\u0000-\u007f]/.test(value);
@@ -178,6 +188,30 @@ const migrateDailyDefenseHeroImage = (db: StoreDB): StoreDB => {
   };
 };
 
+const migrateProductDetailImages = (db: StoreDB, seed: StoreDB): StoreDB => {
+  const seedProductBySlug = new Map(seed.products.map((product) => [product.slug, product]));
+
+  return {
+    ...db,
+    products: db.products.map((product) => {
+      const patch = PRODUCT_DETAIL_IMAGE_PATCHES[product.slug];
+      if (!patch) {
+        return product;
+      }
+
+      const mainImage = patch.mainImage ?? product.images[0] ?? seedProductBySlug.get(product.slug)?.images[0] ?? "";
+      if (mainImage.trim() === "") {
+        return product;
+      }
+
+      return {
+        ...product,
+        images: [mainImage, patch.thumbnail],
+      };
+    }),
+  };
+};
+
 const migrateAnalytics = (db: StoreDB): StoreDB => {
   const rawViews = db.analytics?.productViewsBySlug;
   const normalizedViews: Record<string, number> = {};
@@ -215,8 +249,11 @@ export const loadDb = (): StoreDB => {
   }
 
   const normalized = migrateAnalytics(
-    migrateDailyDefenseHeroImage(
-      migrateLegacyAccountEmailDomain(normalizeDbLocalizedFields(saved, seed)),
+    migrateProductDetailImages(
+      migrateDailyDefenseHeroImage(
+        migrateLegacyAccountEmailDomain(normalizeDbLocalizedFields(saved, seed)),
+      ),
+      seed,
     ),
   );
   writeLocal(DB_KEY, normalized);
