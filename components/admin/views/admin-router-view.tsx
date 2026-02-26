@@ -405,11 +405,20 @@ function AdminDashboardView() {
 }
 
 type AnalyticsRange = "7d" | "30d" | "90d" | "all";
+type SalesInterval = "daily" | "weekly" | "monthly" | "yearly";
+type SalesSeriesPoint = {
+  key: string;
+  label: string;
+  revenue: number;
+  orders: number;
+  units: number;
+};
 
 function AdminAnalyticsView() {
   const { db, locale } = useStore();
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
   const [range, setRange] = useState<AnalyticsRange>("30d");
+  const [salesInterval, setSalesInterval] = useState<SalesInterval>("daily");
   const [analysisNow] = useState<number>(() => Date.now());
 
   const rangeDays = range === "all" ? null : Number(range.replace("d", ""));
@@ -584,6 +593,170 @@ function AdminAnalyticsView() {
           ? t("최근 90일", "Last 90 days")
           : t("전체 기간", "All time");
 
+  const salesIntervalData = useMemo<Record<SalesInterval, SalesSeriesPoint[]>>(() => {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const now = new Date(analysisNow);
+    const paidOrdersAllTime = db.orders.filter((order) => order.paymentStatus === "paid" && order.status !== "cancelled");
+    const formatDateKey = (timestamp: number): string => {
+      const date = new Date(timestamp);
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(date.getUTCDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+    const formatMonthKey = (timestamp: number): string => {
+      const date = new Date(timestamp);
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+      return `${year}-${month}`;
+    };
+    const getUtcDayStart = (timestamp: number): number => {
+      const date = new Date(timestamp);
+      return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+    };
+    const getUtcWeekStart = (timestamp: number): number => {
+      const dayStart = getUtcDayStart(timestamp);
+      const date = new Date(dayStart);
+      const weekday = (date.getUTCDay() + 6) % 7;
+      return dayStart - weekday * DAY_MS;
+    };
+    const shortDateLabel = (timestamp: number): string =>
+      new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+        month: "numeric",
+        day: "numeric",
+      }).format(new Date(timestamp));
+    const monthLabel = (timestamp: number): string => {
+      const date = new Date(timestamp);
+      if (locale === "ko") {
+        return `${date.getUTCMonth() + 1}월`;
+      }
+      return new Intl.DateTimeFormat("en-US", { month: "short" }).format(date);
+    };
+    const createMetricsMap = (
+      keys: string[],
+    ): Map<string, { revenue: number; orders: number; units: number }> =>
+      new Map(keys.map((key) => [key, { revenue: 0, orders: 0, units: 0 }]));
+    const addOrderToBucket = (
+      map: Map<string, { revenue: number; orders: number; units: number }>,
+      key: string,
+      revenue: number,
+      units: number,
+    ) => {
+      const metrics = map.get(key);
+      if (!metrics) {
+        return;
+      }
+      metrics.revenue += revenue;
+      metrics.orders += 1;
+      metrics.units += units;
+    };
+    const toSeries = (
+      buckets: Array<{ key: string; label: string }>,
+      map: Map<string, { revenue: number; orders: number; units: number }>,
+    ): SalesSeriesPoint[] =>
+      buckets.map((bucket) => {
+        const metrics = map.get(bucket.key);
+        return {
+          key: bucket.key,
+          label: bucket.label,
+          revenue: metrics?.revenue ?? 0,
+          orders: metrics?.orders ?? 0,
+          units: metrics?.units ?? 0,
+        };
+      });
+
+    const todayStart = getUtcDayStart(analysisNow);
+    const dailyBuckets = Array.from({ length: 14 }, (_, index) => {
+      const bucketStart = todayStart - (13 - index) * DAY_MS;
+      return {
+        key: formatDateKey(bucketStart),
+        label: shortDateLabel(bucketStart),
+      };
+    });
+    const currentWeekStart = getUtcWeekStart(analysisNow);
+    const weeklyBuckets = Array.from({ length: 12 }, (_, index) => {
+      const bucketStart = currentWeekStart - (11 - index) * 7 * DAY_MS;
+      return {
+        key: formatDateKey(bucketStart),
+        label: shortDateLabel(bucketStart),
+      };
+    });
+    const monthlyBuckets = Array.from({ length: 12 }, (_, index) => {
+      const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (11 - index), 1));
+      const bucketStart = date.getTime();
+      return {
+        key: formatMonthKey(bucketStart),
+        label: monthLabel(bucketStart),
+      };
+    });
+    const currentYear = now.getUTCFullYear();
+    const yearlyBuckets = Array.from({ length: 5 }, (_, index) => {
+      const year = currentYear - (4 - index);
+      return {
+        key: String(year),
+        label: String(year),
+      };
+    });
+
+    const dailyMap = createMetricsMap(dailyBuckets.map((bucket) => bucket.key));
+    const weeklyMap = createMetricsMap(weeklyBuckets.map((bucket) => bucket.key));
+    const monthlyMap = createMetricsMap(monthlyBuckets.map((bucket) => bucket.key));
+    const yearlyMap = createMetricsMap(yearlyBuckets.map((bucket) => bucket.key));
+
+    paidOrdersAllTime.forEach((order) => {
+      const createdAt = new Date(order.createdAt).getTime();
+      if (!Number.isFinite(createdAt) || createdAt <= 0) {
+        return;
+      }
+      const units = order.items.reduce((sum, item) => sum + Math.max(1, item.quantity), 0);
+      const dayKey = formatDateKey(createdAt);
+      const weekKey = formatDateKey(getUtcWeekStart(createdAt));
+      const monthKey = formatMonthKey(createdAt);
+      const yearKey = String(new Date(createdAt).getUTCFullYear());
+
+      addOrderToBucket(dailyMap, dayKey, order.total, units);
+      addOrderToBucket(weeklyMap, weekKey, order.total, units);
+      addOrderToBucket(monthlyMap, monthKey, order.total, units);
+      addOrderToBucket(yearlyMap, yearKey, order.total, units);
+    });
+
+    return {
+      daily: toSeries(dailyBuckets, dailyMap),
+      weekly: toSeries(weeklyBuckets, weeklyMap),
+      monthly: toSeries(monthlyBuckets, monthlyMap),
+      yearly: toSeries(yearlyBuckets, yearlyMap),
+    };
+  }, [analysisNow, db.orders, locale]);
+
+  const activeSalesSeries = salesIntervalData[salesInterval];
+  const salesSeriesTotalRevenue = activeSalesSeries.reduce((sum, entry) => sum + entry.revenue, 0);
+  const salesSeriesTotalOrders = activeSalesSeries.reduce((sum, entry) => sum + entry.orders, 0);
+  const salesSeriesTotalUnits = activeSalesSeries.reduce((sum, entry) => sum + entry.units, 0);
+  const salesSeriesAverageRevenue = activeSalesSeries.length > 0 ? salesSeriesTotalRevenue / activeSalesSeries.length : 0;
+  const salesSeriesMaxRevenue = Math.max(1, ...activeSalesSeries.map((entry) => entry.revenue));
+  const salesSeriesPeak = activeSalesSeries.reduce<SalesSeriesPoint | null>((best, entry) => {
+    if (!best || entry.revenue > best.revenue) {
+      return entry;
+    }
+    return best;
+  }, null);
+  const salesIntervalLabel =
+    salesInterval === "daily"
+      ? t("일간", "Daily")
+      : salesInterval === "weekly"
+        ? t("주간", "Weekly")
+        : salesInterval === "monthly"
+          ? t("월간", "Monthly")
+          : t("연간", "Yearly");
+  const salesSeriesWindowLabel =
+    salesInterval === "daily"
+      ? t("최근 14일", "Last 14 days")
+      : salesInterval === "weekly"
+        ? t("최근 12주", "Last 12 weeks")
+        : salesInterval === "monthly"
+          ? t("최근 12개월", "Last 12 months")
+          : t("최근 5년", "Last 5 years");
+
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -626,6 +799,93 @@ function AdminAnalyticsView() {
           <AnalyticsCard label={t("주문 전환율", "Order Conversion")} value={`${orderConversionRate.toFixed(1)}%`} />
           <AnalyticsCard label={t("조회당 판매수", "Units per View")} value={`${unitConversionRate.toFixed(1)}%`} />
           <AnalyticsCard label={t("신규 고객", "New Customers")} value={String(newCustomers)} hint={t("선택 기간 가입", "Joined in selected range")} />
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">{t("판매 주기 분석", "Sales Cycle Analysis")}</h2>
+            <p className="text-sm text-slate-500 mt-1">
+              {t("일간, 주간, 월간, 연간 단위로 판매 흐름을 비교합니다.", "Compare sales flow across daily, weekly, monthly, and yearly periods.")}
+            </p>
+          </div>
+          <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
+            {([
+              { value: "daily", label: t("일간", "Daily") },
+              { value: "weekly", label: t("주간", "Weekly") },
+              { value: "monthly", label: t("월간", "Monthly") },
+              { value: "yearly", label: t("연간", "Yearly") },
+            ] as Array<{ value: SalesInterval; label: string }>).map((option) => (
+              <button
+                key={`sales-period-${option.value}`}
+                type="button"
+                className={`h-8 rounded-full px-3 text-xs font-semibold transition ${
+                  salesInterval === option.value ? "bg-[#e6194c] text-white shadow-sm" : "text-slate-600 hover:bg-white"
+                }`}
+                onClick={() => setSalesInterval(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <AnalyticsCard
+            label={t("선택 구간 총매출", "Window Revenue")}
+            value={currency(salesSeriesTotalRevenue)}
+            hint={`${salesIntervalLabel} · ${salesSeriesWindowLabel}`}
+          />
+          <AnalyticsCard
+            label={t("구간당 평균 매출", "Avg Revenue per Bucket")}
+            value={currency(salesSeriesAverageRevenue)}
+            hint={t("선택 구간 평균", "Average in selected window")}
+          />
+          <AnalyticsCard
+            label={t("최고 매출 구간", "Peak Sales Bucket")}
+            value={salesSeriesPeak ? `${salesSeriesPeak.label} · ${currency(salesSeriesPeak.revenue)}` : "-"}
+            hint={
+              salesSeriesPeak
+                ? `${salesSeriesPeak.orders.toLocaleString()} ${t("주문", "orders")} · ${salesSeriesPeak.units.toLocaleString()} ${t("개", "units")}`
+                : t("데이터 없음", "No data")
+            }
+          />
+        </div>
+
+        <div className="mt-6 overflow-x-auto pb-1">
+          <div className="min-w-[640px] rounded-xl border border-[#f7e9ef] bg-gradient-to-b from-[#fff8fb] to-white p-4">
+            <div
+              className="h-52 grid gap-2"
+              style={{
+                gridTemplateColumns: `repeat(${Math.max(activeSalesSeries.length, 1)}, minmax(0, 1fr))`,
+              }}
+            >
+              {activeSalesSeries.map((entry) => {
+                const barHeight = entry.revenue > 0 ? Math.max(8, (entry.revenue / salesSeriesMaxRevenue) * 138) : 3;
+                return (
+                  <div key={`${salesInterval}-${entry.key}`} className="flex min-w-0 flex-col justify-end">
+                    <div className="h-36 flex items-end justify-center">
+                      <div
+                        className="w-5 rounded-t-md bg-[#e6194c]/20 overflow-hidden"
+                        title={`${entry.label}: ${currency(entry.revenue)} / ${entry.orders.toLocaleString()} ${t("주문", "orders")}`}
+                      >
+                        <div className="w-full rounded-t-md bg-[#e6194c]" style={{ height: `${barHeight}px` }} />
+                      </div>
+                    </div>
+                    <p className="mt-2 truncate text-center text-[11px] font-semibold text-slate-500">{entry.label}</p>
+                    <p className="text-center text-[10px] text-slate-400">{entry.orders.toLocaleString()}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
+          <span>{t("총 주문", "Total Orders")}: {salesSeriesTotalOrders.toLocaleString()}</span>
+          <span>{t("총 판매 수량", "Units Sold")}: {salesSeriesTotalUnits.toLocaleString()}</span>
+          <span>{t("집계 기간", "Window")}: {salesSeriesWindowLabel}</span>
         </div>
       </section>
 
@@ -2380,7 +2640,5 @@ function SummaryCard({ label, value, href }: { label: string; value: string; hre
     </Link>
   );
 }
-
-
 
 
