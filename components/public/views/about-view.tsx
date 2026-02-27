@@ -55,7 +55,7 @@ export function AboutView() {
       </section>
 
       <section
-        className="relative h-[60vh] md:h-[80vh] w-full parallax-bg flex items-center"
+        className="relative h-[60vh] md:h-[80vh] w-full overflow-hidden parallax-bg flex items-center"
         style={{
           backgroundImage: "url('/brand_flower.png')",
         }}

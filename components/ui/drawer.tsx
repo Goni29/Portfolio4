@@ -10,9 +10,11 @@ interface DrawerProps {
   onClose: () => void;
   children: ReactNode;
   side?: "left" | "right";
+  headerContent?: ReactNode;
+  headerActions?: ReactNode;
 }
 
-export function Drawer({ open, title, onClose, children, side = "left" }: DrawerProps) {
+export function Drawer({ open, title, onClose, children, side = "left", headerContent, headerActions }: DrawerProps) {
   const { locale } = useStore();
 
   useEffect(() => {
@@ -54,16 +56,21 @@ export function Drawer({ open, title, onClose, children, side = "left" }: Drawer
           side === "left" ? "left-0" : "right-0",
         )}
       >
-        <div className="sticky top-0 z-10 border-b border-[#f3e7ea] bg-[#f8f6f6] px-6 py-5 flex items-center justify-between">
-          <h2 className="font-semibold tracking-wide uppercase text-sm">{title}</h2>
-          <button
-            type="button"
-            className="h-11 w-11 rounded-full border border-[#e1d4d8] grid place-items-center"
-            aria-label={locale === "ko" ? "닫기" : "Close"}
-            onClick={onClose}
-          >
-            <span className="material-symbols-outlined">close</span>
-          </button>
+        <div className="sticky top-0 z-10 border-b border-[#f3e7ea] bg-[#f8f6f6] px-6 py-5 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            {headerContent ?? <h2 className="font-semibold tracking-wide uppercase text-sm">{title}</h2>}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {headerActions}
+            <button
+              type="button"
+              className="h-11 w-11 rounded-full border border-[#e1d4d8] grid place-items-center"
+              aria-label={locale === "ko" ? "닫기" : "Close"}
+              onClick={onClose}
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
         </div>
         <div className="p-6">{children}</div>
       </aside>

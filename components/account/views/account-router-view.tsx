@@ -258,7 +258,7 @@ function AccountRegisterView() {
         <div className="absolute bottom-12 left-12 right-12 text-white">
           <p className="text-3xl font-bold tracking-tight mb-2">{t("정제된 럭셔리 뷰티", "Refined Beauty.")}</p>
           <p className="text-lg text-slate-200 font-medium">
-            {t("큐레이션 컬렉션과 멤버 전용 혜택을 가장 먼저 만나보세요.", "Join our community for exclusive access to the curated collection.")}
+            {t("큐레이션 컬렉션과 최신 소식을 가장 먼저 만나보세요.", "Discover curated collections and latest updates first.")}
           </p>
         </div>
       </div>
@@ -267,7 +267,7 @@ function AccountRegisterView() {
           <div className="w-full max-w-md mx-auto">
             <div className="mb-10">
               <h1 className="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">{t("회원가입", "Create Account")}</h1>
-              <p className="text-[#7b5b67] text-lg">{t("Portfolio 멤버십으로 더 특별한 뷰티 경험을 시작해 보세요.", "Join Portfolio for an exclusive beauty experience.")}</p>
+              <p className="text-[#7b5b67] text-lg">{t("Portfolio와 함께 더 특별한 뷰티 여정을 시작해 보세요.", "Start your beauty journey with Portfolio.")}</p>
             </div>
 
             <form
@@ -351,7 +351,7 @@ function AccountRegisterView() {
                   <label className="font-medium text-slate-900 cursor-pointer" htmlFor="account-register-subscribe">
                     {t("Portfolio 저널 뉴스레터 구독", "Subscribe to the Portfolio Journal")}
                   </label>
-                  <p className="text-[#8b6675]">{t("최신 뷰티 인사이트와 트렌드, 멤버 전용 혜택을 받아보세요.", "Get the latest beauty tips, trends, and exclusive offers.")}</p>
+                  <p className="text-[#8b6675]">{t("최신 뷰티 인사이트와 트렌드를 받아보세요.", "Get the latest beauty tips and trends.")}</p>
                 </div>
               </div>
 
@@ -435,8 +435,7 @@ function AccountOverviewView() {
           {t("다시 오신 것을 환영합니다.", "Welcome back,")} <span className="font-bold">{currentUser.name}.</span>
         </h2>
         <p className="text-slate-500 max-w-2xl">
-          {t("오늘의 뷰티 포트폴리오 현황입니다. 다음 플래티넘 리워드까지", "Here is what is happening with your beauty portfolio today. You have")} {" "}
-          <span className="text-[#e6194c] font-medium">320 {t("포인트", "points")}</span> {t("남아 있습니다.", "until your next Platinum reward.")}
+          {t("오늘의 뷰티 포트폴리오 현황입니다.", "Here is what is happening with your beauty portfolio today.")}
         </p>
       </div>
 
@@ -930,5 +929,3 @@ function AccountAddressesView() {
     </div>
   );
 }
-
-

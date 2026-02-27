@@ -134,11 +134,11 @@ export function PublicShell({ children }: { children: ReactNode }) {
     >
       <header className="fixed inset-x-0 top-0 z-50 h-[var(--public-header-height)] w-full bg-[#fcf8f9]/95 backdrop-blur-md border-b border-[#f3e7ea]/50">
         <div className="container-edge h-full">
-          <div className="grid h-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center">
-            <div className="flex items-center min-w-0">
+          <div className="relative grid h-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-1.5 sm:gap-x-2 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-x-0">
+            <div className="relative z-10 flex items-center min-w-0">
               <button
                 type="button"
-                className="lg:hidden h-11 w-11 min-w-11 shrink-0 grid place-items-center text-[#1b0e11]"
+                className="lg:hidden h-8 w-8 min-w-8 sm:h-10 sm:w-10 sm:min-w-10 shrink-0 grid place-items-center text-[#1b0e11]"
                 onClick={() => setMenuOpen(true)}
                 aria-label={locale === "ko" ? "메뉴 열기" : "Open menu"}
               >
@@ -161,32 +161,45 @@ export function PublicShell({ children }: { children: ReactNode }) {
               </nav>
             </div>
 
-            <div className="justify-self-center px-4">
-              <Link href={localize("/")} className="inline-flex items-center">
+            <div
+              className={cn(
+                "absolute inset-y-0 left-1/2 z-20 flex min-w-0 items-center justify-center px-1 transition-transform duration-300 ease-out sm:px-2 lg:static lg:inset-auto lg:left-auto lg:translate-x-0 lg:justify-self-center lg:px-4 lg:z-0",
+                headerSearchOpen
+                  ? "-translate-x-[138%] sm:-translate-x-1/2"
+                  : "-translate-x-1/2",
+              )}
+            >
+              <Link href={localize("/")} className="pointer-events-auto inline-flex max-w-full items-center">
                 <Image
                   src="/logo_header.png"
                   alt="Portfolio logo"
                   width={420}
                   height={172}
-                  className="h-14 sm:h-16 w-auto object-contain"
+                  className="h-10 max-w-[132px] w-auto object-contain sm:h-12 sm:max-w-[166px] md:h-14 md:max-w-[196px] lg:h-16 lg:max-w-none"
                   priority
                 />
               </Link>
             </div>
 
-            <div className="flex items-center justify-end gap-6">
-              <div className="flex items-center gap-3 sm:gap-5">
-                <LocaleToggle className="hidden sm:inline-flex" locale={locale} onChange={onLocaleChange} />
+            <div className="relative z-10 flex items-center justify-end gap-1 sm:gap-3 lg:gap-6">
+              <div className="flex items-center gap-1 sm:gap-2 md:gap-3 lg:gap-5">
+                <LocaleToggle
+                  className="hidden sm:inline-flex lg:hidden shrink-0 origin-center scale-[0.92] sm:scale-100"
+                  locale={locale}
+                  onChange={onLocaleChange}
+                  size="compact"
+                />
+                <LocaleToggle className="hidden lg:inline-flex shrink-0" locale={locale} onChange={onLocaleChange} />
                 <div ref={headerSearchWrapRef} className="relative">
                   <div
                     className={cn(
-                      "flex h-11 shrink-0 items-center overflow-hidden rounded-full transition-[width,background-color] duration-300 ease-out",
-                      headerSearchOpen ? "w-40 bg-white/90 sm:w-56" : "w-11 bg-transparent",
+                      "flex h-8 sm:h-10 lg:h-11 shrink-0 items-center overflow-hidden rounded-full transition-[width,background-color] duration-300 ease-out",
+                      headerSearchOpen ? "w-[min(26vw,6.75rem)] sm:w-36 md:w-44 lg:w-56 bg-white/90" : "w-8 sm:w-10 lg:w-11 bg-transparent",
                     )}
                   >
                     <button
                       type="button"
-                      className="grid h-11 w-11 shrink-0 place-items-center text-[#1b0e11] transition-opacity hover:opacity-70"
+                      className="grid h-8 w-8 sm:h-10 sm:w-10 lg:h-11 lg:w-11 shrink-0 place-items-center text-[#1b0e11] transition-opacity hover:opacity-70"
                       aria-label={resolveText(BRAND_LABELS.navSearch, locale)}
                       aria-expanded={headerSearchOpen}
                       onClick={() => {
@@ -206,7 +219,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
                         }
                       }}
                     >
-                      <span className="material-symbols-outlined text-[20px]">search</span>
+                      <span className="material-symbols-outlined text-[18px] lg:text-[20px]">search</span>
                     </button>
                     <input
                       ref={headerSearchInputRef}
@@ -235,7 +248,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
                   </div>
 
                   {headerSearchOpen && trimmedHeaderSearchQuery && (
-                    <div className="absolute left-1/2 top-[calc(100%+8px)] z-[70] w-[min(24rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-2xl border border-[#efd9e1] bg-white/95 shadow-[0_18px_42px_rgba(54,17,31,0.2)] backdrop-blur">
+                    <div className="fixed left-3 right-3 top-[calc(var(--public-header-height)+0.5rem)] z-[70] overflow-hidden rounded-2xl border border-[#efd9e1] bg-white/95 shadow-[0_18px_42px_rgba(54,17,31,0.2)] backdrop-blur sm:absolute sm:left-1/2 sm:right-auto sm:top-[calc(100%+8px)] sm:w-[min(24rem,calc(100vw-2rem))] sm:-translate-x-1/2">
                       {headerSearchResults.length > 0 ? (
                         <ul className="divide-y divide-[#f2e6ea]">
                           {headerSearchResults.map((product) => (
@@ -277,7 +290,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
                 </div>
                 <Link
                   href={localize("/account")}
-                  className="h-11 w-11 shrink-0 grid place-items-center text-[#1b0e11] hover:opacity-70 transition-opacity"
+                  className="h-8 w-8 sm:h-10 sm:w-10 lg:h-11 lg:w-11 shrink-0 grid place-items-center text-[#1b0e11] hover:opacity-70 transition-opacity"
                   aria-label={resolveText(BRAND_LABELS.navAccount, locale)}
                   onClick={(event) => {
                     if (ready && currentUser?.role === "admin") {
@@ -286,17 +299,17 @@ export function PublicShell({ children }: { children: ReactNode }) {
                     }
                   }}
                 >
-                  <span className="material-symbols-outlined text-[20px]">account_circle</span>
+                  <span className="material-symbols-outlined text-[18px] lg:text-[20px]">account_circle</span>
                 </Link>
                 <button
                   type="button"
-                  className="relative h-11 w-11 shrink-0 grid place-items-center text-[#1b0e11] hover:opacity-70 transition-opacity"
+                  className="relative h-8 w-8 sm:h-10 sm:w-10 lg:h-11 lg:w-11 shrink-0 grid place-items-center text-[#1b0e11] hover:opacity-70 transition-opacity"
                   aria-label={resolveText(BRAND_LABELS.navCart, locale)}
                   onClick={() => setCartOpenPath(routePath)}
                 >
-                  <span className="material-symbols-outlined text-[20px]">shopping_bag</span>
+                  <span className="material-symbols-outlined text-[18px] lg:text-[20px]">shopping_bag</span>
                   {cartCount > 0 && (
-                    <span className="absolute top-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#e6194c] text-[9px] font-bold text-white">
+                    <span className="absolute right-0.5 top-0.5 sm:top-1 sm:right-1 flex h-3 w-3 sm:h-3.5 sm:w-3.5 items-center justify-center rounded-full bg-[#e6194c] text-[8px] sm:text-[9px] font-bold text-white">
                       {Math.min(9, cartCount)}
                     </span>
                   )}
@@ -307,78 +320,141 @@ export function PublicShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <Drawer open={menuOpen} title={locale === "ko" ? "메뉴" : "Menu"} onClose={() => setMenuOpen(false)}>
-        <div className="mb-4">
-          <LocaleToggle locale={locale} onChange={onLocaleChange} />
-        </div>
-        <nav className="grid gap-2">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={localize(item.href)}
-              className="h-11 px-4 rounded-lg border border-[#e9dde0] flex items-center justify-between text-sm font-medium"
-              onClick={() => setMenuOpen(false)}
-            >
-              <span>{navLabel(item)}</span>
-              <span className="material-symbols-outlined text-base">chevron_right</span>
-            </Link>
-          ))}
-        </nav>
-
-        <div className="my-6 h-px bg-[#e6d8dc]" />
-
-        {!currentUser ? (
-          <div className="grid gap-3">
-            <button
-              type="button"
-              className="h-11 rounded-full bg-[#e6194c] text-white text-sm font-semibold hover:bg-[#cb1743] transition-colors"
-              onClick={() => {
-                router.push(localize("/account/login"));
-                setMenuOpen(false);
-              }}
-            >
-              {resolveText(BRAND_LABELS.navLogin, locale)}
-            </button>
-            <button
-              type="button"
-              className="h-11 rounded-full bg-[#e6194c] text-white text-sm font-semibold hover:bg-[#cb1743] transition-colors"
-              onClick={() => {
-                router.push(localize("/account/register"));
-                setMenuOpen(false);
-              }}
-            >
-              {resolveText(BRAND_LABELS.navRegister, locale)}
-            </button>
-          </div>
-        ) : (
-          <div className="grid gap-3">
-            <button
-              type="button"
-              className="h-11 rounded-full bg-[#e6194c] text-white text-sm font-semibold hover:bg-[#cb1743] transition-colors"
-              onClick={() => {
-                router.push(accountHref);
-                setMenuOpen(false);
-              }}
-            >
-              {currentUser.role === "admin"
-                ? locale === "ko"
-                  ? "관리자 대시보드"
-                  : "Admin Dashboard"
-                : resolveText(BRAND_LABELS.navAccount, locale)}
-            </button>
-            <button
-              type="button"
-              className="h-11 rounded-full bg-[#e6194c] text-white text-sm font-semibold hover:bg-[#cb1743] transition-colors"
-              onClick={() => {
-                logout();
-                router.push(localize("/"));
-                setMenuOpen(false);
-              }}
-            >
-              {locale === "ko" ? "로그아웃" : "Sign Out"}
-            </button>
+      <Drawer
+        open={menuOpen}
+        title={locale === "ko" ? "메뉴" : "Menu"}
+        onClose={() => setMenuOpen(false)}
+        headerContent={(
+          <div className="leading-tight">
+            <p className="text-[9px] uppercase tracking-[0.24em] text-[#a78490]">
+              {locale === "ko" ? "하이엔드 큐레이션" : "High-End Curation"}
+            </p>
+            <p className="mt-1 truncate font-serif text-[1.05rem] tracking-[0.02em] text-[#1b0e11]">
+              {locale === "ko" ? "포트폴리오 메뉴" : "Portfolio Menu"}
+            </p>
           </div>
         )}
+        headerActions={(
+          <LocaleToggle locale={locale} onChange={onLocaleChange} size="compact" className="inline-flex shrink-0" />
+        )}
+      >
+        <div className="flex min-h-full flex-col text-[#1b0e11]">
+          <nav className="pt-4">
+            <section>
+              <h2 className="mb-4 font-serif text-[10px] uppercase tracking-[0.2em] text-[#a0808a]">
+                {locale === "ko" ? "쇼핑" : "Shop"}
+              </h2>
+              <Link
+                href={localize("/shop")}
+                className="group flex items-center justify-between py-1"
+                onClick={() => setMenuOpen(false)}
+              >
+                <span className="font-serif text-[1.08rem] sm:text-[1.16rem] leading-tight tracking-tight transition-transform duration-300 group-hover:translate-x-1">
+                  {resolveText(BRAND_LABELS.navShop, locale)}
+                </span>
+                <span className="material-symbols-outlined text-[16px] text-[#7a5964] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  arrow_forward
+                </span>
+              </Link>
+            </section>
+
+            <section className="mt-8">
+              <h2 className="mb-4 font-serif text-[10px] uppercase tracking-[0.2em] text-[#a0808a]">
+                {locale === "ko" ? "루틴" : "Routine"}
+              </h2>
+              <Link
+                href={localize("/routine")}
+                className="group flex items-center justify-between py-1"
+                onClick={() => setMenuOpen(false)}
+              >
+                <span className="font-serif text-[1.08rem] sm:text-[1.16rem] leading-tight tracking-tight transition-transform duration-300 group-hover:translate-x-1">
+                  {resolveText(BRAND_LABELS.navRoutine, locale)}
+                </span>
+                <span className="material-symbols-outlined text-[16px] text-[#7a5964] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  arrow_forward
+                </span>
+              </Link>
+            </section>
+
+            <section className="mt-10 space-y-3 border-t border-[#efe2e7] pt-8">
+              {NAV_ITEMS.filter((item) => item.href === "/journal" || item.href === "/about" || item.href === "/contact").map((item) => (
+                <Link
+                  key={item.href}
+                  href={localize(item.href)}
+                  className="group flex items-center justify-between py-1"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <span className="font-serif text-[1.08rem] sm:text-[1.16rem] leading-tight tracking-tight transition-transform duration-300 group-hover:translate-x-1">
+                    {navLabel(item)}
+                  </span>
+                  <span className="material-symbols-outlined text-[16px] text-[#7a5964] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    arrow_forward
+                  </span>
+                </Link>
+              ))}
+            </section>
+
+            <section className="mt-8 grid grid-cols-2 gap-y-3 border-t border-[#efe2e7] pt-6 pb-7">
+              {currentUser ? (
+                <>
+                  <Link
+                    href={accountHref}
+                    className="text-[12px] font-medium tracking-wide text-[#6f5560] transition-colors hover:text-[#1b0e11]"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {currentUser.role === "admin"
+                      ? locale === "ko"
+                        ? "관리자"
+                        : "Admin"
+                      : resolveText(BRAND_LABELS.navAccount, locale)}
+                  </Link>
+                  <Link
+                    href={localize("/account/orders")}
+                    className="text-[12px] font-medium tracking-wide text-[#6f5560] transition-colors hover:text-[#1b0e11]"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {locale === "ko" ? "주문 내역" : "My Orders"}
+                  </Link>
+                  <Link
+                    href={localize("/")}
+                    className="col-span-2 mt-2 justify-self-start text-[12px] font-medium tracking-wide text-[#6f5560] transition-colors hover:text-[#e6194c]"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      logout();
+                      router.push(localize("/"));
+                      setMenuOpen(false);
+                    }}
+                  >
+                    {locale === "ko" ? "로그아웃" : "Sign Out"}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href={localize("/account/login")}
+                    className="text-[12px] font-medium tracking-wide text-[#6f5560] transition-colors hover:text-[#1b0e11]"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {resolveText(BRAND_LABELS.navLogin, locale)}
+                  </Link>
+                  <Link
+                    href={localize("/account/register")}
+                    className="text-[12px] font-medium tracking-wide text-[#6f5560] transition-colors hover:text-[#1b0e11]"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {resolveText(BRAND_LABELS.navRegister, locale)}
+                  </Link>
+                </>
+              )}
+            </section>
+          </nav>
+
+          <footer className="mt-auto border-t border-[#efe2e7] pt-7">
+            <p className="font-serif text-[12px] italic leading-relaxed text-[#6f5560]">
+              {locale === "ko" ? "뷰티를 하나의 예술 경험으로 완성합니다." : "Elevating beauty to an art form."}
+            </p>
+          </footer>
+        </div>
       </Drawer>
 
       <CartDrawer open={cartOpen} onClose={closeCart} />

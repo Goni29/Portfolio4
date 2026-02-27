@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "@/components/providers/store-provider";
 import { Drawer } from "@/components/ui/drawer";
 import { resolveText } from "@/lib/i18n";
+import { withLocalePath } from "@/lib/locale-routing";
 import {
   getDefaultProductSizeKey,
 } from "@/lib/product-pricing";
@@ -42,8 +43,9 @@ const resolveSearchText = (
 };
 
 export function ShopView() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const { db, addToCart, locale } = useStore();
+  const { db, addToCart, currentUser, toggleWishlist, locale } = useStore();
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
   const searchQuery = (searchParams.get("q") ?? "").trim().toLowerCase();
 
@@ -179,6 +181,7 @@ export function ShopView() {
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / SHOP_PAGE_SIZE));
   const paged = filtered.slice(0, page * SHOP_PAGE_SIZE);
+  const wishlistSet = useMemo(() => new Set(currentUser?.wishlist ?? []), [currentUser]);
 
   const categoryLabel =
     filters.category === "all" ? t("카테고리", "Category") : categoryLabelText(filters.category);
@@ -273,6 +276,15 @@ export function ShopView() {
   const quickAddFromCard = (product: Product) => {
     addToCart(product.slug, 1, getDefaultProductSizeKey(product));
   };
+
+  const toggleWishlistFromCard = (productSlug: string) => {
+    if (!currentUser) {
+      router.push(withLocalePath("/account/login", locale));
+      return;
+    }
+    toggleWishlist(productSlug);
+  };
+
   const filledStarStyle = { fontVariationSettings: "'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 20" } as const;
   const emptyStarStyle = { fontVariationSettings: "'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20" } as const;
 
@@ -458,6 +470,7 @@ export function ShopView() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
           {paged.map((product) => {
             const roundedRating = Math.max(0, Math.min(5, Math.round(product.rating * 2) / 2));
+            const isWishlisted = wishlistSet.has(product.slug);
             return (
               <article key={product.id} className="group product-card-hover cursor-pointer">
                 <div className="relative overflow-hidden rounded-xl bg-stone-100 dark:bg-stone-800 aspect-[3/4] mb-4">
@@ -470,14 +483,33 @@ export function ShopView() {
                   </Link>
 
                   <div className="absolute inset-x-0 bottom-0 p-4 z-20 opacity-0 translate-y-4 transition-all duration-300 ease-out bg-gradient-to-t from-black/60 to-transparent group-hover:opacity-100 group-hover:translate-y-0">
-                    <button
-                      type="button"
-                      className="w-full bg-white text-slate-900 hover:bg-white/90 font-medium text-sm py-3 rounded-sm shadow-lg transition-colors flex items-center justify-center gap-2"
-                      onClick={() => quickAddFromCard(product)}
-                    >
-                      <span className="material-symbols-outlined text-[18px]">shopping_bag</span>
-                      {t("바로 담기", "Add to Bag")}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className="flex-1 bg-white text-slate-900 hover:bg-white/90 font-medium text-sm py-3 rounded-sm shadow-lg transition-colors flex items-center justify-center gap-2"
+                        onClick={() => quickAddFromCard(product)}
+                      >
+                        <span className="material-symbols-outlined text-[18px]">shopping_bag</span>
+                        {t("바로 담기", "Add to Bag")}
+                      </button>
+                      <button
+                        type="button"
+                        className={`min-w-[44px] px-3 py-3 rounded-sm shadow-lg transition-colors flex items-center justify-center gap-1.5 ${
+                          isWishlisted
+                            ? "bg-[#e6194c] text-white hover:bg-[#d01644]"
+                            : "bg-white text-slate-900 hover:bg-white/90"
+                        }`}
+                        aria-label={t("위시리스트 등록", "Add to Wishlist")}
+                        onClick={() => toggleWishlistFromCard(product.slug)}
+                      >
+                        <span className="material-symbols-outlined text-[18px]">
+                          {isWishlisted ? "favorite" : "favorite_border"}
+                        </span>
+                        <span className="hidden lg:inline text-xs font-semibold">
+                          {t("위시", "Wish")}
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 

@@ -240,24 +240,6 @@ export function CheckoutCompleteView() {
                   <dd className="text-xl font-bold text-[#e6194c]">{currency(order.total)}</dd>
                 </div>
               </dl>
-
-              <div className="mt-8 rounded-xl bg-[#fcf8f9] p-4 border border-[#f3e7ea]">
-                <div className="flex gap-3">
-                  <span className="material-symbols-outlined text-[#e6194c]">loyalty</span>
-                  <div>
-                    <h4 className="text-sm font-bold text-[#1b0e11]">{t("Portfolio 멤버십", "Join The Portfolio Club")}</h4>
-                    <p className="mt-1 text-xs text-[#974e60]">
-                      {t("이번 주문 포인트를 적립하고 멤버 전용 혜택을 받아보세요.", "Earn points on this purchase and unlock member benefits.")}
-                    </p>
-                    <button
-                      type="button"
-                      className="mt-3 w-full rounded-lg border border-[#e6194c]/20 bg-white py-2 text-xs font-bold text-[#e6194c] hover:bg-[#e6194c]/5 transition-colors"
-                    >
-                      {t("무료로 가입하기", "Join for Free")}
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>

@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useStore } from "@/components/providers/store-provider";
 import { NotFoundView } from "@/components/public/views/not-found-view";
 import { resolveList, resolveText } from "@/lib/i18n";
+import { withLocalePath } from "@/lib/locale-routing";
 import {
   getDefaultProductSizeKey,
   getProductPriceBySize,
@@ -21,7 +23,8 @@ const filledStarStyle = { fontVariationSettings: "'FILL' 1, 'wght' 500, 'GRAD' 0
 const emptyStarStyle = { fontVariationSettings: "'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20" } as const;
 
 export function ProductView({ slug }: { slug: string }) {
-  const { db, addToCart, locale, recordProductView } = useStore();
+  const router = useRouter();
+  const { db, addToCart, currentUser, locale, recordProductView, toggleWishlist } = useStore();
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
 
   const [quantity, setQuantity] = useState(1);
@@ -91,6 +94,14 @@ export function ProductView({ slug }: { slug: string }) {
     (entry) => entry.slug !== product.slug && !related.some((item) => item.slug === entry.slug),
   );
   const recommended = [...related, ...fallbackProducts].slice(0, 4);
+  const isWishlisted = currentUser?.wishlist.includes(product.slug) ?? false;
+  const handleWishlistClick = () => {
+    if (!currentUser) {
+      router.push(withLocalePath("/account/login", locale));
+      return;
+    }
+    toggleWishlist(product.slug);
+  };
 
   return (
     <>
@@ -203,11 +214,11 @@ export function ProductView({ slug }: { slug: string }) {
               </div>
             )}
 
-            <div className="flex gap-4">
-              <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg h-12 w-32">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="flex shrink-0 items-center border border-slate-200 dark:border-slate-700 rounded-lg h-12 w-[116px] sm:w-32">
                 <button
                   type="button"
-                  className="w-10 h-full flex items-center justify-center text-slate-500 hover:text-[#e6194c] transition-colors"
+                  className="w-9 sm:w-10 h-full flex items-center justify-center text-slate-500 hover:text-[#e6194c] transition-colors"
                   onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
                 >
                   <span className="material-symbols-outlined !text-lg">remove</span>
@@ -220,7 +231,7 @@ export function ProductView({ slug }: { slug: string }) {
                 />
                 <button
                   type="button"
-                  className="w-10 h-full flex items-center justify-center text-slate-500 hover:text-[#e6194c] transition-colors"
+                  className="w-9 sm:w-10 h-full flex items-center justify-center text-slate-500 hover:text-[#e6194c] transition-colors"
                   onClick={() => setQuantity((prev) => Math.min(99, prev + 1))}
                 >
                   <span className="material-symbols-outlined !text-lg">add</span>
@@ -229,12 +240,30 @@ export function ProductView({ slug }: { slug: string }) {
 
               <button
                 type="button"
-                className="flex-1 bg-[#e6194c] hover:bg-[#e6194c]/90 text-white font-bold h-12 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-[#e6194c]/20"
+                className="min-w-0 flex-1 bg-[#e6194c] hover:bg-[#e6194c]/90 text-white h-12 rounded-lg px-3 sm:px-4 flex items-center justify-between text-sm sm:text-base font-bold whitespace-nowrap transition-all duration-300 shadow-lg shadow-[#e6194c]/20"
                 onClick={() => addToCart(product.slug, quantity, activeSizeKey)}
               >
-                <span>{t("쇼핑백 담기", "Add to Bag")}</span>
-                <span className="w-px h-4 bg-white/20 mx-2" />
-                <span>{currency(activeUnitPrice * quantity)}</span>
+                <span className="truncate">{t("쇼핑백 담기", "Add to Bag")}</span>
+                <span className="hidden sm:block w-px h-4 bg-white/20 mx-2 shrink-0" />
+                <span className="shrink-0 tabular-nums">{currency(activeUnitPrice * quantity)}</span>
+              </button>
+
+              <button
+                type="button"
+                className={`h-12 w-12 sm:w-auto sm:px-4 rounded-lg border transition-colors flex items-center justify-center gap-1.5 ${
+                  isWishlisted
+                    ? "border-[#e6194c] bg-[#fff1f5] text-[#bf0f42] hover:bg-[#ffe4ed]"
+                    : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-[#e6194c]/45 hover:text-[#e6194c]"
+                }`}
+                aria-label={t("위시리스트 등록", "Add to Wishlist")}
+                onClick={handleWishlistClick}
+              >
+                <span className="material-symbols-outlined !text-[20px]">
+                  {isWishlisted ? "favorite" : "favorite_border"}
+                </span>
+                <span className="hidden sm:inline text-sm font-medium">
+                  {isWishlisted ? t("저장됨", "Saved") : t("위시리스트", "Wishlist")}
+                </span>
               </button>
             </div>
 
@@ -291,7 +320,7 @@ export function ProductView({ slug }: { slug: string }) {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {recommended.map((entry) => (
               <article key={entry.id} className="group flex flex-col">
                 <div className="relative overflow-hidden rounded-lg bg-[#f8f6f6] dark:bg-slate-800 aspect-[4/5] mb-4">
