@@ -57,6 +57,7 @@ export function ShopView() {
   const [desktopPanel, setDesktopPanel] = useState<DesktopPanel | null>(null);
   const [desktopPanelLeft, setDesktopPanelLeft] = useState(0);
   const [desktopPanelRight, setDesktopPanelRight] = useState<number | null>(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
   const desktopMenuRef = useRef<HTMLDivElement | null>(null);
 
   const sortLabel = (key: (typeof SORTS)[number]) => {
@@ -273,6 +274,43 @@ export function ShopView() {
     };
   }, [desktopPanel]);
 
+  useEffect(() => {
+    const menu = desktopMenuRef.current;
+    if (!menu) {
+      return;
+    }
+
+    const syncScrollHint = () => {
+      const compactViewport = window.innerWidth < 1024;
+      if (!compactViewport || desktopPanel !== null) {
+        setShowScrollHint(false);
+        return;
+      }
+
+      const canScroll = menu.scrollWidth - menu.clientWidth > 12;
+      const nearEnd = menu.scrollLeft >= menu.scrollWidth - menu.clientWidth - 12;
+      setShowScrollHint(canScroll && !nearEnd);
+    };
+
+    syncScrollHint();
+    const rafId = window.requestAnimationFrame(syncScrollHint);
+    const timerId = window.setTimeout(syncScrollHint, 160);
+    const resizeObserver =
+      "ResizeObserver" in window ? new ResizeObserver(() => syncScrollHint()) : null;
+    resizeObserver?.observe(menu);
+
+    menu.addEventListener("scroll", syncScrollHint, { passive: true });
+    window.addEventListener("resize", syncScrollHint);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.clearTimeout(timerId);
+      resizeObserver?.disconnect();
+      menu.removeEventListener("scroll", syncScrollHint);
+      window.removeEventListener("resize", syncScrollHint);
+    };
+  }, [desktopPanel, filters, sort, locale, filtered.length]);
+
   const quickAddFromCard = (product: Product) => {
     addToCart(product.slug, 1, getDefaultProductSizeKey(product));
   };
@@ -290,7 +328,7 @@ export function ShopView() {
 
   const desktopTriggerClass = (isActive: boolean) =>
     [
-      "group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all whitespace-nowrap",
+      "group inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-[13px] font-medium transition-all whitespace-nowrap md:px-4 md:text-sm",
       isActive
         ? "border-[#e6194c]/45 bg-[#fff0f4] text-[#8a1d3d] shadow-[0_6px_14px_rgba(230,25,76,0.14)]"
         : "border-[#e6d7dd] bg-white/90 text-slate-700 hover:border-[#e6194c]/45 hover:bg-[#fff6f8]",
@@ -319,12 +357,12 @@ export function ShopView() {
       </section>
 
       <section className="sticky top-[var(--public-header-height)] z-40 border-y border-[#f0dde4] bg-[#fff7fa]/95 backdrop-blur-md">
-        <div className="px-6 lg:px-12 py-3">
+        <div className="relative px-6 lg:px-12 py-3">
           <div
             ref={desktopMenuRef}
-            className="relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#eed7df] bg-white/85 px-3 py-3 shadow-[0_10px_24px_rgba(86,32,46,0.07)] md:px-4"
+            className="relative flex items-center gap-2 overflow-x-auto no-scrollbar rounded-2xl border border-[#eed7df] bg-white/85 px-3 py-3 shadow-[0_10px_24px_rgba(86,32,46,0.07)] md:gap-3 md:px-4 lg:flex-wrap lg:overflow-visible"
           >
-            <div className="flex flex-wrap items-center gap-2 md:gap-3 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+            <div className="flex shrink-0 items-center gap-2 md:gap-3 lg:flex-wrap">
               <button
                 type="button"
                 className={desktopTriggerClass(desktopPanel === "category")}
@@ -375,15 +413,16 @@ export function ShopView() {
               </button>
               <button
                 type="button"
-                className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-[#ebd4dc] bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#7b5a66] transition-colors hover:border-[#e6194c]/45 hover:text-[#e6194c]"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#ebd4dc] bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#7b5a66] transition-colors hover:border-[#e6194c]/45 hover:text-[#e6194c]"
                 onClick={resetFilters}
+                aria-label={t("초기화", "Clear All")}
               >
                 <span className="material-symbols-outlined text-[16px]">restart_alt</span>
-                {t("초기화", "Clear All")}
+                <span className="hidden sm:inline">{t("초기화", "Clear All")}</span>
               </button>
             </div>
 
-            <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3 lg:ml-auto">
               <span className="hidden sm:inline-flex items-center rounded-full border border-[#efd8e0] bg-white/80 px-3 py-1 text-xs font-semibold text-[#7a5763]">
                 {filtered.length} {t("개 상품", "Products")}
               </span>
@@ -463,6 +502,14 @@ export function ShopView() {
               </div>
             )}
           </div>
+
+          {showScrollHint && (
+            <div className="pointer-events-none absolute right-0 top-1/2 z-20 flex -translate-y-1/2 lg:hidden">
+              <span className="material-symbols-outlined text-[16px] leading-none text-[#ba5f7a] animate-pulse drop-shadow-[0_3px_6px_rgba(110,41,64,0.22)]">
+                chevron_right
+              </span>
+            </div>
+          )}
         </div>
       </section>
 
