@@ -51,13 +51,13 @@ function applyHostClip(host: HTMLDivElement, clipPath: string) {
 
   host.dataset.aboutClipPath = clipPath;
   host.style.clipPath = clipPath;
-  host.style.webkitClipPath = clipPath;
+  host.style.setProperty("-webkit-clip-path", clipPath);
 }
 
 function resetHostClip(host: HTMLDivElement) {
   delete host.dataset.aboutClipPath;
   host.style.clipPath = "";
-  host.style.webkitClipPath = "";
+  host.style.removeProperty("-webkit-clip-path");
 }
 
 function isSectionActive(rect: DOMRect, viewportHeight: number, leadPx: number) {
