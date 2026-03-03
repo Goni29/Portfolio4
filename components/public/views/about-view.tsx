@@ -10,8 +10,35 @@ const HIDDEN_CLIP_PATH = "inset(100% 0px 0px 0px)";
 const CLIP_OVERSCAN_PX = 24;
 const CHAPTER_SWITCH_LEAD_PX = 72;
 
+type LegacyMediaQueryListener = (this: MediaQueryList, ev: MediaQueryListEvent) => unknown;
+
+interface LegacyMediaQueryList {
+  addListener?: (callback: LegacyMediaQueryListener) => void;
+  removeListener?: (callback: LegacyMediaQueryListener) => void;
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
+}
+
+function addMediaQueryChangeListener(mediaQuery: MediaQueryList, listener: () => void) {
+  if (typeof mediaQuery.addEventListener === "function") {
+    mediaQuery.addEventListener("change", listener);
+    return;
+  }
+
+  const legacyMediaQuery = mediaQuery as unknown as LegacyMediaQueryList;
+  legacyMediaQuery.addListener?.(listener as LegacyMediaQueryListener);
+}
+
+function removeMediaQueryChangeListener(mediaQuery: MediaQueryList, listener: () => void) {
+  if (typeof mediaQuery.removeEventListener === "function") {
+    mediaQuery.removeEventListener("change", listener);
+    return;
+  }
+
+  const legacyMediaQuery = mediaQuery as unknown as LegacyMediaQueryList;
+  legacyMediaQuery.removeListener?.(listener as LegacyMediaQueryListener);
 }
 
 function readViewportHeight() {
@@ -183,19 +210,11 @@ function useAboutMobileFixedBackground(
 
     syncByBreakpoint();
 
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", syncByBreakpoint);
-    } else {
-      mediaQuery.addListener(syncByBreakpoint);
-    }
+    addMediaQueryChangeListener(mediaQuery, syncByBreakpoint);
 
     return () => {
       detach();
-      if (typeof mediaQuery.removeEventListener === "function") {
-        mediaQuery.removeEventListener("change", syncByBreakpoint);
-      } else {
-        mediaQuery.removeListener(syncByBreakpoint);
-      }
+      removeMediaQueryChangeListener(mediaQuery, syncByBreakpoint);
     };
   }, [chapterSectionRef, heroSectionRef, mobileFixedHostRef]);
 }
