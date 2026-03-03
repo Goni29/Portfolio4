@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 import Link from "next/link";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import ScrollSmoother from "gsap/ScrollSmoother";
 import { useStore } from "@/components/providers/store-provider";
 
 const MOBILE_PARALLAX_QUERY = "(max-width: 1023.98px)";
@@ -9,6 +12,12 @@ type MobileAboutBackgroundState = "none" | "hero" | "chapter";
 const HIDDEN_CLIP_PATH = "inset(100% 0px 0px 0px)";
 const CLIP_OVERSCAN_PX = 24;
 const CHAPTER_SWITCH_LEAD_PX = 72;
+const MOBILE_SCROLL_MOMENTUM_MIN = 0.8;
+const MOBILE_SCROLL_MOMENTUM_MAX = 1.8;
+const MOBILE_SCROLL_MOMENTUM_VELOCITY_DIVISOR = 1400;
+const MOBILE_SMOOTHER_SMOOTH_SECONDS = 0.55;
+const MOBILE_SMOOTHER_TOUCH_SMOOTH_SECONDS = 0.12;
+let gsapPluginsRegistered = false;
 
 type LegacyMediaQueryListener = (this: MediaQueryList, ev: MediaQueryListEvent) => unknown;
 
@@ -91,10 +100,27 @@ function isSectionActive(rect: DOMRect, viewportHeight: number, leadPx: number) 
   return rect.bottom > -leadPx && rect.top < viewportHeight + leadPx;
 }
 
+function ensureGsapPluginsRegistered() {
+  if (gsapPluginsRegistered) {
+    return;
+  }
+
+  gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+  gsapPluginsRegistered = true;
+}
+
+function resolveMobileScrollMomentum(observer: { velocityY: number }) {
+  const velocity = Math.abs(observer.velocityY || 0);
+  const duration = velocity / MOBILE_SCROLL_MOMENTUM_VELOCITY_DIVISOR;
+  return clamp(duration, MOBILE_SCROLL_MOMENTUM_MIN, MOBILE_SCROLL_MOMENTUM_MAX);
+}
+
 function useAboutMobileFixedBackground(
   mobileFixedHostRef: RefObject<HTMLDivElement | null>,
   heroSectionRef: RefObject<HTMLElement | null>,
   chapterSectionRef: RefObject<HTMLElement | null>,
+  smootherWrapperRef: RefObject<HTMLDivElement | null>,
+  smootherContentRef: RefObject<HTMLElement | null>,
 ) {
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -105,6 +131,45 @@ function useAboutMobileFixedBackground(
     let rafId: number | null = null;
     let active = false;
     let stableHostHeight = 0;
+    let smootherInstance: ScrollSmoother | null = null;
+    let smootherCreated = false;
+
+    ensureGsapPluginsRegistered();
+
+    const enableMobileScrollNormalization = () => {
+      const smootherWrapper = smootherWrapperRef.current;
+      const smootherContent = smootherContentRef.current;
+      if (!smootherWrapper || !smootherContent) {
+        return;
+      }
+
+      ScrollTrigger.config({ ignoreMobileResize: true });
+      ScrollSmoother.get()?.kill();
+      smootherInstance = ScrollSmoother.create({
+        wrapper: smootherWrapper,
+        content: smootherContent,
+        smooth: MOBILE_SMOOTHER_SMOOTH_SECONDS,
+        smoothTouch: MOBILE_SMOOTHER_TOUCH_SMOOTH_SECONDS,
+        ignoreMobileResize: true,
+        normalizeScroll: {
+          allowNestedScroll: true,
+          debounce: true,
+          momentum: resolveMobileScrollMomentum,
+        },
+      });
+      smootherCreated = true;
+    };
+
+    const disableMobileScrollNormalization = () => {
+      if (smootherCreated) {
+        smootherInstance?.kill();
+        smootherInstance = null;
+        smootherCreated = false;
+      }
+
+      ScrollTrigger.normalizeScroll(false);
+      ScrollTrigger.config({ ignoreMobileResize: false });
+    };
 
     const scheduleUpdate = () => {
       if (!active || rafId !== null) {
@@ -170,6 +235,7 @@ function useAboutMobileFixedBackground(
       stableHostHeight = 0;
 
       active = true;
+      enableMobileScrollNormalization();
       window.addEventListener("scroll", scheduleUpdate, { passive: true });
       window.addEventListener("resize", handleResize);
       window.addEventListener("orientationchange", handleResize);
@@ -192,6 +258,7 @@ function useAboutMobileFixedBackground(
         window.cancelAnimationFrame(rafId);
         rafId = null;
       }
+      disableMobileScrollNormalization();
 
       const mobileFixedHost = mobileFixedHostRef.current;
       if (mobileFixedHost) {
@@ -216,20 +283,28 @@ function useAboutMobileFixedBackground(
       detach();
       removeMediaQueryChangeListener(mediaQuery, syncByBreakpoint);
     };
-  }, [chapterSectionRef, heroSectionRef, mobileFixedHostRef]);
+  }, [chapterSectionRef, heroSectionRef, mobileFixedHostRef, smootherWrapperRef, smootherContentRef]);
 }
 
 export function AboutView() {
   const mobileFixedHostRef = useRef<HTMLDivElement>(null);
+  const smootherWrapperRef = useRef<HTMLDivElement>(null);
+  const smootherContentRef = useRef<HTMLDivElement>(null);
   const heroSectionRef = useRef<HTMLElement>(null);
   const chapterSectionRef = useRef<HTMLElement>(null);
   const { locale } = useStore();
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
 
-  useAboutMobileFixedBackground(mobileFixedHostRef, heroSectionRef, chapterSectionRef);
+  useAboutMobileFixedBackground(
+    mobileFixedHostRef,
+    heroSectionRef,
+    chapterSectionRef,
+    smootherWrapperRef,
+    smootherContentRef,
+  );
 
   return (
-    <main className="about-parallax-root w-full">
+    <main className="about-parallax-root w-full" data-about-smoother="on">
       <div
         ref={mobileFixedHostRef}
         className="about-mobile-fixed-host z-0 pointer-events-none lg:hidden"
@@ -251,7 +326,9 @@ export function AboutView() {
         />
       </div>
 
-      <section ref={heroSectionRef} className="about-parallax-section relative h-[85svh] lg:h-[85vh] w-full overflow-hidden flex items-center justify-center">
+      <div ref={smootherWrapperRef} className="about-smoother-wrapper">
+        <div ref={smootherContentRef} className="about-smoother-content">
+          <section ref={heroSectionRef} className="about-parallax-section relative h-[85svh] lg:h-[85vh] w-full overflow-hidden flex items-center justify-center">
         <div
           className="about-parallax-bg absolute inset-0 z-0 hidden parallax-bg pointer-events-none lg:block"
           style={{
@@ -456,6 +533,8 @@ export function AboutView() {
           <span className="material-symbols-outlined text-white">arrow_right_alt</span>
         </Link>
       </section>
+        </div>
+      </div>
     </main>
   );
 }

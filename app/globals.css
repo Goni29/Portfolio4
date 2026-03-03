@@ -149,6 +149,15 @@ span.material-symbols-outlined {
 }
 
 @media (max-width: 1023.98px) {
+  .about-parallax-root .about-smoother-wrapper,
+  .about-parallax-root .about-smoother-content {
+    width: 100%;
+  }
+
+  .about-parallax-root[data-about-smoother="on"] {
+    overflow-x: clip;
+  }
+
   .about-parallax-root .about-mobile-fixed-host {
     position: fixed;
     top: 0;
@@ -159,6 +168,8 @@ span.material-symbols-outlined {
     overflow: hidden;
     pointer-events: none;
     touch-action: pan-y;
+    will-change: clip-path, opacity;
+    transform: translateZ(0);
     opacity: 0;
     visibility: hidden;
   }
@@ -179,7 +190,9 @@ span.material-symbols-outlined {
     background-attachment: scroll;
     opacity: 0;
     visibility: hidden;
-    will-change: opacity;
+    will-change: opacity, transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
     pointer-events: none;
     touch-action: pan-y;
   }
