@@ -9,7 +9,6 @@ type MobileAboutBackgroundState = "none" | "hero" | "chapter";
 const HIDDEN_CLIP_PATH = "inset(100% 0px 0px 0px)";
 const CLIP_OVERSCAN_PX = 24;
 const CHAPTER_SWITCH_LEAD_PX = 72;
-const HERO_SWITCH_LEAD_PX = 24;
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -65,18 +64,6 @@ function isSectionActive(rect: DOMRect, viewportHeight: number, leadPx: number) 
   return rect.bottom > -leadPx && rect.top < viewportHeight + leadPx;
 }
 
-function resolveActiveBackground(heroRect: DOMRect, chapterRect: DOMRect, viewportHeight: number): MobileAboutBackgroundState {
-  if (isSectionActive(chapterRect, viewportHeight, CHAPTER_SWITCH_LEAD_PX)) {
-    return "chapter";
-  }
-
-  if (!isSectionActive(heroRect, viewportHeight, HERO_SWITCH_LEAD_PX)) {
-    return "none";
-  }
-
-  return "hero";
-}
-
 function useAboutMobileFixedBackground(
   mobileFixedHostRef: RefObject<HTMLDivElement | null>,
   heroSectionRef: RefObject<HTMLElement | null>,
@@ -116,15 +103,24 @@ function useAboutMobileFixedBackground(
 
         const heroRect = heroSection.getBoundingClientRect();
         const chapterRect = chapterSection.getBoundingClientRect();
-        const nextState = resolveActiveBackground(heroRect, chapterRect, viewportHeight);
-        applyActiveBackground(mobileFixedHost, nextState);
+        const heroClipPath = resolveVisibleClipPath(heroRect, viewportHeight, stableHostHeight);
+        const chapterClipPath = resolveVisibleClipPath(chapterRect, viewportHeight, stableHostHeight);
+        const chapterActive = isSectionActive(chapterRect, viewportHeight, CHAPTER_SWITCH_LEAD_PX);
 
+        let nextState: MobileAboutBackgroundState = "none";
         let nextClipPath = HIDDEN_CLIP_PATH;
-        if (nextState === "hero") {
-          nextClipPath = resolveVisibleClipPath(heroRect, viewportHeight, stableHostHeight) ?? HIDDEN_CLIP_PATH;
-        } else if (nextState === "chapter") {
-          nextClipPath = resolveVisibleClipPath(chapterRect, viewportHeight, stableHostHeight) ?? HIDDEN_CLIP_PATH;
+
+        // Switch to chapter only when chapter clip is actually valid.
+        if (chapterActive && chapterClipPath) {
+          nextState = "chapter";
+          nextClipPath = chapterClipPath;
+        } else if (heroClipPath) {
+          // If chapter clip is not ready yet, keep hero clip to avoid abrupt disappearance.
+          nextState = "hero";
+          nextClipPath = heroClipPath;
         }
+
+        applyActiveBackground(mobileFixedHost, nextState);
         applyHostClip(mobileFixedHost, nextClipPath);
       });
     };
@@ -444,4 +440,3 @@ export function AboutView() {
     </main>
   );
 }
-
