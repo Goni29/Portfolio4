@@ -1,17 +1,244 @@
-"use client";
+﻿"use client";
 
+import { useEffect, useRef, type RefObject } from "react";
 import Link from "next/link";
 import { useStore } from "@/components/providers/store-provider";
 
+const MOBILE_PARALLAX_QUERY = "(max-width: 1023.98px)";
+type MobileAboutBackgroundState = "none" | "hero" | "chapter";
+const HIDDEN_CLIP_PATH = "inset(100% 0px 0px 0px)";
+const CLIP_OVERSCAN_PX = 24;
+const CHAPTER_SWITCH_LEAD_PX = 72;
+const HERO_SWITCH_LEAD_PX = 24;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function readViewportHeight() {
+  const layoutViewportHeight = Math.max(1, Math.ceil(window.innerHeight || document.documentElement.clientHeight || 0));
+  const visualViewport = window.visualViewport;
+  if (visualViewport) {
+    const visualViewportHeight = Math.max(1, Math.ceil(visualViewport.height));
+    return Math.max(layoutViewportHeight, visualViewportHeight);
+  }
+
+  return layoutViewportHeight;
+}
+
+function applyActiveBackground(host: HTMLDivElement, state: MobileAboutBackgroundState) {
+  if (host.dataset.aboutActiveBackground === state) {
+    return;
+  }
+
+  host.dataset.aboutActiveBackground = state;
+}
+
+function resolveVisibleClipPath(rect: DOMRect, viewportHeight: number, hostHeight: number) {
+  const visibleTop = clamp(Math.floor(rect.top) - CLIP_OVERSCAN_PX, 0, viewportHeight);
+  const visibleBottom = clamp(Math.ceil(rect.bottom) + CLIP_OVERSCAN_PX, 0, viewportHeight);
+  if (visibleBottom <= visibleTop) {
+    return null;
+  }
+
+  const bottomInset = Math.max(0, hostHeight - visibleBottom);
+  return `inset(${visibleTop}px 0px ${bottomInset}px 0px)`;
+}
+
+function applyHostClip(host: HTMLDivElement, clipPath: string) {
+  if (host.dataset.aboutClipPath === clipPath) {
+    return;
+  }
+
+  host.dataset.aboutClipPath = clipPath;
+  host.style.clipPath = clipPath;
+  host.style.webkitClipPath = clipPath;
+}
+
+function resetHostClip(host: HTMLDivElement) {
+  delete host.dataset.aboutClipPath;
+  host.style.clipPath = "";
+  host.style.webkitClipPath = "";
+}
+
+function isSectionActive(rect: DOMRect, viewportHeight: number, leadPx: number) {
+  return rect.bottom > -leadPx && rect.top < viewportHeight + leadPx;
+}
+
+function resolveActiveBackground(heroRect: DOMRect, chapterRect: DOMRect, viewportHeight: number): MobileAboutBackgroundState {
+  if (isSectionActive(chapterRect, viewportHeight, CHAPTER_SWITCH_LEAD_PX)) {
+    return "chapter";
+  }
+
+  if (!isSectionActive(heroRect, viewportHeight, HERO_SWITCH_LEAD_PX)) {
+    return "none";
+  }
+
+  return "hero";
+}
+
+function useAboutMobileFixedBackground(
+  mobileFixedHostRef: RefObject<HTMLDivElement | null>,
+  heroSectionRef: RefObject<HTMLElement | null>,
+  chapterSectionRef: RefObject<HTMLElement | null>,
+) {
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia(MOBILE_PARALLAX_QUERY);
+    let rafId: number | null = null;
+    let active = false;
+    let stableHostHeight = 0;
+
+    const scheduleUpdate = () => {
+      if (!active || rafId !== null) {
+        return;
+      }
+
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+
+        const mobileFixedHost = mobileFixedHostRef.current;
+        const heroSection = heroSectionRef.current;
+        const chapterSection = chapterSectionRef.current;
+
+        if (!mobileFixedHost || !heroSection || !chapterSection) {
+          return;
+        }
+
+        const viewportHeight = readViewportHeight();
+        if (stableHostHeight <= 0) {
+          const measuredHostHeight = Math.max(1, Math.ceil(mobileFixedHost.getBoundingClientRect().height || 0));
+          stableHostHeight = Math.max(measuredHostHeight, viewportHeight);
+        }
+
+        const heroRect = heroSection.getBoundingClientRect();
+        const chapterRect = chapterSection.getBoundingClientRect();
+        const nextState = resolveActiveBackground(heroRect, chapterRect, viewportHeight);
+        applyActiveBackground(mobileFixedHost, nextState);
+
+        let nextClipPath = HIDDEN_CLIP_PATH;
+        if (nextState === "hero") {
+          nextClipPath = resolveVisibleClipPath(heroRect, viewportHeight, stableHostHeight) ?? HIDDEN_CLIP_PATH;
+        } else if (nextState === "chapter") {
+          nextClipPath = resolveVisibleClipPath(chapterRect, viewportHeight, stableHostHeight) ?? HIDDEN_CLIP_PATH;
+        }
+        applyHostClip(mobileFixedHost, nextClipPath);
+      });
+    };
+
+    const handleResize = () => {
+      stableHostHeight = 0;
+      scheduleUpdate();
+    };
+
+    const attach = () => {
+      if (active) {
+        return;
+      }
+
+      const mobileFixedHost = mobileFixedHostRef.current;
+      if (mobileFixedHost) {
+        applyActiveBackground(mobileFixedHost, "none");
+        applyHostClip(mobileFixedHost, HIDDEN_CLIP_PATH);
+      }
+      stableHostHeight = 0;
+
+      active = true;
+      window.addEventListener("scroll", scheduleUpdate, { passive: true });
+      window.addEventListener("resize", handleResize);
+      window.addEventListener("orientationchange", handleResize);
+      window.visualViewport?.addEventListener("resize", handleResize);
+      scheduleUpdate();
+    };
+
+    const detach = () => {
+      if (!active) {
+        return;
+      }
+
+      active = false;
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+      window.visualViewport?.removeEventListener("resize", handleResize);
+
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+
+      const mobileFixedHost = mobileFixedHostRef.current;
+      if (mobileFixedHost) {
+        applyActiveBackground(mobileFixedHost, "none");
+        resetHostClip(mobileFixedHost);
+      }
+    };
+
+    const syncByBreakpoint = () => {
+      if (mediaQuery.matches) {
+        attach();
+      } else {
+        detach();
+      }
+    };
+
+    syncByBreakpoint();
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", syncByBreakpoint);
+    } else {
+      mediaQuery.addListener(syncByBreakpoint);
+    }
+
+    return () => {
+      detach();
+      if (typeof mediaQuery.removeEventListener === "function") {
+        mediaQuery.removeEventListener("change", syncByBreakpoint);
+      } else {
+        mediaQuery.removeListener(syncByBreakpoint);
+      }
+    };
+  }, [chapterSectionRef, heroSectionRef, mobileFixedHostRef]);
+}
+
 export function AboutView() {
+  const mobileFixedHostRef = useRef<HTMLDivElement>(null);
+  const heroSectionRef = useRef<HTMLElement>(null);
+  const chapterSectionRef = useRef<HTMLElement>(null);
   const { locale } = useStore();
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
 
+  useAboutMobileFixedBackground(mobileFixedHostRef, heroSectionRef, chapterSectionRef);
+
   return (
-    <main className="w-full">
-      <section className="relative h-[85vh] w-full overflow-hidden flex items-center justify-center">
+    <main className="about-parallax-root w-full">
+      <div
+        ref={mobileFixedHostRef}
+        className="about-mobile-fixed-host z-0 pointer-events-none lg:hidden"
+        data-about-active-background="none"
+        aria-hidden="true"
+      >
         <div
-          className="absolute inset-0 z-0 parallax-bg"
+          className="about-mobile-fixed-bg about-mobile-fixed-bg--hero"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4)), url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKj4lHjoW3MDQh1yB01v5eIL5KwJ46xELz5lBxVMY-QeekpoyRiJEAybgNKi8CmxymJig6b9si0K_ujPyA-DwDDsHesS4F4VsAu0_8bq43LQkZCGjH6SC6lNb7yUrhrwpWZ2ej-Oxyl_MF66zQKBD5dicq-2U1fuMpBhOelSK7nMBZZswHqRYj8cSo23fN8gCCFynDEoaPmEIAo6DYUB5gkkPBDOaJqhb6ePlF3N8gN9eRUcD1kszVtrxyhAI6aPCM-nXIQvNN6yo')",
+          }}
+        />
+        <div
+          className="about-mobile-fixed-bg about-mobile-fixed-bg--chapter"
+          style={{
+            backgroundImage: "linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url('/brand_flower.png')",
+          }}
+        />
+      </div>
+
+      <section ref={heroSectionRef} className="about-parallax-section relative h-[85svh] lg:h-[85vh] w-full overflow-hidden flex items-center justify-center">
+        <div
+          className="about-parallax-bg absolute inset-0 z-0 hidden parallax-bg pointer-events-none lg:block"
           style={{
             backgroundImage:
               "linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4)), url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKj4lHjoW3MDQh1yB01v5eIL5KwJ46xELz5lBxVMY-QeekpoyRiJEAybgNKi8CmxymJig6b9si0K_ujPyA-DwDDsHesS4F4VsAu0_8bq43LQkZCGjH6SC6lNb7yUrhrwpWZ2ej-Oxyl_MF66zQKBD5dicq-2U1fuMpBhOelSK7nMBZZswHqRYj8cSo23fN8gCCFynDEoaPmEIAo6DYUB5gkkPBDOaJqhb6ePlF3N8gN9eRUcD1kszVtrxyhAI6aPCM-nXIQvNN6yo')",
@@ -55,12 +282,16 @@ export function AboutView() {
       </section>
 
       <section
-        className="relative h-[60vh] md:h-[80vh] w-full overflow-hidden parallax-bg flex items-center"
-        style={{
-          backgroundImage: "url('/brand_flower.png')",
-        }}
+        ref={chapterSectionRef}
+        className="about-chapter-parallax about-parallax-section relative h-[60svh] md:h-[80svh] lg:h-[80vh] w-full overflow-hidden flex items-center"
       >
-        <div className="absolute inset-0 bg-black/20" />
+        <div
+          className="absolute inset-0 z-0 hidden parallax-bg pointer-events-none lg:block"
+          style={{
+            backgroundImage: "url('/brand_flower.png')",
+          }}
+        />
+        <div className="absolute inset-0 z-[1] hidden bg-black/20 lg:block" />
         <div className="relative z-10 w-full px-6 md:px-20">
           <div className="max-w-lg bg-white/90 backdrop-blur-sm p-10 md:p-14 rounded-lg shadow-xl">
             <span className="text-[#e6194c] text-xs font-bold tracking-widest uppercase mb-3 block">{t("챕터 1", "Chapter I")}</span>
@@ -213,3 +444,4 @@ export function AboutView() {
     </main>
   );
 }
+

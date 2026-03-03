@@ -148,6 +148,56 @@ span.material-symbols-outlined {
   text-wrap: pretty;
 }
 
+@media (max-width: 1023.98px) {
+  .about-parallax-root .about-mobile-fixed-host {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    min-height: 100svh;
+    overflow: hidden;
+    pointer-events: none;
+    touch-action: pan-y;
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .about-parallax-root .about-mobile-fixed-host[data-about-active-background="hero"],
+  .about-parallax-root .about-mobile-fixed-host[data-about-active-background="chapter"] {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .about-parallax-root .about-mobile-fixed-bg {
+    position: absolute;
+    inset: 0;
+    background-color: #f8f6f6;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: scroll;
+    opacity: 0;
+    visibility: hidden;
+    will-change: opacity;
+    pointer-events: none;
+    touch-action: pan-y;
+  }
+
+  .about-parallax-root .about-mobile-fixed-host[data-about-active-background="hero"] .about-mobile-fixed-bg--hero,
+  .about-parallax-root .about-mobile-fixed-host[data-about-active-background="chapter"] .about-mobile-fixed-bg--chapter {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  @supports (height: 100lvh) {
+    .about-parallax-root .about-mobile-fixed-host {
+      height: 100lvh;
+      min-height: 100lvh;
+    }
+  }
+}
+
 @media (min-width: 640px) {
   :root {
     --public-header-height: 5rem;
