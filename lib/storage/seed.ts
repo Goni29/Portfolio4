@@ -30,6 +30,7 @@ const products: Product[] = [
     skinTypes: ["dry", "combination", "normal", "sensitive"],
     concerns: ["dullness", "hydration", "texture"],
     price: 85,
+    freeShipping: true,
     compareAtPrice: 98,
     badge: "best",
     images: [
@@ -137,7 +138,6 @@ const products: Product[] = [
     skinTypes: ["dry", "oily", "combination", "normal", "sensitive"],
     concerns: ["puffiness", "texture"],
     price: 65,
-    freeShipping: true,
     images: [
       "https://lh3.googleusercontent.com/aida-public/AB6AXuDDeaMjfnRcsb-EhCZ8Jzeg-QWUApRk3zY8Vft0kc0pCGpEQ4qZkh5JLLUYhqybZVBSLLecMGW4N8HaKc8pMVuwFt1dbdFsoIndrkHaPbwCs2BIvkl6yhKpoMk9cTS4JWPiYr8LszIQ6Mh8RUPBV55GjQaMsXjQYSSpdDfunvTaS1iDflAV9UGLllK1e348CXMU5MO--dyXahtPBF2CZOymVo9gmztr5AECArz-vTJ2LSI3Wo8M_4aSElpHDMz6HL7B18EpCgGspGE",
       "/roller.png",

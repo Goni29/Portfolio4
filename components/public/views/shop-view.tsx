@@ -59,6 +59,7 @@ export function ShopView() {
   const [page, setPage] = useState(1);
   const [desktopPanel, setDesktopPanel] = useState<DesktopPanel | null>(null);
   const [desktopPanelLeft, setDesktopPanelLeft] = useState(0);
+  const [desktopPanelTop, setDesktopPanelTop] = useState(0);
   const [showScrollHint, setShowScrollHint] = useState(false);
   const filterBarWrapRef = useRef<HTMLDivElement | null>(null);
   const desktopMenuRef = useRef<HTMLDivElement | null>(null);
@@ -197,7 +198,9 @@ export function ShopView() {
       const anchorCenterX = anchorRect.left + anchorRect.width / 2 - wrapperRect.left;
       const maxLeft = Math.max(0, wrapperRect.width - panelWidth);
       const nextLeft = Math.max(0, Math.min(maxLeft, anchorCenterX - panelWidth / 2));
+      const nextTop = anchorRect.bottom - wrapperRect.top + 4;
       setDesktopPanelLeft(nextLeft);
+      setDesktopPanelTop(nextTop);
     }
 
     setDesktopPanel(panel);
@@ -408,8 +411,8 @@ export function ShopView() {
 
           {desktopPanel === "category" && (
             <div
-              className={`${desktopDropdownClass} top-[calc(100%+4px)] w-[240px]`}
-              style={{ left: desktopPanelLeft }}
+              className={`${desktopDropdownClass} w-[240px]`}
+              style={{ left: desktopPanelLeft, top: desktopPanelTop }}
             >
               <button type="button" className={desktopOptionClass(filters.category === "all")} onClick={() => applyDesktopFilter({ category: "all" })}>
                 {t("전체", "All")}
@@ -424,8 +427,8 @@ export function ShopView() {
 
           {desktopPanel === "concern" && (
             <div
-              className={`${desktopDropdownClass} top-[calc(100%+4px)] w-[240px]`}
-              style={{ left: desktopPanelLeft }}
+              className={`${desktopDropdownClass} w-[240px]`}
+              style={{ left: desktopPanelLeft, top: desktopPanelTop }}
             >
               <button type="button" className={desktopOptionClass(filters.concern === "all")} onClick={() => applyDesktopFilter({ concern: "all" })}>
                 {t("전체", "All")}
@@ -440,8 +443,8 @@ export function ShopView() {
 
           {desktopPanel === "collection" && (
             <div
-              className={`${desktopDropdownClass} top-[calc(100%+4px)] w-[260px]`}
-              style={{ left: desktopPanelLeft }}
+              className={`${desktopDropdownClass} w-[260px]`}
+              style={{ left: desktopPanelLeft, top: desktopPanelTop }}
             >
               <button type="button" className={desktopOptionClass(filters.collection === "all")} onClick={() => applyDesktopFilter({ collection: "all" })}>
                 {t("전체", "All")}
@@ -456,8 +459,8 @@ export function ShopView() {
 
           {desktopPanel === "sort" && (
             <div
-              className={`${desktopDropdownClass} top-[calc(100%+4px)] w-[230px]`}
-              style={{ left: desktopPanelLeft }}
+              className={`${desktopDropdownClass} w-[230px]`}
+              style={{ left: desktopPanelLeft, top: desktopPanelTop }}
             >
               {SORTS.map((option) => (
                 <button key={option} type="button" className={desktopOptionClass(sort === option)} onClick={() => applyDesktopSort(option)}>
@@ -523,13 +526,13 @@ export function ShopView() {
                   <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">
                     {resolveText(product.shortDescription, locale)}
                   </p>
-                  <div className="flex items-center justify-center gap-2 mt-2">
+                  <div className="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
                     <span className="text-base font-medium text-slate-900 dark:text-white">
                       {currency(product.price)}
                     </span>
                     {product.freeShipping && (
-                      <span className="text-[11px] font-semibold text-[#e6194c]">
-                        {t("臾대즺諛곗넚", "Free Shipping")}
+                      <span className="hidden shrink-0 text-[11px] font-semibold text-[#e6194c] lg:inline-flex">
+                        {t("무료배송", "Free Shipping")}
                       </span>
                     )}
                     {product.reviewCount > 0 && (
@@ -552,6 +555,11 @@ export function ShopView() {
                       </div>
                     )}
                   </div>
+                  {product.freeShipping && (
+                    <p className="mt-1 text-center text-[11px] font-semibold text-[#e6194c] lg:hidden">
+                      {t("무료배송", "Free Shipping")}
+                    </p>
+                  )}
                 </div>
               </article>
             );
@@ -581,5 +589,3 @@ export function ShopView() {
     </>
   );
 }
-
-

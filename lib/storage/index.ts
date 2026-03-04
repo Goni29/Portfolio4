@@ -19,6 +19,7 @@ const PRODUCT_DETAIL_IMAGE_PATCHES: Record<string, { thumbnail: string; mainImag
   "mineral-veil-spf50": { mainImage: "/suncream.png", thumbnail: "/suncream1.png" },
   "enzyme-polish-cleanser": { mainImage: "/form.png", thumbnail: "/form1.png" },
 };
+const ROSE_QUARTZ_ROLLER_SLUG = "rose-quartz-roller";
 
 const hasHangul = (value: string): boolean => /[가-힣]/.test(value);
 const hasNonAscii = (value: string): boolean => /[^\u0000-\u007f]/.test(value);
@@ -212,6 +213,49 @@ const migrateProductDetailImages = (db: StoreDB, seed: StoreDB): StoreDB => {
   };
 };
 
+const migrateProductFreeShipping = (db: StoreDB, seed: StoreDB): StoreDB => {
+  const seedProductBySlug = new Map(seed.products.map((product) => [product.slug, product]));
+
+  return {
+    ...db,
+    products: db.products.map((product) => {
+      if (typeof product.freeShipping === "boolean") {
+        return product;
+      }
+
+      const seedProduct = seedProductBySlug.get(product.slug);
+      if (typeof seedProduct?.freeShipping !== "boolean") {
+        return product;
+      }
+
+      return {
+        ...product,
+        freeShipping: seedProduct.freeShipping,
+      };
+    }),
+  };
+};
+
+const migrateRoseQuartzRollerFreeShipping = (db: StoreDB): StoreDB => {
+  return {
+    ...db,
+    products: db.products.map((product) => {
+      if (product.slug !== ROSE_QUARTZ_ROLLER_SLUG) {
+        return product;
+      }
+
+      if (!product.freeShipping) {
+        return product;
+      }
+
+      return {
+        ...product,
+        freeShipping: false,
+      };
+    }),
+  };
+};
+
 const migrateAnalytics = (db: StoreDB): StoreDB => {
   const rawViews = db.analytics?.productViewsBySlug;
   const normalizedViews: Record<string, number> = {};
@@ -249,11 +293,16 @@ export const loadDb = (): StoreDB => {
   }
 
   const normalized = migrateAnalytics(
-    migrateProductDetailImages(
-      migrateDailyDefenseHeroImage(
-        migrateLegacyAccountEmailDomain(normalizeDbLocalizedFields(saved, seed)),
+    migrateRoseQuartzRollerFreeShipping(
+      migrateProductFreeShipping(
+        migrateProductDetailImages(
+          migrateDailyDefenseHeroImage(
+            migrateLegacyAccountEmailDomain(normalizeDbLocalizedFields(saved, seed)),
+          ),
+          seed,
+        ),
+        seed,
       ),
-      seed,
     ),
   );
   writeLocal(DB_KEY, normalized);
