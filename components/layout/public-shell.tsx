@@ -183,12 +183,6 @@ export function PublicShell({ children }: { children: ReactNode }) {
 
             <div className="relative z-10 flex items-center justify-end gap-1 sm:gap-3 lg:gap-6">
               <div className="flex items-center gap-1 sm:gap-2 md:gap-3 lg:gap-5">
-                <LocaleToggle
-                  className="hidden sm:inline-flex lg:hidden shrink-0 origin-center scale-[0.92] sm:scale-100"
-                  locale={locale}
-                  onChange={onLocaleChange}
-                  size="compact"
-                />
                 <LocaleToggle className="hidden lg:inline-flex shrink-0" locale={locale} onChange={onLocaleChange} />
                 <div ref={headerSearchWrapRef} className="relative">
                   <div

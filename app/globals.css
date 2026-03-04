@@ -211,6 +211,66 @@ span.material-symbols-outlined {
   }
 }
 
+@media (max-width: 1023.98px) and (max-height: 540px) and (orientation: landscape) {
+  .about-parallax-root .about-hero-section {
+    min-height: calc(100svh + var(--public-header-height));
+    padding-top: calc(var(--public-header-height) + 0.4rem);
+    padding-bottom: 1rem;
+  }
+
+  .about-parallax-root .about-hero-content {
+    max-width: min(44rem, 92vw);
+    gap: 0.65rem;
+  }
+
+  .about-parallax-root .about-hero-eyebrow {
+    font-size: 0.72rem;
+    line-height: 1.15;
+    margin-bottom: 0.1rem;
+  }
+
+  .about-parallax-root .about-hero-title {
+    font-size: clamp(2rem, 5vw, 3.1rem);
+    line-height: 1.04;
+  }
+
+  .about-parallax-root .about-hero-copy {
+    max-width: min(38rem, 86vw);
+    margin-top: 0.15rem;
+    font-size: 0.95rem;
+    line-height: 1.36;
+  }
+
+  .about-parallax-root .about-hero-arrow {
+    margin-top: 0.35rem;
+  }
+
+  .about-parallax-root .about-chapter-parallax {
+    height: auto;
+    min-height: 100svh;
+    padding-top: calc(var(--public-header-height) + 0.8rem);
+    padding-bottom: 1rem;
+    overflow: visible;
+    align-items: flex-start;
+  }
+
+  .about-parallax-root .about-chapter-card {
+    max-width: min(34rem, 88vw);
+    padding: 1.2rem 1.35rem;
+  }
+
+  .about-parallax-root .about-chapter-card h3 {
+    font-size: clamp(1.5rem, 3.2vw, 2.1rem);
+    line-height: 1.15;
+    margin-bottom: 0.55rem;
+  }
+
+  .about-parallax-root .about-chapter-card p {
+    font-size: 0.93rem;
+    line-height: 1.5;
+  }
+}
+
 @media (min-width: 640px) {
   :root {
     --public-header-height: 5rem;
@@ -222,7 +282,7 @@ span.material-symbols-outlined {
   }
 }
 
-@media (min-width: 1024px) {
+@media ((min-width: 1024px) and (pointer: fine)), ((min-width: 1024px) and (min-height: 600px)) {
   :root {
     --public-header-height: 5.25rem;
     --public-sticky-offset: calc(var(--public-header-height) + 1rem);

@@ -1,13 +1,14 @@
 ﻿"use client";
 
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import ScrollSmoother from "gsap/ScrollSmoother";
 import { useStore } from "@/components/providers/store-provider";
+import { withLocalePath } from "@/lib/locale-routing";
+import { DESKTOP_UP_MEDIA_QUERY } from "@/lib/responsive";
 
-const MOBILE_PARALLAX_QUERY = "(max-width: 1023.98px)";
 type MobileAboutBackgroundState = "none" | "hero" | "chapter";
 const HIDDEN_CLIP_PATH = "inset(100% 0px 0px 0px)";
 const CLIP_OVERSCAN_PX = 24;
@@ -127,7 +128,7 @@ function useAboutMobileFixedBackground(
       return;
     }
 
-    const mediaQuery = window.matchMedia(MOBILE_PARALLAX_QUERY);
+    const mediaQuery = window.matchMedia(DESKTOP_UP_MEDIA_QUERY);
     let rafId: number | null = null;
     let active = false;
     let stableHostHeight = 0;
@@ -269,9 +270,9 @@ function useAboutMobileFixedBackground(
 
     const syncByBreakpoint = () => {
       if (mediaQuery.matches) {
-        attach();
-      } else {
         detach();
+      } else {
+        attach();
       }
     };
 
@@ -286,6 +287,126 @@ function useAboutMobileFixedBackground(
   }, [chapterSectionRef, heroSectionRef, mobileFixedHostRef, smootherWrapperRef, smootherContentRef]);
 }
 
+interface AboutMobileFooterProps {
+  locale: "ko" | "en";
+  localize: (path: string) => string;
+}
+
+function AboutMobileFooter({ locale, localize }: AboutMobileFooterProps) {
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+
+  return (
+    <footer className="bg-stone-100 border-t border-stone-200 lg:hidden">
+      <div className="px-6 py-16">
+        <div className="flex flex-col md:flex-row justify-between gap-12">
+          <div className="w-full md:w-1/3 space-y-6">
+            <img
+              src="/logo_header.png"
+              alt="Portfolio logo"
+              className="h-16 sm:h-20 w-auto object-contain"
+            />
+            <p className="text-slate-500 text-sm leading-relaxed max-w-sm">
+              {locale === "ko"
+                ? "정제된 효능과 감각적 사용감을 갖춘 스킨케어 루틴을 제안합니다."
+                : "Elevate your daily ritual with precision skincare engineered for visible performance."}
+            </p>
+          </div>
+
+          <div className="w-full md:w-2/3 grid grid-cols-2 sm:grid-cols-3 gap-8">
+            <div>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest mb-6">
+                {locale === "ko" ? "컬렉션" : "Collections"}
+              </h3>
+              <ul className="space-y-3 text-sm text-slate-500">
+                <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/collections/ritual-essentials")}>{locale === "ko" ? "리추얼 에센셜" : "Ritual Essentials"}</Link></li>
+                <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/collections/night-repair")}>{locale === "ko" ? "나이트 리페어" : "Night Repair"}</Link></li>
+                <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/collections/daily-defense")}>{locale === "ko" ? "데일리 디펜스" : "Daily Defense"}</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest mb-6">
+                {locale === "ko" ? "브랜드" : "Company"}
+              </h3>
+              <ul className="space-y-3 text-sm text-slate-500">
+                <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/about")}>{locale === "ko" ? "브랜드 철학" : "Brand Philosophy"}</Link></li>
+                <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/journal")}>{locale === "ko" ? "저널" : "Journal"}</Link></li>
+                <li><Link className="hover:text-[#e6194c] transition-colors" href={localize("/contact")}>{locale === "ko" ? "고객문의" : "Contact Us"}</Link></li>
+              </ul>
+            </div>
+
+            <div className="col-span-2 sm:col-span-1">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest mb-6">
+                {locale === "ko" ? "뉴스레터" : "Newsletter"}
+              </h3>
+              <p className="text-sm text-slate-500 mb-4">
+                {locale === "ko"
+                  ? "신제품 소식, 리추얼 인사이트, 멤버 전용 혜택을 가장 먼저 받아보세요."
+                  : "Receive product launches, ritual insights, and member-only offers first."}
+              </p>
+              <form
+                className="flex flex-col gap-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (!newsletterEmail.trim()) {
+                    return;
+                  }
+                  setNewsletterSubscribed(true);
+                  setNewsletterEmail("");
+                }}
+              >
+                <input
+                  className="w-full bg-white border-none rounded-sm px-4 py-3 text-sm shadow-sm focus:ring-1 focus:ring-[#e6194c] placeholder:text-slate-400"
+                  placeholder={locale === "ko" ? "이메일 주소를 입력해 주세요" : "Enter your email"}
+                  type="email"
+                  value={newsletterEmail}
+                  onChange={(event) => {
+                    setNewsletterEmail(event.target.value);
+                    if (newsletterSubscribed) {
+                      setNewsletterSubscribed(false);
+                    }
+                  }}
+                />
+                <button
+                  className="w-full bg-[#e6194c] text-white px-4 py-3 rounded-sm text-sm font-bold uppercase tracking-wider hover:bg-[#cb1743] transition-colors"
+                  type="submit"
+                >
+                  {locale === "ko" ? "구독하기" : "Subscribe"}
+                </button>
+                <p className="text-[11px] text-slate-400">
+                  {newsletterSubscribed
+                    ? locale === "ko"
+                      ? "구독이 완료되었습니다."
+                      : "Thanks for subscribing."
+                    : locale === "ko"
+                      ? "구독 시 개인정보 처리방침에 동의한 것으로 간주됩니다."
+                      : "By subscribing, you agree to our Privacy Policy."}
+                </p>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-stone-200 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-400">
+          <p>Copyright 2026 Portfolio Beauty. All rights reserved.</p>
+          <div className="flex gap-6">
+            <a className="hover:text-[#e6194c] transition-colors" href="#">
+              {locale === "ko" ? "개인정보 처리방침" : "Privacy Policy"}
+            </a>
+            <a className="hover:text-[#e6194c] transition-colors" href="#">
+              {locale === "ko" ? "이용약관" : "Terms of Service"}
+            </a>
+            <a className="hover:text-[#e6194c] transition-colors" href="#">
+              {locale === "ko" ? "배송 정책" : "Shipping Policy"}
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 export function AboutView() {
   const mobileFixedHostRef = useRef<HTMLDivElement>(null);
   const smootherWrapperRef = useRef<HTMLDivElement>(null);
@@ -294,6 +415,7 @@ export function AboutView() {
   const chapterSectionRef = useRef<HTMLElement>(null);
   const { locale } = useStore();
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
+  const localize = (path: string) => withLocalePath(path, locale);
 
   useAboutMobileFixedBackground(
     mobileFixedHostRef,
@@ -328,7 +450,10 @@ export function AboutView() {
 
       <div ref={smootherWrapperRef} className="about-smoother-wrapper">
         <div ref={smootherContentRef} className="about-smoother-content">
-          <section ref={heroSectionRef} className="about-parallax-section relative h-[85svh] lg:h-[85vh] w-full overflow-hidden flex items-center justify-center">
+          <section
+            ref={heroSectionRef}
+            className="about-hero-section about-parallax-section relative h-auto min-h-[85svh] w-full overflow-visible flex items-center justify-center pt-[calc(var(--public-header-height)+0.75rem)] pb-10 md:pb-14 lg:h-[85vh] lg:min-h-0 lg:overflow-hidden lg:pt-0 lg:pb-0"
+          >
         <div
           className="about-parallax-bg absolute inset-0 z-0 hidden parallax-bg pointer-events-none lg:block"
           style={{
@@ -336,19 +461,19 @@ export function AboutView() {
               "linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4)), url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKj4lHjoW3MDQh1yB01v5eIL5KwJ46xELz5lBxVMY-QeekpoyRiJEAybgNKi8CmxymJig6b9si0K_ujPyA-DwDDsHesS4F4VsAu0_8bq43LQkZCGjH6SC6lNb7yUrhrwpWZ2ej-Oxyl_MF66zQKBD5dicq-2U1fuMpBhOelSK7nMBZZswHqRYj8cSo23fN8gCCFynDEoaPmEIAo6DYUB5gkkPBDOaJqhb6ePlF3N8gN9eRUcD1kszVtrxyhAI6aPCM-nXIQvNN6yo')",
           }}
         />
-        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto flex flex-col items-center gap-6">
-          <p className="text-white/90 text-sm md:text-base font-bold tracking-[0.2em] uppercase mb-2">{t("브랜드 철학", "The Philosophy")}</p>
-          <h1 className="text-white font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.1] italic">
+        <div className="about-hero-content relative z-10 text-center px-6 max-w-4xl mx-auto flex flex-col items-center gap-6">
+          <p className="about-hero-eyebrow text-white/90 text-sm md:text-base font-bold tracking-[0.2em] uppercase mb-2">{t("브랜드 철학", "The Philosophy")}</p>
+          <h1 className="about-hero-title text-white font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.1] italic">
             {t("정제된 아름다움", "Beauty, Curated")} <br />
             <span className="not-italic">{t("자연에서 시작됩니다.", "by Nature.")}</span>
           </h1>
-          <p className="text-white/80 text-lg md:text-xl font-light max-w-xl mt-4 leading-relaxed">
+          <p className="about-hero-copy text-white/80 text-lg md:text-xl font-light max-w-xl mt-4 leading-relaxed">
             {t(
               "예술성과 과학, 그리고 감각적 완성도를 향한 선언. 진정한 럭셔리는 눈에 보이는 결과를 넘어 피부에 남는 경험입니다.",
               "A manifesto of art, biology, and the pursuit of the exquisite. True luxury is not just what you see, but what you feel.",
             )}
           </p>
-          <div className="mt-10">
+          <div className="about-hero-arrow mt-10">
             <span className="material-symbols-outlined text-white animate-bounce text-4xl">keyboard_arrow_down</span>
           </div>
         </div>
@@ -385,7 +510,7 @@ export function AboutView() {
         />
         <div className="absolute inset-0 z-[1] hidden bg-black/20 lg:block" />
         <div className="relative z-10 w-full px-6 md:px-20">
-          <div className="max-w-lg bg-white/90 backdrop-blur-sm p-10 md:p-14 rounded-lg shadow-xl">
+          <div className="about-chapter-card max-w-lg bg-white/90 backdrop-blur-sm p-10 md:p-14 rounded-lg shadow-xl">
             <span className="text-[#e6194c] text-xs font-bold tracking-widest uppercase mb-3 block">{t("챕터 1", "Chapter I")}</span>
             <h3 className="font-serif text-3xl md:text-4xl text-[#1b0e11] mb-4">{t("원료의 기원", "The Origin")}</h3>
             <p className="text-[#1b0e11]/80 leading-relaxed">
@@ -533,6 +658,7 @@ export function AboutView() {
           <span className="material-symbols-outlined text-white">arrow_right_alt</span>
         </Link>
       </section>
+      <AboutMobileFooter locale={locale} localize={localize} />
         </div>
       </div>
     </main>

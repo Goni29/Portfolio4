@@ -1,15 +1,15 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "@/components/providers/store-provider";
-import { Drawer } from "@/components/ui/drawer";
 import { resolveText } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/locale-routing";
 import {
   getDefaultProductSizeKey,
 } from "@/lib/product-pricing";
+import { isDesktopUpViewport } from "@/lib/responsive";
 import type { Concern, Product, ProductFilters, SkinType } from "@/lib/types";
 import { currency } from "@/lib/utils";
 
@@ -17,8 +17,7 @@ type ShopFilters = ProductFilters & {
   collection: string;
 };
 
-type ActivePanel = "all" | "category" | "concern" | "collection" | "sort";
-type DesktopPanel = Exclude<ActivePanel, "all">;
+type DesktopPanel = "category" | "concern" | "collection" | "sort";
 
 const DEFAULT_FILTERS: ShopFilters = {
   category: "all",
@@ -31,6 +30,12 @@ const DEFAULT_FILTERS: ShopFilters = {
 
 const SORTS = ["newest", "priceAsc", "priceDesc", "best"] as const;
 const SHOP_PAGE_SIZE = 8;
+const PANEL_WIDTH: Record<DesktopPanel, number> = {
+  category: 240,
+  concern: 240,
+  collection: 260,
+  sort: 230,
+};
 
 const resolveSearchText = (
   value: Product["name"] | Product["shortDescription"] | Product["description"],
@@ -52,12 +57,10 @@ export function ShopView() {
   const [filters, setFilters] = useState<ShopFilters>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<(typeof SORTS)[number]>("newest");
   const [page, setPage] = useState(1);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [activePanel, setActivePanel] = useState<ActivePanel>("all");
   const [desktopPanel, setDesktopPanel] = useState<DesktopPanel | null>(null);
   const [desktopPanelLeft, setDesktopPanelLeft] = useState(0);
-  const [desktopPanelRight, setDesktopPanelRight] = useState<number | null>(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
+  const filterBarWrapRef = useRef<HTMLDivElement | null>(null);
   const desktopMenuRef = useRef<HTMLDivElement | null>(null);
 
   const sortLabel = (key: (typeof SORTS)[number]) => {
@@ -103,28 +106,8 @@ export function ShopView() {
     return locale === "ko" ? label.ko : label.en;
   };
 
-  const skinTypeLabelText = (key: string) => {
-    const labels: Record<string, { ko: string; en: string }> = {
-      dry: { ko: "건성", en: "Dry" },
-      oily: { ko: "지성", en: "Oily" },
-      combination: { ko: "복합성", en: "Combination" },
-      normal: { ko: "중성", en: "Normal" },
-      sensitive: { ko: "민감성", en: "Sensitive" },
-      all: { ko: "전체", en: "All" },
-    };
-    const label = labels[key];
-    if (!label) {
-      return key;
-    }
-    return locale === "ko" ? label.ko : label.en;
-  };
-
   const categories = useMemo(() => {
     return Array.from(new Set(db.products.map((product) => product.category))).sort();
-  }, [db.products]);
-
-  const skinTypes = useMemo(() => {
-    return Array.from(new Set(db.products.flatMap((product) => product.skinTypes))).sort();
   }, [db.products]);
 
   const concerns = useMemo(() => {
@@ -198,32 +181,23 @@ export function ShopView() {
     setPage(1);
   };
 
-  const openPanel = (panel: ActivePanel) => {
-    setDesktopPanel(null);
-    setActivePanel(panel);
-    setDrawerOpen(true);
-  };
-
   const toggleDesktopPanel = (
     panel: DesktopPanel,
     anchorElement?: HTMLElement,
   ) => {
     if (desktopPanel === panel) {
       setDesktopPanel(null);
-      setDesktopPanelRight(null);
       return;
     }
 
-    if (anchorElement && desktopMenuRef.current) {
-      const menuRect = desktopMenuRef.current.getBoundingClientRect();
+    if (anchorElement && filterBarWrapRef.current) {
+      const wrapperRect = filterBarWrapRef.current.getBoundingClientRect();
       const anchorRect = anchorElement.getBoundingClientRect();
-      const nextLeft = Math.max(0, anchorRect.left - menuRect.left);
+      const panelWidth = PANEL_WIDTH[panel];
+      const anchorCenterX = anchorRect.left + anchorRect.width / 2 - wrapperRect.left;
+      const maxLeft = Math.max(0, wrapperRect.width - panelWidth);
+      const nextLeft = Math.max(0, Math.min(maxLeft, anchorCenterX - panelWidth / 2));
       setDesktopPanelLeft(nextLeft);
-      if (panel === "sort") {
-        setDesktopPanelRight(Math.max(0, menuRect.right - anchorRect.right));
-      } else {
-        setDesktopPanelRight(null);
-      }
     }
 
     setDesktopPanel(panel);
@@ -247,15 +221,13 @@ export function ShopView() {
     setDesktopPanel(null);
   };
 
-  const showPanel = (panel: Exclude<ActivePanel, "all">) => activePanel === "all" || activePanel === panel;
-
   useEffect(() => {
     if (!desktopPanel) {
       return;
     }
 
     const onPointerDown = (event: MouseEvent) => {
-      if (!desktopMenuRef.current?.contains(event.target as Node)) {
+      if (!filterBarWrapRef.current?.contains(event.target as Node)) {
         setDesktopPanel(null);
       }
     };
@@ -281,7 +253,7 @@ export function ShopView() {
     }
 
     const syncScrollHint = () => {
-      const compactViewport = window.innerWidth < 1024;
+      const compactViewport = !isDesktopUpViewport();
       if (!compactViewport || desktopPanel !== null) {
         setShowScrollHint(false);
         return;
@@ -335,7 +307,7 @@ export function ShopView() {
     ].join(" ");
 
   const desktopDropdownClass =
-    "absolute top-[calc(100%+10px)] z-50 rounded-2xl border border-[#ecd3dc] bg-white/95 p-1.5 shadow-[0_20px_34px_rgba(53,18,31,0.18)] backdrop-blur";
+    "absolute z-50 rounded-2xl border border-[#ecd3dc] bg-white/95 p-1.5 shadow-[0_20px_34px_rgba(53,18,31,0.18)] backdrop-blur";
 
   const desktopOptionClass = (isActive: boolean) =>
     [
@@ -356,21 +328,17 @@ export function ShopView() {
         </div>
       </section>
 
-      <section className="sticky top-[var(--public-header-height)] z-40 border-y border-[#f0dde4] bg-[#fff7fa]/95 backdrop-blur-md">
-        <div className="relative px-6 lg:px-12 py-3">
+      <section className="sticky top-[var(--public-header-height)] z-40 border-y border-[#f0dde4] bg-[#fff7fa]/95 backdrop-blur-md overflow-visible">
+        <div ref={filterBarWrapRef} className="relative px-6 lg:px-12 py-3 overflow-visible">
           <div
             ref={desktopMenuRef}
-            className="relative flex items-center gap-2 overflow-x-auto no-scrollbar rounded-2xl border border-[#eed7df] bg-white/85 px-3 py-3 shadow-[0_10px_24px_rgba(86,32,46,0.07)] md:gap-3 md:px-4 lg:flex-wrap lg:overflow-visible"
+            className="relative flex items-center gap-2 overflow-x-auto overflow-y-visible no-scrollbar rounded-2xl border border-[#eed7df] bg-white/85 px-3 py-3 shadow-[0_10px_24px_rgba(86,32,46,0.07)] md:gap-3 md:px-4 lg:flex-wrap lg:overflow-visible"
           >
             <div className="flex shrink-0 items-center gap-2 md:gap-3 lg:flex-wrap">
               <button
                 type="button"
                 className={desktopTriggerClass(desktopPanel === "category")}
-                onClick={(event) =>
-                  window.innerWidth >= 768
-                    ? toggleDesktopPanel("category", event.currentTarget)
-                    : openPanel("category")
-                }
+                onClick={(event) => toggleDesktopPanel("category", event.currentTarget)}
               >
                 {categoryLabel}
                 <span
@@ -382,11 +350,7 @@ export function ShopView() {
               <button
                 type="button"
                 className={desktopTriggerClass(desktopPanel === "concern")}
-                onClick={(event) =>
-                  window.innerWidth >= 768
-                    ? toggleDesktopPanel("concern", event.currentTarget)
-                    : openPanel("concern")
-                }
+                onClick={(event) => toggleDesktopPanel("concern", event.currentTarget)}
               >
                 {concernLabel}
                 <span
@@ -398,11 +362,7 @@ export function ShopView() {
               <button
                 type="button"
                 className={desktopTriggerClass(desktopPanel === "collection")}
-                onClick={(event) =>
-                  window.innerWidth >= 768
-                    ? toggleDesktopPanel("collection", event.currentTarget)
-                    : openPanel("collection")
-                }
+                onClick={(event) => toggleDesktopPanel("collection", event.currentTarget)}
               >
                 {collectionLabel}
                 <span
@@ -429,78 +389,13 @@ export function ShopView() {
               <button
                 type="button"
                 className={desktopTriggerClass(desktopPanel === "sort")}
-                onClick={(event) =>
-                  window.innerWidth >= 768
-                    ? toggleDesktopPanel("sort", event.currentTarget)
-                    : openPanel("sort")
-                }
+                onClick={(event) => toggleDesktopPanel("sort", event.currentTarget)}
               >
                 <span className="material-symbols-outlined text-[18px]">tune</span>
                 <span className="hidden sm:inline">{sortLabel(sort)}</span>
                 <span className="sm:hidden">{t("정렬", "Sort")}</span>
               </button>
             </div>
-
-            {desktopPanel === "category" && (
-              <div
-                className={`${desktopDropdownClass} w-[240px]`}
-                style={{ left: desktopPanelLeft }}
-              >
-                <button type="button" className={desktopOptionClass(filters.category === "all")} onClick={() => applyDesktopFilter({ category: "all" })}>
-                  {t("전체", "All")}
-                </button>
-                {categories.map((option) => (
-                  <button key={option} type="button" className={desktopOptionClass(filters.category === option)} onClick={() => applyDesktopFilter({ category: option })}>
-                    {categoryLabelText(option)}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {desktopPanel === "concern" && (
-              <div
-                className={`${desktopDropdownClass} w-[240px]`}
-                style={{ left: desktopPanelLeft }}
-              >
-                <button type="button" className={desktopOptionClass(filters.concern === "all")} onClick={() => applyDesktopFilter({ concern: "all" })}>
-                  {t("전체", "All")}
-                </button>
-                {concerns.map((option) => (
-                  <button key={option} type="button" className={desktopOptionClass(filters.concern === option)} onClick={() => applyDesktopFilter({ concern: option })}>
-                    {concernLabelText(option)}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {desktopPanel === "collection" && (
-              <div
-                className={`${desktopDropdownClass} w-[260px]`}
-                style={{ left: desktopPanelLeft }}
-              >
-                <button type="button" className={desktopOptionClass(filters.collection === "all")} onClick={() => applyDesktopFilter({ collection: "all" })}>
-                  {t("전체", "All")}
-                </button>
-                {collections.map((option) => (
-                  <button key={option.slug} type="button" className={desktopOptionClass(filters.collection === option.slug)} onClick={() => applyDesktopFilter({ collection: option.slug })}>
-                    {option.name}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {desktopPanel === "sort" && (
-              <div
-                className={`${desktopDropdownClass} w-[230px]`}
-                style={desktopPanelRight === null ? { left: desktopPanelLeft } : { right: desktopPanelRight }}
-              >
-                {SORTS.map((option) => (
-                  <button key={option} type="button" className={desktopOptionClass(sort === option)} onClick={() => applyDesktopSort(option)}>
-                    {sortLabel(option)}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           {showScrollHint && (
@@ -508,6 +403,67 @@ export function ShopView() {
               <span className="material-symbols-outlined text-[16px] leading-none text-[#ba5f7a] animate-pulse drop-shadow-[0_3px_6px_rgba(110,41,64,0.22)]">
                 chevron_right
               </span>
+            </div>
+          )}
+
+          {desktopPanel === "category" && (
+            <div
+              className={`${desktopDropdownClass} top-[calc(100%+4px)] w-[240px]`}
+              style={{ left: desktopPanelLeft }}
+            >
+              <button type="button" className={desktopOptionClass(filters.category === "all")} onClick={() => applyDesktopFilter({ category: "all" })}>
+                {t("전체", "All")}
+              </button>
+              {categories.map((option) => (
+                <button key={option} type="button" className={desktopOptionClass(filters.category === option)} onClick={() => applyDesktopFilter({ category: option })}>
+                  {categoryLabelText(option)}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {desktopPanel === "concern" && (
+            <div
+              className={`${desktopDropdownClass} top-[calc(100%+4px)] w-[240px]`}
+              style={{ left: desktopPanelLeft }}
+            >
+              <button type="button" className={desktopOptionClass(filters.concern === "all")} onClick={() => applyDesktopFilter({ concern: "all" })}>
+                {t("전체", "All")}
+              </button>
+              {concerns.map((option) => (
+                <button key={option} type="button" className={desktopOptionClass(filters.concern === option)} onClick={() => applyDesktopFilter({ concern: option })}>
+                  {concernLabelText(option)}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {desktopPanel === "collection" && (
+            <div
+              className={`${desktopDropdownClass} top-[calc(100%+4px)] w-[260px]`}
+              style={{ left: desktopPanelLeft }}
+            >
+              <button type="button" className={desktopOptionClass(filters.collection === "all")} onClick={() => applyDesktopFilter({ collection: "all" })}>
+                {t("전체", "All")}
+              </button>
+              {collections.map((option) => (
+                <button key={option.slug} type="button" className={desktopOptionClass(filters.collection === option.slug)} onClick={() => applyDesktopFilter({ collection: option.slug })}>
+                  {option.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {desktopPanel === "sort" && (
+            <div
+              className={`${desktopDropdownClass} top-[calc(100%+4px)] w-[230px]`}
+              style={{ left: desktopPanelLeft }}
+            >
+              {SORTS.map((option) => (
+                <button key={option} type="button" className={desktopOptionClass(sort === option)} onClick={() => applyDesktopSort(option)}>
+                  {sortLabel(option)}
+                </button>
+              ))}
             </div>
           )}
         </div>
@@ -573,7 +529,7 @@ export function ShopView() {
                     </span>
                     {product.freeShipping && (
                       <span className="text-[11px] font-semibold text-[#e6194c]">
-                        {t("무료배송", "Free Shipping")}
+                        {t("臾대즺諛곗넚", "Free Shipping")}
                       </span>
                     )}
                     {product.reviewCount > 0 && (
@@ -622,120 +578,8 @@ export function ShopView() {
           </div>
         )}
       </section>
-
-      <Drawer open={drawerOpen} title={t("필터", "Filters")} onClose={() => setDrawerOpen(false)} side="right">
-        <div className="grid gap-6">
-          {showPanel("category") && (
-            <div>
-              <p className="text-xs uppercase tracking-[0.15em] font-semibold text-[#6f5560] mb-2">
-                {t("카테고리", "Category")}
-              </p>
-              <select
-                className="h-11 w-full rounded-xl border border-[#e8dce0] bg-white px-4 text-sm"
-                value={filters.category}
-                onChange={(event) => updateFilters({ category: event.target.value })}
-              >
-                <option value="all">{t("전체", "All")}</option>
-                {categories.map((option) => (
-                  <option key={option} value={option}>
-                    {categoryLabelText(option)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {showPanel("concern") && (
-            <div>
-              <p className="text-xs uppercase tracking-[0.15em] font-semibold text-[#6f5560] mb-2">
-                {t("고민", "Concern")}
-              </p>
-              <select
-                className="h-11 w-full rounded-xl border border-[#e8dce0] bg-white px-4 text-sm"
-                value={filters.concern}
-                onChange={(event) => updateFilters({ concern: event.target.value })}
-              >
-                <option value="all">{t("전체", "All")}</option>
-                {concerns.map((option) => (
-                  <option key={option} value={option}>
-                    {concernLabelText(option)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {showPanel("collection") && (
-            <>
-              <div>
-                <p className="text-xs uppercase tracking-[0.15em] font-semibold text-[#6f5560] mb-2">
-                  {t("컬렉션", "Collection")}
-                </p>
-                <select
-                  className="h-11 w-full rounded-xl border border-[#e8dce0] bg-white px-4 text-sm"
-                  value={filters.collection}
-                  onChange={(event) => updateFilters({ collection: event.target.value })}
-                >
-                  <option value="all">{t("전체", "All")}</option>
-                  {collections.map((option) => (
-                    <option key={option.slug} value={option.slug}>
-                      {option.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-[0.15em] font-semibold text-[#6f5560] mb-2">
-                  {t("피부 타입", "Skin Type")}
-                </p>
-                <select
-                  className="h-11 w-full rounded-xl border border-[#e8dce0] bg-white px-4 text-sm"
-                  value={filters.skinType}
-                  onChange={(event) => updateFilters({ skinType: event.target.value })}
-                >
-                  <option value="all">{t("전체", "All")}</option>
-                  {skinTypes.map((option) => (
-                    <option key={option} value={option}>
-                      {skinTypeLabelText(option)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </>
-          )}
-
-          {showPanel("sort") && (
-            <div>
-              <p className="text-xs uppercase tracking-[0.15em] font-semibold text-[#6f5560] mb-2">
-                {t("정렬", "Sort By")}
-              </p>
-              <select
-                className="h-11 w-full rounded-xl border border-[#e8dce0] bg-white px-4 text-sm"
-                value={sort}
-                onChange={(event) => {
-                  setSort(event.target.value as (typeof SORTS)[number]);
-                  setPage(1);
-                }}
-              >
-                {SORTS.map((option) => (
-                  <option key={option} value={option}>
-                    {sortLabel(option)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <button
-            type="button"
-            className="h-11 rounded-full border border-[#e3d5da] text-sm font-semibold"
-            onClick={resetFilters}
-          >
-            {t("초기화", "Clear All")}
-          </button>
-        </div>
-      </Drawer>
     </>
   );
 }
+
+
