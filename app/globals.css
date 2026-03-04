@@ -7,6 +7,13 @@
   --color-subtle: #6f5560;
   --color-panel: #ffffff;
   --color-border: #f0e3e7;
+  --admin-accent: #e82e5c;
+  --admin-border: rgba(0, 0, 0, 0.08);
+  --admin-text: rgba(0, 0, 0, 0.88);
+  --admin-muted: rgba(0, 0, 0, 0.55);
+  --admin-subtle-bg: rgba(0, 0, 0, 0.02);
+  --admin-radius: 16px;
+  --admin-transition: 180ms ease-out;
   --public-header-height: 4.75rem;
   --public-sticky-offset: calc(var(--public-header-height) + 1rem);
 }
@@ -97,6 +104,86 @@ button:focus-visible {
 .header-search-input:focus,
 .admin-menu-search-input:focus {
   box-shadow: none !important;
+}
+
+.admin-theme {
+  background: #fff;
+  color: var(--admin-text);
+}
+
+.admin-theme .admin-surface {
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: #fff;
+}
+
+.admin-theme .admin-input {
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: #fff;
+  transition: border-color var(--admin-transition), background-color var(--admin-transition), color var(--admin-transition);
+}
+
+.admin-theme .admin-input:hover {
+  border-color: rgba(0, 0, 0, 0.16);
+}
+
+.admin-theme .admin-input:focus,
+.admin-theme .admin-input:focus-visible {
+  border-color: var(--admin-accent) !important;
+  box-shadow: none !important;
+  outline: none;
+}
+
+.admin-theme .admin-input:focus-within {
+  border-color: var(--admin-accent) !important;
+}
+
+.admin-theme .admin-ghost-button,
+.admin-theme .admin-solid-button {
+  border-radius: var(--admin-radius);
+  transition: border-color var(--admin-transition), background-color var(--admin-transition), color var(--admin-transition), opacity var(--admin-transition);
+}
+
+.admin-theme .admin-ghost-button {
+  border: 1px solid var(--admin-border);
+  background: #fff;
+  color: var(--admin-text);
+}
+
+.admin-theme .admin-ghost-button:hover {
+  background: var(--admin-subtle-bg);
+  border-color: rgba(0, 0, 0, 0.16);
+}
+
+.admin-theme .admin-solid-button {
+  border: 1px solid var(--admin-accent);
+  background: var(--admin-accent);
+  color: #fff;
+}
+
+.admin-theme .admin-solid-button:hover {
+  background: #d32851;
+  border-color: #d32851;
+}
+
+.admin-theme .admin-ghost-button:focus-visible,
+.admin-theme .admin-solid-button:focus-visible {
+  box-shadow: none !important;
+  outline: none;
+}
+
+.admin-theme .admin-ghost-button:focus-visible {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+}
+
+.admin-theme .admin-hover-subtle {
+  transition: background-color var(--admin-transition), border-color var(--admin-transition), color var(--admin-transition), opacity var(--admin-transition);
+}
+
+.admin-theme .admin-hover-subtle:hover {
+  background: var(--admin-subtle-bg);
 }
 
 span.material-symbols-outlined {

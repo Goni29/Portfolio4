@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useStore } from "@/components/providers/store-provider";
-import { EmptyState, InputField, Row } from "@/components/public/shared/ui";
+import { EmptyState, InputField } from "@/components/public/shared/ui";
 import { resolveText } from "@/lib/i18n";
 import { getProductPriceBySize, getProductSizeLabel, hasMultipleProductSizes } from "@/lib/product-pricing";
 import type { Article, Banner, Collection, Coupon, Order, Product, SupportInquiry } from "@/lib/types";
-import { currency, formatDate, uid } from "@/lib/utils";
+import { cn, currency, formatDate, uid } from "@/lib/utils";
 
 export function AdminRouterView({ segments }: { segments: string[] }) {
   if (segments[0] === "login") {
@@ -16,7 +16,8 @@ export function AdminRouterView({ segments }: { segments: string[] }) {
   }
 
   if (segments[0] === "products") {
-    return <AdminProductsView />;
+    const editSlug = segments[1] === "edit" && segments[2] ? decodeURIComponent(segments[2]) : null;
+    return <AdminProductsView key={editSlug ?? "products"} editSlug={editSlug} />;
   }
 
   if (segments[0] === "analytics") {
@@ -96,12 +97,12 @@ function AdminLoginView() {
         }}
       >
         <div className="text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#e6194c] font-bold">{t("관리자", "Admin")}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#e82e5c] font-bold">{t("관리자", "Admin")}</p>
           <h1 className="text-4xl font-semibold tracking-tight text-slate-900 mt-2">{t("로그인", "Sign In")}</h1>
         </div>
         <InputField label={t("이메일", "Email")} value={email} onChange={setEmail} />
         <InputField label={t("비밀번호", "Password")} value={password} onChange={setPassword} />
-        <button type="submit" className="h-12 rounded-xl bg-[#e6194c] text-white text-sm font-semibold uppercase tracking-[0.12em]">
+        <button type="submit" className="h-12 rounded-xl bg-[#e82e5c] text-white text-sm font-semibold uppercase tracking-[0.12em]">
           {t("로그인", "Sign In")}
         </button>
         {message && <p className="text-sm text-slate-500">{message}</p>}
@@ -112,6 +113,7 @@ function AdminLoginView() {
 
 function AdminDashboardView() {
   const { db, locale } = useStore();
+  const [trendRange, setTrendRange] = useState<"7d" | "30d" | "90d">("30d");
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
   const statusLabelMap: Record<Order["status"], { ko: string; en: string }> = {
     pending: { ko: "대기", en: "Pending" },
@@ -121,46 +123,39 @@ function AdminDashboardView() {
     cancelled: { ko: "취소", en: "Cancelled" },
   };
   const orderStatusLabel = (status: Order["status"]) => statusLabelMap[status][locale];
-  const users = db.users.filter((user) => user.role === "user");
+  const usersById = useMemo(() => new Map(db.users.map((user) => [user.id, user])), [db.users]);
+
+  const paidOrders = db.orders.filter((order) => order.paymentStatus === "paid" && order.status !== "cancelled");
   const pendingReviews = db.reviews.filter((review) => !review.approved);
   const unpaidOrders = db.orders.filter((order) => order.paymentStatus !== "paid");
+  const refundRequestedOrders = db.orders.filter((order) => order.refundRequested);
   const openInquiries = db.inquiries.filter((inquiry) => inquiry.status !== "resolved");
-  const paidOrders = db.orders.filter((order) => order.paymentStatus === "paid" && order.status !== "cancelled");
-  const totalRevenue = paidOrders.reduce((sum, order) => sum + order.total, 0);
-  const paidOrderCount = paidOrders.length;
-  const averageOrderValue = paidOrderCount > 0 ? totalRevenue / paidOrderCount : 0;
-  const totalUnitsSold = paidOrders.reduce(
-    (sum, order) => sum + order.items.reduce((orderSum, item) => orderSum + Math.max(1, item.quantity), 0),
-    0,
-  );
-  const totalProductViews = Object.values(db.analytics.productViewsBySlug).reduce(
-    (sum, count) => sum + count,
-    0,
-  );
-  const orderToViewRate = totalProductViews > 0 ? (paidOrderCount / totalProductViews) * 100 : 0;
-  const unitToViewRate = totalProductViews > 0 ? (totalUnitsSold / totalProductViews) * 100 : 0;
+  const activeCoupons = db.coupons.filter((coupon) => coupon.active);
+  const totalProductViews = Object.values(db.analytics.productViewsBySlug ?? {}).reduce((sum, count) => sum + count, 0);
 
-  const now = new Date();
-  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-  const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
   const toTimestamp = (value: string): number => {
     const parsed = new Date(value).getTime();
     return Number.isFinite(parsed) ? parsed : 0;
   };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const monthRevenue = paidOrders.reduce((sum, order) => {
-    return toTimestamp(order.createdAt) >= currentMonthStart ? sum + order.total : sum;
-  }, 0);
-  const previousMonthRevenue = paidOrders.reduce((sum, order) => {
-    const createdAt = toTimestamp(order.createdAt);
-    return createdAt >= previousMonthStart && createdAt < currentMonthStart ? sum + order.total : sum;
-  }, 0);
-  const monthRevenueGrowthRate =
-    previousMonthRevenue > 0 ? ((monthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100 : null;
-  const monthRevenueHint =
-    monthRevenueGrowthRate === null
-      ? t("\uC804\uC6D4 \uBE44\uAD50 \uB370\uC774\uD130 \uC5C6\uC74C", "No previous-month baseline")
-      : `${monthRevenueGrowthRate >= 0 ? "+" : ""}${monthRevenueGrowthRate.toFixed(1)}% ${t("\uC804\uC6D4 \uB300\uBE44", "vs last month")}`;
+  const dayKeys = Array.from({ length: 90 }, (_, index) => {
+    const day = new Date(today);
+    day.setDate(today.getDate() - (89 - index));
+    return day.toISOString().slice(0, 10);
+  });
+
+  const dailyMetrics: Record<string, { revenue: number; orders: number; units: number }> = Object.fromEntries(
+    dayKeys.map((key) => [
+      key,
+      {
+        revenue: 0,
+        orders: 0,
+        units: 0,
+      },
+    ]),
+  );
 
   const productBySlug = new Map(db.products.map((product) => [product.slug, product]));
   const productMetricsBySlug = new Map(
@@ -176,6 +171,12 @@ function AdminDashboardView() {
   );
 
   paidOrders.forEach((order) => {
+    const dayKey = order.createdAt.slice(0, 10);
+    if (dailyMetrics[dayKey]) {
+      dailyMetrics[dayKey].revenue += order.total;
+      dailyMetrics[dayKey].orders += 1;
+    }
+
     const countedProducts = new Set<string>();
     order.items.forEach((item) => {
       const product = productBySlug.get(item.productSlug);
@@ -189,6 +190,9 @@ function AdminDashboardView() {
 
       metrics.unitsSold += quantity;
       metrics.revenue += unitPrice * quantity;
+      if (dailyMetrics[dayKey]) {
+        dailyMetrics[dayKey].units += quantity;
+      }
 
       if (!countedProducts.has(item.productSlug)) {
         metrics.orderCount += 1;
@@ -196,6 +200,77 @@ function AdminDashboardView() {
       }
     });
   });
+
+  const dailySeries = dayKeys.map((key) => {
+    const entry = dailyMetrics[key];
+    return {
+      key,
+      revenue: entry.revenue,
+      orders: entry.orders,
+      units: entry.units,
+      aov: entry.orders > 0 ? entry.revenue / entry.orders : null,
+    };
+  });
+
+  const latestSeven = dailySeries.slice(-7);
+  const latestTwelve = dailySeries.slice(-12);
+  const sumSeries = (series: Array<{ revenue: number; orders: number; units: number }>) =>
+    series.reduce(
+      (acc, point) => ({
+        revenue: acc.revenue + point.revenue,
+        orders: acc.orders + point.orders,
+        units: acc.units + point.units,
+      }),
+      { revenue: 0, orders: 0, units: 0 },
+    );
+
+  const buildWeeklySeries = (weeks: number) => {
+    const buckets: Array<{ revenue: number; orders: number; units: number; aov: number | null }> = [];
+    const startIndex = Math.max(0, dailySeries.length - weeks * 7);
+    for (let weekIndex = 0; weekIndex < weeks; weekIndex += 1) {
+      const weekSlice = dailySeries.slice(startIndex + weekIndex * 7, startIndex + (weekIndex + 1) * 7);
+      if (weekSlice.length === 0) {
+        continue;
+      }
+      const weeklyTotals = sumSeries(weekSlice);
+      buckets.push({
+        ...weeklyTotals,
+        aov: weeklyTotals.orders > 0 ? weeklyTotals.revenue / weeklyTotals.orders : null,
+      });
+    }
+    return buckets;
+  };
+
+  const weeklyAovWindow = 8;
+  const weeklyAovExpandedWindow = 12;
+  const weeklySeries = buildWeeklySeries(weeklyAovWindow);
+  const expandedWeeklySeries = buildWeeklySeries(weeklyAovExpandedWindow);
+  const emptyWeeklyMetric = { revenue: 0, orders: 0, units: 0, aov: null as number | null };
+  const currentWeek = weeklySeries[weeklySeries.length - 1] ?? emptyWeeklyMetric;
+  const previousWeek = weeklySeries[weeklySeries.length - 2] ?? emptyWeeklyMetric;
+  const currentWeekAov = currentWeek.aov ?? 0;
+  const previousWeekAov = previousWeek.aov ?? 0;
+  const rawWeeklyAovSeries = weeklySeries.map((point) => point.aov);
+  const expandedWeeklyAovSeries = expandedWeeklySeries.map((point) => point.aov);
+  const displayAovSeries = buildDisplayAovSparkline(rawWeeklyAovSeries, expandedWeeklyAovSeries, weeklyAovWindow);
+
+  const buildDeltaState = (current: number, previous: number): KpiDeltaState => {
+    if (!Number.isFinite(current) || !Number.isFinite(previous)) {
+      return { kind: "none" };
+    }
+    if (previous === 0) {
+      if (current > 0) {
+        return { kind: "up" };
+      }
+      return { kind: "flat" };
+    }
+    return { kind: "percent", value: ((current - previous) / previous) * 100 };
+  };
+
+  const totalRevenue = paidOrders.reduce((sum, order) => sum + order.total, 0);
+  const paidOrderCount = paidOrders.length;
+  const averageOrderValue = paidOrderCount > 0 ? totalRevenue / paidOrderCount : 0;
+  const orderToViewRate = totalProductViews > 0 ? (paidOrderCount / totalProductViews) * 100 : 0;
 
   const productStats = db.products.map((product) => {
     const metrics = productMetricsBySlug.get(product.slug) ?? {
@@ -208,6 +283,7 @@ function AdminDashboardView() {
     return {
       slug: product.slug,
       name: resolveText(product.name, locale),
+      image: product.images[0] ?? "/logo_header.png",
       views: metrics.views,
       unitsSold: metrics.unitsSold,
       orderCount: metrics.orderCount,
@@ -226,186 +302,917 @@ function AdminDashboardView() {
     .sort((a, b) => b.revenue - a.revenue || b.unitsSold - a.unitsSold)
     .slice(0, 5);
 
-  const dayKeys = Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(now);
-    day.setHours(0, 0, 0, 0);
-    day.setDate(day.getDate() - (6 - index));
-    return day.toISOString().slice(0, 10);
-  });
-  const dailyRevenueMap: Record<string, number> = Object.fromEntries(dayKeys.map((key) => [key, 0]));
-  const dailyOrderCountMap: Record<string, number> = Object.fromEntries(dayKeys.map((key) => [key, 0]));
-
-  paidOrders.forEach((order) => {
-    const dayKey = order.createdAt.slice(0, 10);
-    if (!(dayKey in dailyRevenueMap)) {
-      return;
-    }
-
-    dailyRevenueMap[dayKey] += order.total;
-    dailyOrderCountMap[dayKey] += 1;
-  });
-
-  const dailyRevenue = dayKeys.map((key) => ({
-    key,
-    label: key.slice(5),
-    revenue: dailyRevenueMap[key],
-    orders: dailyOrderCountMap[key],
+  const rangeDays = trendRange === "7d" ? 7 : trendRange === "30d" ? 30 : 90;
+  const trendSlice = dailySeries.slice(-rangeDays);
+  const labelStep = trendSlice.length <= 7 ? 3 : trendSlice.length <= 30 ? 6 : 15;
+  const trendSeries: TrendPoint[] = trendSlice.map((entry, index) => ({
+    key: entry.key,
+    label: index % labelStep === 0 || index === trendSlice.length - 1 ? entry.key.slice(5).replace("-", "/") : "",
+    revenue: entry.revenue,
+    orders: entry.orders,
+    units: entry.units,
   }));
-  const maxDailyRevenue = Math.max(1, ...dailyRevenue.map((entry) => entry.revenue));
+
+  const rangeRevenue = trendSlice.reduce((sum, point) => sum + point.revenue, 0);
+  const rangeOrders = trendSlice.reduce((sum, point) => sum + point.orders, 0);
+  const rangeAov = rangeOrders > 0 ? rangeRevenue / rangeOrders : 0;
+  const rangeUnits = trendSlice.reduce((sum, point) => sum + point.units, 0);
+
+  const recentOrders = [...db.orders]
+    .sort((a, b) => toTimestamp(b.createdAt) - toTimestamp(a.createdAt))
+    .slice(0, 8);
+  const recentOrderRows: DashboardOrderRow[] = recentOrders.map((order) => ({
+    id: order.id,
+    customer: usersById.get(order.userId)?.name ?? order.shippingAddress.recipient ?? t("비회원", "Guest"),
+    status: order.status,
+    statusLabel: orderStatusLabel(order.status),
+    total: order.total,
+    createdAt: order.createdAt,
+  }));
+
+  const kpiCards: DashboardKpi[] = [
+    {
+      key: "kpi-weekly-revenue",
+      label: t("주간 매출", "Weekly Revenue"),
+      value: currency(currentWeek.revenue),
+      delta: buildDeltaState(currentWeek.revenue, previousWeek.revenue),
+      href: "/admin/analytics",
+      sparkline: latestSeven.map((point) => point.revenue),
+      sparklineType: "line",
+      icon: "trending_up",
+    },
+    {
+      key: "kpi-weekly-orders",
+      label: t("주간 주문", "Weekly Orders"),
+      value: currentWeek.orders.toLocaleString(),
+      delta: buildDeltaState(currentWeek.orders, previousWeek.orders),
+      href: "/admin/orders",
+      sparkline: latestTwelve.map((point) => point.orders),
+      sparklineType: "bar",
+      icon: "receipt_long",
+    },
+    {
+      key: "kpi-weekly-units",
+      label: t("주간 판매수량", "Weekly Units"),
+      value: currentWeek.units.toLocaleString(),
+      delta: buildDeltaState(currentWeek.units, previousWeek.units),
+      href: "/admin/products",
+      sparkline: latestTwelve.map((point) => point.units),
+      sparklineType: "bar",
+      icon: "inventory_2",
+    },
+    {
+      key: "kpi-weekly-aov",
+      label: t("주간 객단가", "Weekly AOV"),
+      value: currency(currentWeekAov),
+      delta: buildDeltaState(currentWeekAov, previousWeekAov),
+      href: "/admin/analytics",
+      sparkline: displayAovSeries,
+      sparklineType: "line",
+      icon: "toll",
+    },
+  ];
+
+  const topViewedList: RichListItem[] = topViewedProducts.map((entry) => ({
+    key: `view-${entry.slug}`,
+    href: `/admin/products`,
+    productSlug: entry.slug,
+    image: entry.image,
+    name: entry.name,
+    secondary: `${t("조회", "Views")} ${entry.views.toLocaleString()} | ${t("전환", "Conversion")} ${entry.unitConversionRate.toFixed(1)}% | ${t("주문", "Orders")} ${entry.orderCount.toLocaleString()}`,
+    valueLabel: t("조회수", "Views"),
+    value: entry.views.toLocaleString(),
+  }));
+
+  const topRevenueList: RichListItem[] = topRevenueProducts.map((entry) => ({
+    key: `revenue-${entry.slug}`,
+    href: `/admin/products`,
+    productSlug: entry.slug,
+    image: entry.image,
+    name: entry.name,
+    secondary: `${t("매출 전환", "Revenue Conv.")} ${entry.unitConversionRate.toFixed(1)}% | ${t("주문", "Orders")} ${entry.orderCount.toLocaleString()} | ${t("조회", "Views")} ${entry.views.toLocaleString()}`,
+    valueLabel: t("매출", "Revenue"),
+    value: currency(entry.revenue),
+  }));
+
+  const todoItems = [
+    { key: "todo-unpaid", label: t("미결제 주문", "Unpaid Orders"), count: unpaidOrders.length, href: "/admin/orders" },
+    { key: "todo-refund", label: t("환불 요청", "Refund Requests"), count: refundRequestedOrders.length, href: "/admin/orders" },
+    { key: "todo-reviews", label: t("검수 대기 리뷰", "Pending Reviews"), count: pendingReviews.length, href: "/admin/reviews" },
+    { key: "todo-inquiries", label: t("미해결 문의", "Open Inquiries"), count: openInquiries.length, href: "/admin/inquiries" },
+    { key: "todo-coupons", label: t("활성 쿠폰", "Active Coupons"), count: activeCoupons.length, href: "/admin/coupons" },
+  ];
 
   return (
-    <div className="grid gap-6">
-      <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t("대시보드", "Dashboard")}</h1>
-      <div className="grid sm:grid-cols-2 xl:grid-cols-6 gap-4">
-        <SummaryCard label={t("제품", "Products")} value={String(db.products.length)} href="/admin/products" />
-        <SummaryCard label={t("통계", "Analytics")} value={String(totalProductViews)} href="/admin/analytics" />
-        <SummaryCard label={t("주문", "Orders")} value={String(db.orders.length)} href="/admin/orders" />
-        <SummaryCard label={t("고객", "Customers")} value={String(users.length)} href="/admin/customers" />
-        <SummaryCard label={t("검수 대기 리뷰", "Pending Reviews")} value={String(pendingReviews.length)} href="/admin/reviews" />
-        <SummaryCard label={t("\uBB38\uC758", "Inquiries")} value={String(db.inquiries.length)} href="/admin/inquiries" />
-      </div>
+    <div className="grid gap-10">
+      <header className="grid gap-2">
+        <h1 className="text-[28px] font-semibold tracking-tight text-black/90">{t("대시보드", "Dashboard")}</h1>
+        <p className="text-sm text-black/55">
+          {t("오늘 스냅샷, 매출 추세, 최근 주문 및 운영 할 일을 한 화면에서 확인합니다.", "Monitor snapshot KPIs, sales trends, recent orders, and operational tasks in one view.")}
+        </p>
+      </header>
 
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-slate-900">{t("\uB9E4\uCD9C \uBC0F \uD2B8\uB798\uD53D \uD1B5\uACC4", "Sales & Traffic Analytics")}</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-          <AnalyticsCard
-            label={t("\uB204\uC801 \uB9E4\uCD9C", "Total Revenue")}
-            value={currency(totalRevenue)}
-            hint={t("\uACB0\uC81C \uC644\uB8CC \uAE30\uC900", "Paid orders only")}
+      <section className="grid grid-cols-2 gap-5 xl:grid-cols-12">
+        {kpiCards.map((card) => (
+          <DashboardKpiCard
+            key={card.key}
+            className="col-span-1 min-h-[118px] xl:col-span-3"
+            label={card.label}
+            value={card.value}
+            delta={card.delta}
+            href={card.href}
+            sparkline={card.sparkline}
+            sparklineType={card.sparklineType}
+            icon={card.icon}
+            noBaselineLabel={t("전주 데이터 없음", "No last-week baseline")}
+            upLabel={t("상승", "Up")}
+            deltaSuffix={t("전주 대비", "vs last week")}
           />
-          <AnalyticsCard
-            label={t("\uC774\uBC88 \uB2EC \uB9E4\uCD9C", "This Month Revenue")}
-            value={currency(monthRevenue)}
-            hint={monthRevenueHint}
+        ))}
+      </section>
+
+      <section className="grid items-start gap-6 xl:grid-cols-12">
+        <article className="admin-surface self-start p-5 xl:col-span-12 flex flex-col">
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-black/5 pb-4">
+            <div className="grid gap-2">
+              <h2 className="text-[14px] font-medium text-black/55">{t("매출/주문 추세", "Revenue & Order Trend")}</h2>
+              <SegmentedControl
+                value={trendRange}
+                onChange={setTrendRange}
+                options={[
+                  { label: "7D", value: "7d" },
+                  { label: "30D", value: "30d" },
+                  { label: "90D", value: "90d" },
+                ]}
+              />
+            </div>
+            <div className="grid w-full grid-cols-2 gap-3 text-right sm:w-auto sm:grid-cols-3">
+              <div>
+                <p className="text-[12px] font-medium text-black/50">{t("총매출", "Revenue")}</p>
+                <p className="mt-1 tabular-nums text-base font-semibold text-black/88">{currency(rangeRevenue)}</p>
+              </div>
+              <div>
+                <p className="text-[12px] font-medium text-black/50">{t("객단가", "AOV")}</p>
+                <p className="mt-1 tabular-nums text-base font-semibold text-black/88">{currency(rangeAov)}</p>
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-[12px] font-medium text-black/50">{t("주문/조회", "Conv.")}</p>
+                <p className="mt-1 tabular-nums text-base font-semibold text-black/88">{orderToViewRate.toFixed(1)}%</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 flex flex-col justify-center">
+            <RevenueOrdersTrendChart
+              data={trendSeries}
+              revenueLegend={t("매출", "Revenue")}
+              ordersLegend={t("주문", "Orders")}
+              unitsLabel={t("판매수량", "Units")}
+              aovLabel={t("객단가", "AOV")}
+              emptyLabel={t("차트 데이터가 없습니다.", "No chart data")}
+            />
+          </div>
+          <p className="mt-1.5 overflow-x-auto whitespace-nowrap text-[12px] leading-[1.35] text-black/52">
+            {t("선택", "Selected")}: <span className="tabular-nums font-semibold text-black/78">{t("주문", "Orders")} {rangeOrders.toLocaleString()} · {t("매출", "Revenue")} {currency(rangeRevenue)} · {t("판매수량", "Units")} {rangeUnits.toLocaleString()}</span>
+          </p>
+        </article>
+      </section>
+
+      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-12">
+        <div className="xl:col-span-6">
+          <ProductRichList
+            title={t("상위 조회 상품", "Top Viewed Products")}
+            emptyLabel={t("조회 데이터가 아직 없습니다.", "No view data yet.")}
+            items={topViewedList}
           />
-          <AnalyticsCard
-            label={t("\uACB0\uC81C \uC644\uB8CC \uC8FC\uBB38", "Paid Orders")}
-            value={String(paidOrderCount)}
-            hint={t("\uC804\uCCB4 \uC8FC\uBB38 \uAE30\uC900", "Across all orders")}
-          />
-          <AnalyticsCard
-            label={t("\uD3C9\uADE0 \uAC1D\uB2E8\uAC00", "Average Order Value")}
-            value={currency(averageOrderValue)}
-            hint={t("\uACB0\uC81C \uC644\uB8CC \uAE30\uC900", "Paid orders only")}
-          />
-          <AnalyticsCard
-            label={t("\uC0C1\uD488 \uC870\uD68C\uC218", "Product Views")}
-            value={String(totalProductViews)}
-            hint={t("\uC0C1\uD488 \uC0C1\uC138 \uD398\uC774\uC9C0 \uAE30\uC900", "Product detail page visits")}
-          />
-          <AnalyticsCard
-            label={t("\uC870\uD68C \uB300\uBE44 \uD310\uB9E4 \uC218\uB7C9", "Units per View")}
-            value={`${unitToViewRate.toFixed(1)}%`}
-            hint={`${t("\uC8FC\uBB38 \uC804\uD658\uC728", "Order conversion")}: ${orderToViewRate.toFixed(1)}%`}
+        </div>
+        <div className="xl:col-span-6">
+          <ProductRichList
+            title={t("상위 매출 상품", "Top Revenue Products")}
+            emptyLabel={t("매출 데이터가 아직 없습니다.", "No sales data yet.")}
+            items={topRevenueList}
           />
         </div>
       </section>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-slate-900">{t("\uCD5C\uADFC 7\uC77C \uB9E4\uCD9C \uD750\uB984", "Last 7 Days Revenue")}</h2>
-          <div className="mt-5 grid gap-3">
-            {dailyRevenue.map((entry) => (
-              <div key={entry.key} className="grid grid-cols-[52px_minmax(0,1fr)_126px] items-center gap-3">
-                <p className="text-xs font-semibold text-slate-500">{entry.label}</p>
-                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-[#e6194c]"
-                    style={{
-                      width: `${entry.revenue > 0 ? Math.max(8, (entry.revenue / maxDailyRevenue) * 100) : 0}%`,
-                    }}
-                  />
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-semibold text-slate-700">{currency(entry.revenue)}</p>
-                  <p className="text-[11px] text-slate-500">
-                    {entry.orders} {t("\uAC74", "orders")}
-                  </p>
-                </div>
-              </div>
-            ))}
+      <section className="grid gap-6 xl:grid-cols-12">
+        <article className="admin-surface p-6 md:p-7 xl:col-span-6">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h2 className="text-[14px] font-medium text-black/55">{t("최근 주문", "Recent Orders")}</h2>
+            <Link href="/admin/orders" className="inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--admin-accent)] transition-colors duration-200 ease-out hover:text-black/80">
+              {t("전체보기", "View all")}
+              <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+            </Link>
           </div>
-        </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-slate-900">{t("\uC0C1\uC704 \uC870\uD68C \uC0C1\uD488", "Top Viewed Products")}</h2>
-          <div className="mt-4 grid gap-3">
-            {topViewedProducts.length === 0 && (
-              <p className="text-sm text-slate-500">{t("\uC870\uD68C \uB370\uC774\uD130\uAC00 \uC544\uC9C1 \uC5C6\uC2B5\uB2C8\uB2E4.", "No product view data yet.")}</p>
-            )}
-            {topViewedProducts.map((entry) => (
-              <article key={`view-${entry.slug}`} className="rounded-lg border border-slate-200 p-3">
+          <OrdersTable
+            rows={recentOrderRows}
+            labels={{
+              orderNumber: t("주문번호", "Order"),
+              customer: t("고객", "Customer"),
+              status: t("상태", "Status"),
+              amount: t("금액", "Amount"),
+              createdAt: t("일시", "Date"),
+              action: t("액션", "Action"),
+              view: t("보기", "View"),
+              empty: t("주문 데이터가 없습니다.", "No orders yet."),
+            }}
+          />
+
+          <div className="mt-3 grid gap-3 md:hidden">
+            {recentOrderRows.length === 0 && <p className="rounded-2xl border border-black/10 bg-white p-4 text-sm text-black/55">{t("주문 데이터가 없습니다.", "No orders yet.")}</p>}
+            {recentOrderRows.map((row) => (
+              <Link
+                key={`mobile-${row.id}`}
+                href={`/admin/orders/${row.id}`}
+                className="admin-hover-subtle rounded-2xl border border-black/10 bg-white p-4 transition-[background-color,border-color,color] duration-200 ease-out"
+              >
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-semibold text-slate-900 line-clamp-1">{entry.name}</p>
-                  <p className="text-xs font-semibold text-[#e6194c]">{entry.views.toLocaleString()}</p>
+                  <p className="text-sm font-semibold text-black/85">{row.id}</p>
+                  <OrderStatusPill status={row.status} label={row.statusLabel} />
                 </div>
-                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                  <span>{t("\uD310\uB9E4 \uC218\uB7C9", "Units")}: {entry.unitsSold}</span>
-                  <span>{t("\uC8FC\uBB38 \uAC74\uC218", "Orders")}: {entry.orderCount}</span>
-                  <span>{t("\uC804\uD658\uC728", "Conversion")}: {entry.unitConversionRate.toFixed(1)}%</span>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                  <p className="text-black/55">{row.customer}</p>
+                  <p className="tabular-nums text-right font-semibold text-black/85">{currency(row.total)}</p>
+                  <p className="col-span-2 text-right tabular-nums text-xs text-black/55">{formatDate(row.createdAt)}</p>
                 </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      </div>
-
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-slate-900">{t("\uC0C1\uC704 \uB9E4\uCD9C \uC0C1\uD488", "Top Revenue Products")}</h2>
-        <div className="mt-4 grid gap-3">
-          {topRevenueProducts.length === 0 && (
-            <p className="text-sm text-slate-500">{t("\uB9E4\uCD9C \uB370\uC774\uD130\uAC00 \uC544\uC9C1 \uC5C6\uC2B5\uB2C8\uB2E4.", "No sales data yet.")}</p>
-          )}
-          {topRevenueProducts.map((entry) => (
-            <article key={`revenue-${entry.slug}`} className="rounded-lg border border-slate-200 p-3">
-              <div className="flex items-start justify-between gap-2">
-                <p className="font-semibold text-slate-900 line-clamp-1">{entry.name}</p>
-                <p className="text-xs font-semibold text-[#e6194c]">{currency(entry.revenue)}</p>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                <span>{t("\uD310\uB9E4 \uC218\uB7C9", "Units")}: {entry.unitsSold}</span>
-                <span>{t("\uC8FC\uBB38 \uAC74\uC218", "Orders")}: {entry.orderCount}</span>
-                <span>{t("\uC870\uD68C\uC218", "Views")}: {entry.views}</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-slate-900">{t("최근 주문", "Recent Orders")}</h2>
-          <div className="mt-4 grid gap-3">
-            {db.orders.slice(0, 5).map((order) => (
-              <Link key={order.id} href={`/admin/orders/${order.id}`} className="rounded-xl border border-slate-200 p-4 hover:border-[#e6194c]">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold">{order.id}</p>
-                  <p className="text-sm text-slate-500">{formatDate(order.createdAt)}</p>
-                </div>
-                <p className="text-sm text-slate-500 mt-2">{orderStatusLabel(order.status)}</p>
               </Link>
             ))}
-            {db.orders.length === 0 && <p className="text-sm text-slate-500">{t("주문 데이터가 없습니다.", "No orders yet.")}</p>}
           </div>
-        </section>
+        </article>
 
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-slate-900">{t("운영 지표", "Operational Flags")}</h2>
-          <div className="mt-5 grid gap-3">
-            <Row label={t("미결제 주문", "Unpaid Orders")} value={String(unpaidOrders.length)} />
-            <Row label={t("환불 요청", "Refund Requests")} value={String(db.orders.filter((order) => order.refundRequested).length)} />
-            <Row label={t("검수 대기 리뷰", "Draft Reviews")} value={String(pendingReviews.length)} />
-            <Row label={t("\uBBF8\uD574\uACB0 \uBB38\uC758", "Open Inquiries")} value={String(openInquiries.length)} />
-            <Row label={t("활성 쿠폰", "Active Coupons")} value={String(db.coupons.filter((coupon) => coupon.active).length)} />
+        <article className="admin-surface h-fit p-6 md:p-7 xl:col-span-6">
+          <h2 className="text-[14px] font-medium text-black/55">{t("오늘 처리할 일", "Today's To-do")}</h2>
+          <p className="mt-2 text-sm text-black/55">{t("운영 우선순위를 바로 확인하고 해당 페이지로 이동하세요.", "Check operational priorities and jump to the related page.")}</p>
+          <div className="mt-5 grid gap-2">
+            {todoItems.map((item) => (
+              <Link
+                key={item.key}
+                href={item.href}
+                className="admin-hover-subtle flex items-center justify-between rounded-[14px] border border-black/10 bg-white px-3 py-2.5 transition-[background-color,border-color,color] duration-200 ease-out"
+              >
+                <span className="flex items-center gap-2 text-sm font-medium text-black/75">
+                  <span className={item.count > 0 ? "h-2 w-2 rounded-full bg-[color:var(--admin-accent)]" : "h-2 w-2 rounded-full bg-transparent"} />
+                  {item.label}
+                </span>
+                <span
+                  className={cn(
+                    "inline-flex min-w-9 items-center justify-center rounded-full border px-2 py-1 text-xs tabular-nums",
+                    item.count > 0
+                      ? "border-[rgba(232,46,92,0.25)] bg-[rgba(232,46,92,0.04)] font-semibold text-[color:var(--admin-accent)]"
+                      : "border-black/10 bg-black/[0.02] text-black/55",
+                  )}
+                >
+                  {item.count}
+                </span>
+              </Link>
+            ))}
           </div>
-        </section>
-      </div>
+          <p className="mt-4 text-xs text-black/50">
+            {t("누적 결제완료 매출", "Lifetime paid revenue")}: <span className="tabular-nums font-semibold text-black/80">{currency(totalRevenue)}</span>
+          </p>
+          <p className="mt-1 text-xs text-black/50">
+            {t("누적 객단가", "Lifetime AOV")}: <span className="tabular-nums font-semibold text-black/80">{currency(averageOrderValue)}</span>
+          </p>
+        </article>
+      </section>
     </div>
   );
 }
 
-type AnalyticsRange = "7d" | "30d" | "90d" | "all";
-type SalesInterval = "daily" | "weekly" | "monthly" | "yearly";
+type DashboardKpi = {
+  key: string;
+  label: string;
+  value: string;
+  delta: KpiDeltaState;
+  href: string;
+  sparkline: SparklineValue[];
+  sparklineType: "line" | "bar";
+  icon: "trending_up" | "receipt_long" | "inventory_2" | "toll";
+};
+
+type SparklineValue = number | string | null | undefined;
+
+type KpiDeltaState =
+  | { kind: "percent"; value: number }
+  | { kind: "up" }
+  | { kind: "flat" }
+  | { kind: "none" };
+
+type TrendPoint = {
+  key: string;
+  label: string;
+  revenue: number;
+  orders: number;
+  units: number;
+};
+
+type RichListItem = {
+  key: string;
+  href: string;
+  productSlug: string;
+  image: string;
+  name: string;
+  secondary: string;
+  valueLabel: string;
+  value: string;
+};
+
+type DashboardOrderRow = {
+  id: string;
+  customer: string;
+  status: Order["status"];
+  statusLabel: string;
+  total: number;
+  createdAt: string;
+};
+
+type OrdersTableLabels = {
+  orderNumber: string;
+  customer: string;
+  status: string;
+  amount: string;
+  createdAt: string;
+  action: string;
+  view: string;
+  empty: string;
+};
+
+function toNumericValue(value: SparklineValue): number | null {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value === "string") {
+    const normalized = value.replace(/[^0-9.-]/g, "");
+    if (!normalized || normalized === "-" || normalized === "." || normalized === "-.") {
+      return null;
+    }
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function countValidValues(series: SparklineValue[]): number {
+  return series.reduce((count, value) => (toNumericValue(value) === null ? count : count + 1), 0);
+}
+
+function hasEnoughData(series: SparklineValue[]): boolean {
+  if (series.length < 2) {
+    return false;
+  }
+  return countValidValues(series) >= 2;
+}
+
+function fillSeriesWithLocf(series: SparklineValue[]): SparklineValue[] {
+  const numericSeries = series.map((value) => toNumericValue(value));
+  const firstValid = numericSeries.find((value) => value !== null);
+  if (firstValid === undefined) {
+    return series;
+  }
+
+  let lastValid: number | null = null;
+  return numericSeries.map((value) => {
+    if (value !== null) {
+      lastValid = value;
+      return value;
+    }
+    if (lastValid !== null) {
+      return lastValid;
+    }
+    return firstValid;
+  });
+}
+
+function buildDisplayAovSparkline(
+  recentSeries: SparklineValue[],
+  expandedSeries: SparklineValue[],
+  minLength: number,
+): SparklineValue[] {
+  const recentValidCount = countValidValues(recentSeries);
+  const expandedValidCount = countValidValues(expandedSeries);
+
+  if (recentValidCount >= 2) {
+    return fillSeriesWithLocf(recentSeries);
+  }
+
+  if (recentValidCount === 1) {
+    if (expandedValidCount >= 2) {
+      const expandedFilled = fillSeriesWithLocf(expandedSeries);
+      const targetLength = Math.max(minLength, recentSeries.length, 7);
+      return expandedFilled.slice(-targetLength);
+    }
+    return fillSeriesWithLocf(recentSeries);
+  }
+
+  if (expandedValidCount > 0) {
+    const expandedFilled = fillSeriesWithLocf(expandedSeries);
+    const targetLength = Math.max(minLength, recentSeries.length, 7);
+    return expandedFilled.slice(-targetLength);
+  }
+
+  return recentSeries;
+}
+
+function DashboardKpiCard({
+  className,
+  label,
+  value,
+  delta,
+  href,
+  sparkline,
+  sparklineType,
+  icon,
+  noBaselineLabel,
+  upLabel,
+  deltaSuffix,
+}: {
+  className?: string;
+  label: string;
+  value: string;
+  delta: KpiDeltaState;
+  href: string;
+  sparkline: SparklineValue[];
+  sparklineType: "line" | "bar";
+  icon: "trending_up" | "receipt_long" | "inventory_2" | "toll";
+  noBaselineLabel: string;
+  upLabel: string;
+  deltaSuffix: string;
+}) {
+  const deltaText =
+    delta.kind === "percent"
+      ? `${delta.value >= 0 ? "▲" : "▼"} ${Math.abs(delta.value).toFixed(1)}% ${deltaSuffix}`
+      : delta.kind === "up"
+        ? upLabel
+        : delta.kind === "flat"
+          ? `0.0% ${deltaSuffix}`
+          : noBaselineLabel;
+  const trendDirection: "up" | "down" | "flat" =
+    delta.kind === "percent" ? (delta.value > 0 ? "up" : delta.value < 0 ? "down" : "flat") : delta.kind === "up" ? "up" : "flat";
+  const trendIcon = trendDirection === "up" ? "north_east" : trendDirection === "down" ? "south_east" : "remove";
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "admin-surface admin-hover-subtle group flex h-full items-end justify-between gap-3 p-5 transition-[background-color,border-color,color] duration-200 ease-out",
+        className,
+      )}
+    >
+      <div className="min-w-0">
+        <p className="flex items-center gap-1.5 text-[13px] font-medium text-black/55">
+          <span className="material-symbols-outlined text-[14px] text-black/45 transition-colors duration-200 ease-out group-hover:text-[color:var(--admin-accent)]">{icon}</span>
+          <span>{label}</span>
+        </p>
+        <p className="mt-2 tabular-nums text-[clamp(1.65rem,3vw,2.35rem)] font-semibold leading-none tracking-tight text-black/88">{value}</p>
+        <p className={cn("mt-3 text-[12px] font-medium", trendDirection === "up" ? "text-[color:var(--admin-accent)]" : trendDirection === "down" ? "text-black/60" : "text-black/45")}>
+          {deltaText}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-end gap-1">
+        <MiniSparkline values={sparkline} type={sparklineType} />
+        <span
+          className={cn(
+            "material-symbols-outlined mb-0.5 text-[14px] transition-colors duration-200 ease-out",
+            trendDirection === "flat" ? "text-black/35" : "text-black/45 group-hover:text-[color:var(--admin-accent)]",
+          )}
+        >
+          {trendIcon}
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+function MiniSparkline({
+  values,
+  type,
+}: {
+  values: SparklineValue[];
+  type: "line" | "bar";
+}) {
+  if (values.length === 0) {
+    return null;
+  }
+
+  const parsedValues = values.map((value) => toNumericValue(value));
+  const validEntries = parsedValues
+    .map((value, index) => (value === null ? null : { index, value }))
+    .filter((entry): entry is { index: number; value: number } => entry !== null);
+
+  if (validEntries.length === 0) {
+    return (
+      <div className="flex h-10 w-28 shrink-0 items-center justify-center gap-1.5">
+        <span className="h-[3px] w-[3px] rounded-full bg-black/35" />
+        <span className="h-[3px] w-[3px] rounded-full bg-black/35" />
+        <span className="h-[3px] w-[3px] rounded-full bg-black/35" />
+      </div>
+    );
+  }
+
+  const width = 108;
+  const height = 38;
+  const padding = 4;
+  const xForIndex = (index: number): number =>
+    parsedValues.length <= 1 ? width / 2 : padding + (index * (width - padding * 2)) / Math.max(1, parsedValues.length - 1);
+  const lastValidIndex = validEntries[validEntries.length - 1].index;
+
+  if (validEntries.length === 1) {
+    const singleX = xForIndex(lastValidIndex);
+    const singleY = height / 2;
+    return (
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-10 w-28 shrink-0" role="img" aria-hidden>
+        <circle cx={singleX} cy={singleY} r={2.8} fill="var(--admin-accent)" />
+      </svg>
+    );
+  }
+
+  if (!hasEnoughData(values)) {
+    return (
+      <div className="flex h-10 w-28 shrink-0 items-center justify-center gap-1.5">
+        <span className="h-[3px] w-[3px] rounded-full bg-black/35" />
+        <span className="h-[3px] w-[3px] rounded-full bg-black/35" />
+        <span className="h-[3px] w-[3px] rounded-full bg-black/35" />
+      </div>
+    );
+  }
+
+  const validNumbers = validEntries.map((entry) => entry.value);
+  const minValue = Math.min(...validNumbers);
+  const maxValue = Math.max(...validNumbers);
+  const range = maxValue - minValue;
+  const epsilon = 0.0001;
+  const isNearlyFlat = range < epsilon;
+  const normalize = (value: number): number => (isNearlyFlat ? 0.5 : (value - minValue) / range);
+  const yForValue = (value: number): number => height - padding - normalize(value) * (height - padding * 2);
+  const points = validEntries.map((entry) => ({
+    x: xForIndex(entry.index),
+    y: yForValue(entry.value),
+  }));
+
+  if (type === "bar") {
+    const slotWidth = width / Math.max(1, parsedValues.length);
+    const barWidth = Math.max(3.5, Math.min(6, slotWidth - 2));
+    return (
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-10 w-28 shrink-0" role="img" aria-hidden>
+        {parsedValues.map((value, index) => {
+          if (value === null) {
+            return null;
+          }
+          const barHeight = Math.max(2.2, normalize(value) * (height - padding * 2));
+          const x = index * slotWidth + (slotWidth - barWidth) / 2;
+          const y = height - padding - barHeight;
+          return (
+            <rect
+              key={`kpi-bar-${index}`}
+              x={x}
+              y={y}
+              width={barWidth}
+              height={barHeight}
+              rx={1.5}
+              fill={index === lastValidIndex ? "var(--admin-accent)" : "rgba(15,23,42,0.2)"}
+            />
+          );
+        })}
+      </svg>
+    );
+  }
+
+  const path = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" ");
+  const areaPath = `M ${points[0].x.toFixed(2)} ${(height - padding).toFixed(2)} L ${points.map((point) => `${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" L ")} L ${points[points.length - 1].x.toFixed(2)} ${(height - padding).toFixed(2)} Z`;
+  const previousPoint = points.length > 1 ? points[points.length - 2] : null;
+  const lastPoint = points[points.length - 1];
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="h-10 w-28 shrink-0" role="img" aria-hidden>
+      <path d={areaPath} fill="rgba(15,23,42,0.08)" />
+      <path d={path} fill="none" stroke="rgba(15,23,42,0.45)" strokeWidth="1.75" strokeLinecap="round" />
+      {previousPoint && <circle cx={previousPoint.x} cy={previousPoint.y} r={2.45} fill="white" stroke="rgba(15,23,42,0.35)" strokeWidth="1.2" />}
+      <circle cx={lastPoint.x} cy={lastPoint.y} r={2.8} fill="var(--admin-accent)" />
+    </svg>
+  );
+}
+function SegmentedControl({
+  value,
+  onChange,
+  options,
+}: {
+  value: "7d" | "30d" | "90d";
+  onChange: (next: "7d" | "30d" | "90d") => void;
+  options: Array<{ label: string; value: "7d" | "30d" | "90d" }>;
+}) {
+  return (
+    <div className="inline-flex rounded-2xl border border-black/10 bg-white p-1">
+      {options.map((option) => {
+        const isActive = option.value === value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+            className={cn(
+              "relative h-9 rounded-xl px-4 text-xs font-semibold transition-[background-color,color] duration-200 ease-out",
+              isActive ? "bg-[color:var(--admin-subtle-bg)] text-black/88" : "text-black/55 hover:bg-[color:var(--admin-subtle-bg)]",
+            )}
+          >
+            {option.label}
+            <span className={cn("absolute bottom-1 left-3 right-3 h-[2px] rounded-full", isActive ? "bg-[color:var(--admin-accent)]" : "bg-transparent")} />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function RevenueOrdersTrendChart({
+  data,
+  revenueLegend,
+  ordersLegend,
+  unitsLabel,
+  aovLabel,
+  emptyLabel,
+}: {
+  data: TrendPoint[];
+  revenueLegend: string;
+  ordersLegend: string;
+  unitsLabel: string;
+  aovLabel: string;
+  emptyLabel: string;
+}) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  if (data.length === 0) {
+    return <p className="rounded-2xl border border-black/10 bg-white p-4 text-sm text-black/55">{emptyLabel}</p>;
+  }
+
+  const formatCompactCurrency = (value: number): string => {
+    if (value >= 1000) {
+      return `$${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`;
+    }
+    if (value >= 100) {
+      return `$${value.toFixed(0)}`;
+    }
+    if (value >= 10) {
+      return `$${value.toFixed(1)}`;
+    }
+    return `$${value.toFixed(2)}`;
+  };
+
+  const formatTooltipDate = (key: string): string => {
+    const date = new Date(`${key}T00:00:00`);
+    if (!Number.isFinite(date.getTime())) {
+      return key;
+    }
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  };
+
+  const width = Math.max(620, data.length * 24);
+  const height = 236;
+  const leftPadding = 52;
+  const rightPadding = 12;
+  const topPadding = 14;
+  const bottomPadding = 24;
+  const chartBottom = height - bottomPadding;
+  const chartHeight = chartBottom - topPadding;
+  const plotWidth = width - leftPadding - rightPadding;
+  const slotWidth = plotWidth / Math.max(1, data.length);
+  const orderBarMaxHeight = chartHeight * 0.34;
+  const maxRevenue = Math.max(0, ...data.map((entry) => entry.revenue));
+  const revenueTickStep = 100;
+  const revenueAxisMax = Math.max(revenueTickStep, Math.ceil(maxRevenue / revenueTickStep) * revenueTickStep);
+  const revenueTickValues = Array.from(
+    { length: Math.floor(revenueAxisMax / revenueTickStep) + 1 },
+    (_, index) => revenueAxisMax - index * revenueTickStep,
+  );
+  const maxOrders = Math.max(1, ...data.map((entry) => entry.orders));
+
+  const points = data.map((entry, index) => {
+    const x = leftPadding + slotWidth * index + slotWidth / 2;
+    const revenueY = chartBottom - (entry.revenue / revenueAxisMax) * chartHeight;
+    const orderBarHeight = (entry.orders / maxOrders) * orderBarMaxHeight;
+    const hasEvent = entry.revenue > 0 || entry.orders > 0;
+    const aov = entry.orders > 0 ? entry.revenue / entry.orders : null;
+    return { ...entry, x, revenueY, orderBarHeight, hasEvent, aov };
+  });
+
+  const lastIndex = points.length - 1;
+  const linePath = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.revenueY.toFixed(2)}`).join(" ");
+  const areaPath = `M ${points[0].x.toFixed(2)} ${chartBottom.toFixed(2)} L ${points.map((point) => `${point.x.toFixed(2)} ${point.revenueY.toFixed(2)}`).join(" L ")} L ${points[points.length - 1].x.toFixed(2)} ${chartBottom.toFixed(2)} Z`;
+
+  const safeHoveredIndex = hoveredIndex === null ? null : Math.max(0, Math.min(points.length - 1, hoveredIndex));
+  const hoveredPoint = safeHoveredIndex === null ? null : points[safeHoveredIndex];
+  const tooltipLeft = hoveredPoint ? Math.max(90, Math.min(width - 90, hoveredPoint.x)) : 0;
+
+  return (
+    <div className="overflow-x-auto">
+      <div className="relative mx-auto min-w-[620px]" style={{ width }}>
+        {hoveredPoint && (
+          <div
+            className="pointer-events-none absolute z-[3] -translate-x-1/2 rounded-[13px] border border-black/10 bg-white px-3 py-2 text-xs text-black/75"
+            style={{ left: tooltipLeft, top: 8 }}
+          >
+            <p className="mb-1 tabular-nums text-[11px] text-black/55">{formatTooltipDate(hoveredPoint.key)}</p>
+            <p className="tabular-nums font-semibold text-black/88">{revenueLegend}: {currency(hoveredPoint.revenue)}</p>
+            <p className="mt-0.5 tabular-nums">{ordersLegend}: {hoveredPoint.orders.toLocaleString()}</p>
+            <p className="mt-0.5 tabular-nums">{unitsLabel}: {hoveredPoint.units.toLocaleString()}</p>
+            {hoveredPoint.aov !== null && <p className="mt-0.5 tabular-nums">{aovLabel}: {currency(hoveredPoint.aov)}</p>}
+          </div>
+        )}
+
+        <svg viewBox={`0 0 ${width} ${height}`} className="h-[180px] w-full md:h-[220px] xl:h-[260px]" role="img" aria-hidden>
+          {revenueTickValues.map((tickValue) => {
+            const y = chartBottom - (tickValue / revenueAxisMax) * chartHeight;
+            return (
+              <g key={`grid-${tickValue}`}>
+                <line x1={leftPadding} x2={width - rightPadding} y1={y} y2={y} stroke="rgba(15,23,42,0.08)" strokeWidth="1" />
+                <text x={leftPadding - 8} y={y + 3} textAnchor="end" fontSize="10" fill="rgba(0,0,0,0.45)">
+                  {formatCompactCurrency(tickValue)}
+                </text>
+              </g>
+            );
+          })}
+
+          {points.map((point) => (
+            <rect
+              key={`orders-bar-${point.key}`}
+              x={point.x - 1.6}
+              y={chartBottom - Math.max(1.5, point.orderBarHeight)}
+              width={3.2}
+              height={Math.max(1.5, point.orderBarHeight)}
+              rx={1}
+              fill="rgba(15,23,42,0.18)"
+            />
+          ))}
+
+          <path d={areaPath} fill="rgba(15,23,42,0.08)" />
+          <path d={linePath} fill="none" stroke="rgba(15,23,42,0.58)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+
+          {points.map((point, index) => {
+            if (index === lastIndex) {
+              return (
+                <g key={`point-${point.key}`}>
+                  <circle cx={point.x} cy={point.revenueY} r="5.1" fill="none" stroke="rgba(15,23,42,0.22)" strokeWidth="1" />
+                  <circle cx={point.x} cy={point.revenueY} r="3.7" fill="var(--admin-accent)" stroke="#fff" strokeWidth="1.4" />
+                </g>
+              );
+            }
+            if (!point.hasEvent) {
+              return null;
+            }
+            return (
+              <g key={`point-${point.key}`}>
+                <circle cx={point.x} cy={point.revenueY} r="4.4" fill="none" stroke="rgba(15,23,42,0.16)" strokeWidth="1" />
+                <circle cx={point.x} cy={point.revenueY} r="2.5" fill="#fff" stroke="rgba(15,23,42,0.45)" strokeWidth="1.1" />
+              </g>
+            );
+          })}
+
+          {points.map((point) =>
+            point.label ? (
+              <text key={`label-${point.key}`} x={point.x} y={height - 6} textAnchor="middle" fontSize="10" fill="rgba(0,0,0,0.45)">
+                {point.label}
+              </text>
+            ) : null,
+          )}
+
+          {points.map((point, index) => (
+            <rect
+              key={`hover-hit-${point.key}`}
+              x={leftPadding + slotWidth * index}
+              y={topPadding}
+              width={slotWidth}
+              height={chartHeight + bottomPadding}
+              fill="transparent"
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseMove={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+            />
+          ))}
+        </svg>
+      </div>
+
+      <div className="mt-1.5 flex items-center gap-5 text-xs text-black/55">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-3 rounded-[4px] bg-black/12" />
+          {revenueLegend}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-3 w-[3px] rounded-full bg-black/20" />
+          {ordersLegend}
+        </span>
+      </div>
+    </div>
+  );
+}
+function ProductRichList({ title, emptyLabel, items }: { title: string; emptyLabel: string; items: RichListItem[] }) {
+  return (
+    <article className="admin-surface p-5">
+        <h3 className="text-[14px] font-medium text-black/55">{title}</h3>
+      <div className="mt-4 grid gap-2">
+        {items.length === 0 && <p className="rounded-[14px] border border-black/10 bg-white p-3 text-sm text-black/55">{emptyLabel}</p>}
+        {items.map((item) => (
+          <article
+            key={item.key}
+            className="admin-hover-subtle group relative flex items-center gap-3 rounded-[14px] border border-black/10 bg-white px-3 py-2.5 transition-[background-color,border-color,color,opacity] duration-200 ease-out"
+          >
+            <span className="absolute bottom-2 left-0 top-2 w-[2px] rounded-full bg-[color:var(--admin-accent)] opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100" />
+            <Link href={item.href} className="flex min-w-0 flex-1 items-center gap-3">
+              <img src={item.image} alt={item.name} className="h-11 w-11 rounded-[13px] border border-black/10 object-cover" loading="lazy" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-black/85">{item.name}</p>
+                <p className="mt-1 truncate text-xs text-black/55">{item.secondary}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[11px] text-black/45">{item.valueLabel}</p>
+                <p className="tabular-nums text-sm font-semibold text-black/85">{item.value}</p>
+              </div>
+            </Link>
+            <div className="ml-2 hidden items-center gap-1 opacity-0 transition-opacity duration-200 ease-out sm:flex group-hover:opacity-100">
+              <Link
+                href={`/product/${item.productSlug}`}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-black/10 text-[color:var(--admin-accent)]"
+                aria-label={`view-product-${item.productSlug}`}
+              >
+                <span className="material-symbols-outlined text-[14px]">visibility</span>
+              </Link>
+              <Link
+                href={`/admin/products/edit/${item.productSlug}`}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-black/10 text-[color:var(--admin-accent)]"
+                aria-label={`edit-product-${item.productSlug}`}
+              >
+                <span className="material-symbols-outlined text-[14px]">edit</span>
+              </Link>
+            </div>
+          </article>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function OrderStatusPill({ status, label }: { status: Order["status"]; label: string }) {
+  const isCritical = status === "pending" || status === "processing" || status === "cancelled";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium",
+        isCritical
+          ? "border-[rgba(232,46,92,0.25)] bg-[rgba(232,46,92,0.04)] text-[color:var(--admin-accent)]"
+          : "border-black/10 bg-black/[0.02] text-black/60",
+      )}
+    >
+      {label}
+    </span>
+  );
+}
+
+function OrdersTable({ rows, labels }: { rows: DashboardOrderRow[]; labels: OrdersTableLabels }) {
+  if (rows.length === 0) {
+    return <p className="hidden rounded-2xl border border-black/10 bg-white p-4 text-sm text-black/55 md:block">{labels.empty}</p>;
+  }
+
+  return (
+    <div className="hidden overflow-x-auto rounded-2xl border border-black/10 md:block">
+      <table className="min-w-full border-collapse text-sm">
+        <thead className="sticky top-0 z-[1] bg-white">
+          <tr className="border-b border-black/10 text-xs uppercase tracking-[0.12em] text-black/45">
+            <th className="px-4 py-3 text-left font-medium">{labels.orderNumber}</th>
+            <th className="px-4 py-3 text-left font-medium">{labels.customer}</th>
+            <th className="px-4 py-3 text-left font-medium">{labels.status}</th>
+            <th className="px-4 py-3 text-right font-medium">{labels.amount}</th>
+            <th className="px-4 py-3 text-right font-medium">{labels.createdAt}</th>
+            <th className="px-4 py-3 text-right font-medium">{labels.action}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.id} className="admin-hover-subtle border-b border-black/5 transition-[background-color,border-color] duration-200 ease-out last:border-b-0">
+              <td className="px-4 py-3">
+                <Link href={`/admin/orders/${row.id}`} className="font-semibold text-black/85 transition-colors duration-200 ease-out hover:text-[color:var(--admin-accent)]">
+                  {row.id}
+                </Link>
+              </td>
+              <td className="px-4 py-3 text-black/70">{row.customer}</td>
+              <td className="px-4 py-3">
+                <OrderStatusPill status={row.status} label={row.statusLabel} />
+              </td>
+              <td className="px-4 py-3 text-right tabular-nums font-semibold text-black/85">{currency(row.total)}</td>
+              <td className="px-4 py-3 text-right tabular-nums text-black/55">{formatDate(row.createdAt)}</td>
+              <td className="px-4 py-3 text-right">
+                <Link href={`/admin/orders/${row.id}`} className="inline-flex items-center justify-end text-xs font-semibold text-[color:var(--admin-accent)] transition-colors duration-200 ease-out hover:text-black/80">
+                  {labels.view}
+                </Link>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+type AnalyticsRange = "7d" | "30d" | "90d" | "ytd" | "custom" | "180d" | "all";
+type SalesInterval = "daily" | "weekly" | "monthly";
 type SalesSeriesPoint = {
   key: string;
   label: string;
@@ -419,21 +1226,70 @@ function AdminAnalyticsView() {
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
   const [range, setRange] = useState<AnalyticsRange>("30d");
   const [salesInterval, setSalesInterval] = useState<SalesInterval>("daily");
+  const [compareEnabled, setCompareEnabled] = useState(true);
   const [analysisNow] = useState<number>(() => Date.now());
-
-  const rangeDays = range === "all" ? null : Number(range.replace("d", ""));
-  const rangeStart = rangeDays ? analysisNow - rangeDays * 24 * 60 * 60 * 1000 : null;
   const toTimestamp = (value: string): number => {
     const parsed = new Date(value).getTime();
     return Number.isFinite(parsed) ? parsed : 0;
   };
-  const isInRange = (value: string): boolean => {
+  const toInputDate = (timestamp: number): string => {
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+  const [customDateRange, setCustomDateRange] = useState(() => {
+    const end = new Date(analysisNow);
+    end.setHours(0, 0, 0, 0);
+    const start = new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000);
+    return {
+      start: toInputDate(start.getTime()),
+      end: toInputDate(end.getTime()),
+    };
+  });
+
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const startOfToday = new Date(analysisNow);
+  startOfToday.setHours(0, 0, 0, 0);
+  const todayStart = startOfToday.getTime();
+  const ytdStart = new Date(startOfToday.getFullYear(), 0, 1).getTime();
+  const customStartInput = toTimestamp(`${customDateRange.start}T00:00:00`);
+  const customEndInput = toTimestamp(`${customDateRange.end}T23:59:59.999`);
+  const customStart = customStartInput > 0 ? customStartInput : todayStart - 29 * DAY_MS;
+  const customEnd = customEndInput > 0 ? customEndInput : todayStart + DAY_MS - 1;
+  const customRangeStart = Math.min(customStart, customEnd);
+  const customRangeEnd = Math.max(customStart, customEnd);
+  const customRangeDays = Math.max(1, Math.floor((customRangeEnd - customRangeStart) / DAY_MS) + 1);
+  const rangeDays =
+    range === "all"
+      ? 180
+      : range === "ytd"
+        ? Math.max(1, Math.floor((todayStart - ytdStart) / DAY_MS) + 1)
+        : range === "custom"
+          ? customRangeDays
+        : Number(range.replace("d", ""));
+  const rangeStart =
+    range === "all"
+      ? null
+      : range === "ytd"
+        ? ytdStart
+        : range === "custom"
+          ? customRangeStart
+        : todayStart - (Math.max(1, rangeDays) - 1) * DAY_MS;
+  const rangeEnd = range === "custom" ? customRangeEnd : null;
+  const previousRange = compareEnabled && rangeStart !== null
+    ? { start: rangeStart - rangeDays * DAY_MS, end: rangeStart }
+    : null;
+  const isInRange = useCallback((value: string): boolean => {
     const timestamp = toTimestamp(value);
     if (timestamp <= 0) {
       return false;
     }
-    return rangeStart === null || timestamp >= rangeStart;
-  };
+    const isAfterStart = rangeStart === null || timestamp >= rangeStart;
+    const isBeforeEnd = rangeEnd === null || timestamp <= rangeEnd;
+    return isAfterStart && isBeforeEnd;
+  }, [rangeEnd, rangeStart]);
 
   const ordersInRange = db.orders.filter((order) => isInRange(order.createdAt));
   const paidOrders = ordersInRange.filter((order) => order.paymentStatus === "paid" && order.status !== "cancelled");
@@ -471,6 +1327,42 @@ function AdminAnalyticsView() {
   const activeCustomers = paidOrderCountByUser.size;
   const repeatCustomers = [...paidOrderCountByUser.values()].filter((count) => count >= 2).length;
   const repeatCustomerRate = activeCustomers > 0 ? (repeatCustomers / activeCustomers) * 100 : 0;
+  const pendingReviews = db.reviews.filter((review) => !review.approved).length;
+  const openInquiries = db.inquiries.filter((inquiry) => inquiry.status !== "resolved").length;
+  const activeCoupons = db.coupons.filter((coupon) => coupon.active).length;
+
+  const previousOrdersInRange = previousRange
+    ? db.orders.filter((order) => {
+        const timestamp = toTimestamp(order.createdAt);
+        return timestamp > 0 && timestamp >= previousRange.start && timestamp < previousRange.end;
+      })
+    : [];
+  const previousPaidOrders = previousOrdersInRange.filter((order) => order.paymentStatus === "paid" && order.status !== "cancelled");
+  const previousTotalRevenue = previousPaidOrders.reduce((sum, order) => sum + order.total, 0);
+  const previousPaidOrderCount = previousPaidOrders.length;
+  const previousAov = previousPaidOrderCount > 0 ? previousTotalRevenue / previousPaidOrderCount : 0;
+  const previousOrderConversionRate = totalProductViews > 0 ? (previousPaidOrderCount / totalProductViews) * 100 : 0;
+
+  const buildDeltaState = (current: number, previous: number | null): KpiDeltaState => {
+    if (!compareEnabled || previous === null || !Number.isFinite(current) || !Number.isFinite(previous)) {
+      return { kind: "none" };
+    }
+    if (previous === 0) {
+      if (current > 0) {
+        return { kind: "up" };
+      }
+      return { kind: "flat" };
+    }
+    return { kind: "percent", value: ((current - previous) / previous) * 100 };
+  };
+  const riskItems = [
+    { key: "risk-unpaid", label: t("미결제 주문", "Unpaid Orders"), count: unpaidOrders.length, href: "/admin/orders" },
+    { key: "risk-cancelled", label: t("취소 주문", "Cancelled Orders"), count: cancelledOrders.length, href: "/admin/orders" },
+    { key: "risk-refund", label: t("환불 요청", "Refund Requests"), count: refundRequestedOrders.length, href: "/admin/orders" },
+    { key: "risk-reviews", label: t("검수 대기 리뷰", "Pending Reviews"), count: pendingReviews, href: "/admin/reviews" },
+    { key: "risk-inquiries", label: t("미해결 문의", "Open Inquiries"), count: openInquiries, href: "/admin/inquiries" },
+    { key: "risk-coupons", label: t("활성 쿠폰", "Active Coupons"), count: activeCoupons, href: "/admin/coupons" },
+  ];
 
   const productBySlug = new Map(db.products.map((product) => [product.slug, product]));
   const productStatsMap = new Map(
@@ -583,6 +1475,41 @@ function AdminAnalyticsView() {
     orders: dailyOrdersMap[key],
   }));
   const maxTrendRevenue = Math.max(1, ...trendData.map((entry) => entry.revenue));
+  const sparklineSlice = trendData.slice(-Math.min(14, trendData.length));
+  const topKpis = [
+    {
+      key: "analytics-kpi-revenue",
+      label: t("총매출", "Total Revenue"),
+      value: currency(totalRevenue),
+      delta: buildDeltaState(totalRevenue, previousTotalRevenue),
+      sparkline: sparklineSlice.map((point) => point.revenue),
+      sparklineType: "line" as const,
+    },
+    {
+      key: "analytics-kpi-orders",
+      label: t("주문수", "Orders"),
+      value: paidOrderCount.toLocaleString(),
+      delta: buildDeltaState(paidOrderCount, previousPaidOrderCount),
+      sparkline: sparklineSlice.map((point) => point.orders),
+      sparklineType: "bar" as const,
+    },
+    {
+      key: "analytics-kpi-aov",
+      label: t("객단가(AOV)", "AOV"),
+      value: currency(aov),
+      delta: buildDeltaState(aov, previousAov),
+      sparkline: sparklineSlice.map((point) => (point.orders > 0 ? point.revenue / point.orders : null)),
+      sparklineType: "line" as const,
+    },
+    {
+      key: "analytics-kpi-conversion",
+      label: t("전환율", "Conversion"),
+      value: `${orderConversionRate.toFixed(1)}%`,
+      delta: buildDeltaState(orderConversionRate, previousOrderConversionRate),
+      sparkline: totalProductViews > 0 ? sparklineSlice.map((point) => (point.orders / totalProductViews) * 100) : sparklineSlice.map(() => 0),
+      sparklineType: "line" as const,
+    },
+  ];
 
   const rangeLabel =
     range === "7d"
@@ -591,12 +1518,21 @@ function AdminAnalyticsView() {
         ? t("최근 30일", "Last 30 days")
         : range === "90d"
           ? t("최근 90일", "Last 90 days")
-          : t("전체 기간", "All time");
+          : range === "ytd"
+            ? t("연초 이후", "Year to date")
+            : range === "custom"
+              ? `${customDateRange.start} ~ ${customDateRange.end}`
+            : range === "180d"
+              ? t("최근 180일", "Last 180 days")
+              : t("전체 기간", "All time");
+  const customRangeValue = range === "180d" || range === "all" || range === "custom" ? range : "custom";
 
   const salesIntervalData = useMemo<Record<SalesInterval, SalesSeriesPoint[]>>(() => {
     const DAY_MS = 24 * 60 * 60 * 1000;
     const now = new Date(analysisNow);
-    const paidOrdersAllTime = db.orders.filter((order) => order.paymentStatus === "paid" && order.status !== "cancelled");
+    const paidOrdersForSeries = db.orders.filter(
+      (order) => order.paymentStatus === "paid" && order.status !== "cancelled" && isInRange(order.createdAt),
+    );
     const formatDateKey = (timestamp: number): string => {
       const date = new Date(timestamp);
       const year = date.getUTCFullYear();
@@ -689,21 +1625,11 @@ function AdminAnalyticsView() {
         label: monthLabel(bucketStart),
       };
     });
-    const currentYear = now.getUTCFullYear();
-    const yearlyBuckets = Array.from({ length: 5 }, (_, index) => {
-      const year = currentYear - (4 - index);
-      return {
-        key: String(year),
-        label: String(year),
-      };
-    });
-
     const dailyMap = createMetricsMap(dailyBuckets.map((bucket) => bucket.key));
     const weeklyMap = createMetricsMap(weeklyBuckets.map((bucket) => bucket.key));
     const monthlyMap = createMetricsMap(monthlyBuckets.map((bucket) => bucket.key));
-    const yearlyMap = createMetricsMap(yearlyBuckets.map((bucket) => bucket.key));
 
-    paidOrdersAllTime.forEach((order) => {
+    paidOrdersForSeries.forEach((order) => {
       const createdAt = new Date(order.createdAt).getTime();
       if (!Number.isFinite(createdAt) || createdAt <= 0) {
         return;
@@ -712,28 +1638,24 @@ function AdminAnalyticsView() {
       const dayKey = formatDateKey(createdAt);
       const weekKey = formatDateKey(getUtcWeekStart(createdAt));
       const monthKey = formatMonthKey(createdAt);
-      const yearKey = String(new Date(createdAt).getUTCFullYear());
 
       addOrderToBucket(dailyMap, dayKey, order.total, units);
       addOrderToBucket(weeklyMap, weekKey, order.total, units);
       addOrderToBucket(monthlyMap, monthKey, order.total, units);
-      addOrderToBucket(yearlyMap, yearKey, order.total, units);
     });
 
     return {
       daily: toSeries(dailyBuckets, dailyMap),
       weekly: toSeries(weeklyBuckets, weeklyMap),
       monthly: toSeries(monthlyBuckets, monthlyMap),
-      yearly: toSeries(yearlyBuckets, yearlyMap),
     };
-  }, [analysisNow, db.orders, locale]);
+  }, [analysisNow, db.orders, isInRange, locale]);
 
   const activeSalesSeries = salesIntervalData[salesInterval];
   const salesSeriesTotalRevenue = activeSalesSeries.reduce((sum, entry) => sum + entry.revenue, 0);
   const salesSeriesTotalOrders = activeSalesSeries.reduce((sum, entry) => sum + entry.orders, 0);
   const salesSeriesTotalUnits = activeSalesSeries.reduce((sum, entry) => sum + entry.units, 0);
   const salesSeriesAverageRevenue = activeSalesSeries.length > 0 ? salesSeriesTotalRevenue / activeSalesSeries.length : 0;
-  const salesSeriesMaxRevenue = Math.max(1, ...activeSalesSeries.map((entry) => entry.revenue));
   const salesSeriesPeak = activeSalesSeries.reduce<SalesSeriesPoint | null>((best, entry) => {
     if (!best || entry.revenue > best.revenue) {
       return entry;
@@ -745,87 +1667,173 @@ function AdminAnalyticsView() {
       ? t("일간", "Daily")
       : salesInterval === "weekly"
         ? t("주간", "Weekly")
-        : salesInterval === "monthly"
-          ? t("월간", "Monthly")
-          : t("연간", "Yearly");
+        : t("월간", "Monthly");
   const salesSeriesWindowLabel =
     salesInterval === "daily"
       ? t("최근 14일", "Last 14 days")
       : salesInterval === "weekly"
         ? t("최근 12주", "Last 12 weeks")
-        : salesInterval === "monthly"
-          ? t("최근 12개월", "Last 12 months")
-          : t("최근 5년", "Last 5 years");
+        : t("최근 12개월", "Last 12 months");
 
   return (
-    <div className="grid gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t("통계", "Analytics")}</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            {t("매출, 전환율, 고객 행동 지표를 추적합니다.", "Track revenue, conversion, and customer behavior metrics.")}
-          </p>
+    <div className="mx-auto grid w-full max-w-[1200px] gap-6">
+      <header className="admin-surface p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-[28px] font-semibold tracking-tight text-black/88">{t("통계", "Analytics")}</h1>
+            <p className="mt-1 text-sm text-black/55">{t("매출, 주문, 전환 지표를 동일 톤으로 스캔합니다.", "Scan revenue, orders, and conversion in a consistent layout.")}</p>
+          </div>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="inline-flex rounded-2xl border border-black/10 bg-white p-1">
+              {([
+                { label: "7D", value: "7d" },
+                { label: "30D", value: "30d" },
+                { label: "90D", value: "90d" },
+                { label: "YTD", value: "ytd" },
+              ] as Array<{ label: string; value: AnalyticsRange }>).map((option) => {
+                const active = range === option.value;
+                return (
+                  <button
+                    key={`analytics-range-${option.value}`}
+                    type="button"
+                    onClick={() => setRange(option.value)}
+                    className={cn(
+                      "relative h-9 rounded-xl px-4 text-xs font-semibold transition-[background-color,color] duration-200 ease-out",
+                      active ? "bg-[color:var(--admin-subtle-bg)] text-black/88" : "text-black/55 hover:bg-[color:var(--admin-subtle-bg)]",
+                    )}
+                  >
+                    {option.label}
+                    <span className={cn("absolute bottom-1 left-3 right-3 h-[2px] rounded-full", active ? "bg-[color:var(--admin-accent)]" : "bg-transparent")} />
+                  </button>
+                );
+              })}
+            </div>
+            <select
+              className="admin-input h-10 rounded-2xl px-3 text-sm text-black/75"
+              value={customRangeValue}
+              onChange={(event) => {
+                const next = event.target.value as AnalyticsRange | "custom";
+                if (next === "custom") {
+                  setRange("custom");
+                } else {
+                  setRange(next);
+                }
+              }}
+            >
+              <option value="custom">{t("커스텀", "Custom")}</option>
+              <option value="180d">180D</option>
+              <option value="all">{t("전체 기간", "All time")}</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => setCompareEnabled((prev) => !prev)}
+              className={cn(
+                "admin-ghost-button inline-flex h-10 items-center gap-2 px-3 text-xs font-semibold",
+                compareEnabled && "border-[rgba(232,46,92,0.28)] text-[color:var(--admin-accent)]",
+              )}
+            >
+              <span className={cn("inline-flex h-2.5 w-2.5 rounded-full border", compareEnabled ? "border-[color:var(--admin-accent)] bg-[color:var(--admin-accent)]" : "border-black/20")} />
+              {t("전기간 대비", "Compare previous")}
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <label className="text-xs uppercase tracking-[0.14em] font-semibold text-slate-500">{t("기간", "Range")}</label>
-          <select
-            className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm"
-            value={range}
-            onChange={(event) => setRange(event.target.value as AnalyticsRange)}
-          >
-            <option value="7d">{t("7일", "7 days")}</option>
-            <option value="30d">{t("30일", "30 days")}</option>
-            <option value="90d">{t("90일", "90 days")}</option>
-            <option value="all">{t("\uC804\uCCB4", "All")}</option>
-          </select>
-        </div>
-      </div>
+        {range === "custom" && (
+          <div className="mt-4 flex flex-wrap items-end gap-2 sm:justify-end">
+            <label className="grid gap-1">
+              <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-black/45">{t("시작일", "Start")}</span>
+              <input
+                type="date"
+                className="admin-input h-10 rounded-2xl px-3 text-sm text-black/78"
+                value={customDateRange.start}
+                onChange={(event) => setCustomDateRange((prev) => ({ ...prev, start: event.target.value }))}
+                max={customDateRange.end || undefined}
+              />
+            </label>
+            <label className="grid gap-1">
+              <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-black/45">{t("종료일", "End")}</span>
+              <input
+                type="date"
+                className="admin-input h-10 rounded-2xl px-3 text-sm text-black/78"
+                value={customDateRange.end}
+                onChange={(event) => setCustomDateRange((prev) => ({ ...prev, end: event.target.value }))}
+                min={customDateRange.start || undefined}
+              />
+            </label>
+          </div>
+        )}
+      </header>
 
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-xl font-semibold text-slate-900">{t("핵심 지표", "Key Metrics")}</h2>
-          <p className="text-xs text-slate-500">{rangeLabel}</p>
+      <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-12">
+        {topKpis.map((kpi) => (
+          <div key={kpi.key} className="xl:col-span-3">
+            <AnalyticsTopKpiCard
+              label={kpi.label}
+              value={kpi.value}
+              delta={kpi.delta}
+              sparkline={kpi.sparkline}
+              sparklineType={kpi.sparklineType}
+              deltaSuffix={t("전기간 대비", "vs previous")}
+              upLabel={t("상승", "Up")}
+              noBaselineLabel={t("기준 없음", "No baseline")}
+            />
+          </div>
+        ))}
+      </section>
+
+      <section className="admin-surface p-6">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 className="text-[14px] font-medium text-black/55">{t("보조 지표", "Secondary KPI")}</h2>
+          <p className="text-xs text-black/45">{rangeLabel}</p>
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <AnalyticsCard label={t("결제 완료 매출", "Total Revenue")} value={currency(totalRevenue)} hint={t("결제 완료 주문 기준", "Paid orders only")} />
-          <AnalyticsCard label={t("할인 전 총매출", "Gross Sales")} value={currency(grossSales)} hint={t("할인 적용 전", "Before discounts")} />
-          <AnalyticsCard label={t("순매출", "Net Sales")} value={currency(netSales)} hint={t("할인 적용 후", "After discounts")} />
-          <AnalyticsCard label={t("할인 금액", "Discount Amount")} value={currency(discountTotal)} hint={t("프로모션 포함", "Promotions included")} />
-          <AnalyticsCard label={t("결제 완료 주문", "Paid Orders")} value={String(paidOrderCount)} />
-          <AnalyticsCard label={t("평균 객단가", "Average Order Value")} value={currency(aov)} />
-          <AnalyticsCard label={t("판매 수량", "Units Sold")} value={String(totalUnitsSold)} />
-          <AnalyticsCard label={t("주문당 수량", "Units / Order")} value={unitsPerOrder.toFixed(2)} />
-          <AnalyticsCard label={t("상품 조회수", "Product Views")} value={String(totalProductViews)} hint={t("누적 조회수", "Lifetime views")} />
-          <AnalyticsCard label={t("주문 전환율", "Order Conversion")} value={`${orderConversionRate.toFixed(1)}%`} />
-          <AnalyticsCard label={t("조회당 판매수", "Units per View")} value={`${unitConversionRate.toFixed(1)}%`} />
-          <AnalyticsCard label={t("신규 고객", "New Customers")} value={String(newCustomers)} hint={t("선택 기간 가입", "Joined in selected range")} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-12">
+          {[
+            { key: "gross", group: t("매출", "Revenue"), label: t("할인 전 총매출", "Gross Sales"), value: currency(grossSales) },
+            { key: "net", group: t("매출", "Revenue"), label: t("순매출", "Net Sales"), value: currency(netSales) },
+            { key: "discount", group: t("매출", "Revenue"), label: t("할인 금액", "Discount"), value: currency(discountTotal) },
+            { key: "units", group: t("주문", "Orders"), label: t("판매수량", "Units Sold"), value: totalUnitsSold.toLocaleString() },
+            { key: "upo", group: t("주문", "Orders"), label: t("주문당 수량", "Units / Order"), value: unitsPerOrder.toFixed(2) },
+            { key: "cancel", group: t("주문", "Orders"), label: t("취소율", "Cancellation"), value: `${cancellationRate.toFixed(1)}%` },
+            { key: "refund-rate", group: t("주문", "Orders"), label: t("환불 요청률", "Refund Request Rate"), value: `${refundRequestRate.toFixed(1)}%` },
+            { key: "views", group: t("트래픽", "Traffic"), label: t("상품 조회수", "Product Views"), value: totalProductViews.toLocaleString() },
+            { key: "upv", group: t("트래픽", "Traffic"), label: t("조회당 판매율", "Units / View"), value: `${unitConversionRate.toFixed(1)}%` },
+            { key: "new-customer", group: t("트래픽", "Traffic"), label: t("신규 고객", "New Customers"), value: newCustomers.toLocaleString() },
+            { key: "active-customer", group: t("트래픽", "Traffic"), label: t("결제 고객 수", "Paying Customers"), value: activeCustomers.toLocaleString() },
+            { key: "repeat", group: t("트래픽", "Traffic"), label: t("재구매율", "Repeat Rate"), value: `${repeatCustomerRate.toFixed(1)}%` },
+          ].map((metric) => (
+            <article key={metric.key} className="admin-surface p-4 xl:col-span-3">
+              <p className="text-[11px] font-medium text-black/45">{metric.group}</p>
+              <p className="mt-2 text-[13px] font-medium text-black/60">{metric.label}</p>
+              <p className="mt-1.5 tabular-nums text-lg font-semibold text-black/86">{metric.value}</p>
+            </article>
+          ))}
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+      <section className="admin-surface p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">{t("판매 주기 분석", "Sales Cycle Analysis")}</h2>
-            <p className="text-sm text-slate-500 mt-1">
-              {t("일간, 주간, 월간, 연간 단위로 판매 흐름을 비교합니다.", "Compare sales flow across daily, weekly, monthly, and yearly periods.")}
+            <h2 className="text-[14px] font-medium text-black/55">{t("판매 주기 분석", "Sales Cycle Analysis")}</h2>
+            <p className="text-sm text-black/55 mt-1">
+              {t("선택된 기간 필터 기준으로 일간/주간/월간 흐름을 확인합니다.", "Review daily, weekly, and monthly flow within the selected range.")}
             </p>
           </div>
-          <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
+          <div className="inline-flex items-center gap-1 rounded-2xl border border-black/10 bg-white p-1">
             {([
               { value: "daily", label: t("일간", "Daily") },
               { value: "weekly", label: t("주간", "Weekly") },
               { value: "monthly", label: t("월간", "Monthly") },
-              { value: "yearly", label: t("연간", "Yearly") },
             ] as Array<{ value: SalesInterval; label: string }>).map((option) => (
               <button
                 key={`sales-period-${option.value}`}
                 type="button"
-                className={`h-8 rounded-full px-3 text-xs font-semibold transition ${
-                  salesInterval === option.value ? "bg-[#e6194c] text-white shadow-sm" : "text-slate-600 hover:bg-white"
-                }`}
+                className={cn(
+                  "relative h-9 rounded-xl px-4 text-xs font-semibold transition-[background-color,color] duration-200 ease-out",
+                  salesInterval === option.value ? "bg-[color:var(--admin-subtle-bg)] text-black/88" : "text-black/55 hover:bg-[color:var(--admin-subtle-bg)]",
+                )}
                 onClick={() => setSalesInterval(option.value)}
               >
                 {option.label}
+                <span className={cn("absolute bottom-1 left-3 right-3 h-[2px] rounded-full", salesInterval === option.value ? "bg-[color:var(--admin-accent)]" : "bg-transparent")} />
               </button>
             ))}
           </div>
@@ -853,33 +1861,15 @@ function AdminAnalyticsView() {
           />
         </div>
 
-        <div className="mt-6 overflow-x-auto pb-1">
-          <div className="min-w-[640px] rounded-xl border border-[#f7e9ef] bg-gradient-to-b from-[#fff8fb] to-white p-4">
-            <div
-              className="h-52 grid gap-2"
-              style={{
-                gridTemplateColumns: `repeat(${Math.max(activeSalesSeries.length, 1)}, minmax(0, 1fr))`,
-              }}
-            >
-              {activeSalesSeries.map((entry) => {
-                const barHeight = entry.revenue > 0 ? Math.max(8, (entry.revenue / salesSeriesMaxRevenue) * 138) : 3;
-                return (
-                  <div key={`${salesInterval}-${entry.key}`} className="flex min-w-0 flex-col justify-end">
-                    <div className="h-36 flex items-end justify-center">
-                      <div
-                        className="w-5 rounded-t-md bg-[#e6194c]/20 overflow-hidden"
-                        title={`${entry.label}: ${currency(entry.revenue)} / ${entry.orders.toLocaleString()} ${t("주문", "orders")}`}
-                      >
-                        <div className="w-full rounded-t-md bg-[#e6194c]" style={{ height: `${barHeight}px` }} />
-                      </div>
-                    </div>
-                    <p className="mt-2 truncate text-center text-[11px] font-semibold text-slate-500">{entry.label}</p>
-                    <p className="text-center text-[10px] text-slate-400">{entry.orders.toLocaleString()}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        <div className="mt-6">
+          <AnalyticsSalesCycleBarChart
+            data={activeSalesSeries}
+            revenueLegend={t("매출", "Revenue")}
+            ordersLegend={t("주문", "Orders")}
+            unitsLegend={t("판매수량", "Units")}
+            aovLegend={t("객단가", "AOV")}
+            emptyLabel={t("차트 데이터가 없습니다.", "No chart data")}
+          />
         </div>
 
         <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
@@ -889,24 +1879,24 @@ function AdminAnalyticsView() {
         </div>
       </section>
 
-      <div className="grid lg:grid-cols-2 gap-6 items-start">
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-slate-900">{t("매출 추이", "Revenue Trend")}</h2>
+      <div className="grid gap-6 xl:grid-cols-12 items-start">
+        <section className="admin-surface p-6 xl:col-span-7">
+          <h2 className="text-[14px] font-medium text-black/55">{t("매출 추이", "Revenue Trend")}</h2>
           <div className="mt-5 grid gap-3">
             {trendData.map((entry) => (
-              <div key={entry.key} className="grid grid-cols-[54px_minmax(0,1fr)_138px] items-center gap-3">
-                <p className="text-xs font-semibold text-slate-500">{entry.label}</p>
-                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+              <div key={entry.key} className="grid grid-cols-[58px_minmax(0,1fr)_138px] items-center gap-3">
+                <p className="text-xs font-semibold text-black/52">{entry.label}</p>
+                <div className="h-2 rounded-full bg-black/[0.06] overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-[#e6194c]"
+                    className="h-full rounded-full bg-black/20"
                     style={{
-                      width: `${entry.revenue > 0 ? Math.max(8, (entry.revenue / maxTrendRevenue) * 100) : 0}%`,
+                      width: `${entry.revenue > 0 ? Math.max(2, (entry.revenue / maxTrendRevenue) * 100) : 0}%`,
                     }}
                   />
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-semibold text-slate-700">{currency(entry.revenue)}</p>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="tabular-nums text-xs font-semibold text-black/82">{currency(entry.revenue)}</p>
+                  <p className="text-[11px] text-black/50">
                     {entry.orders} {t("주문", "orders")}
                   </p>
                 </div>
@@ -915,94 +1905,97 @@ function AdminAnalyticsView() {
           </div>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 self-start h-fit">
-          <h2 className="text-xl font-semibold text-slate-900">{t("운영 리스크", "Operational Risks")}</h2>
-          <div className="mt-5 grid gap-3">
-            <Row label={t("전체 주문", "All Orders")} value={String(ordersInRange.length)} />
-            <Row label={t("미결제 주문", "Unpaid Orders")} value={String(unpaidOrders.length)} />
-            <Row label={t("취소 주문", "Cancelled Orders")} value={String(cancelledOrders.length)} />
-            <Row label={t("취소율", "Cancellation Rate")} value={`${cancellationRate.toFixed(1)}%`} />
-            <Row label={t("환불 요청", "Refund Requests")} value={String(refundRequestedOrders.length)} />
-            <Row label={t("환불 요청률", "Refund Request Rate")} value={`${refundRequestRate.toFixed(1)}%`} />
-            <Row label={t("결제 고객 수", "Paying Customers")} value={String(activeCustomers)} />
-            <Row label={t("재구매 고객", "Repeat Customers")} value={`${repeatCustomers} (${repeatCustomerRate.toFixed(1)}%)`} />
-          </div>
-        </section>
-      </div>
-
-      <div className="grid xl:grid-cols-2 gap-6">
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-slate-900">{t("매출 상위 상품", "Top Revenue Products")}</h2>
-          <div className="mt-4 grid gap-3">
-            {topRevenueProducts.length === 0 && (
-              <p className="text-sm text-slate-500">{t("선택 기간의 매출 데이터가 없습니다.", "No sales data for this range.")}</p>
-            )}
-            {topRevenueProducts.map((entry) => (
-              <article key={`analytics-revenue-${entry.slug}`} className="rounded-lg border border-slate-200 p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-semibold text-slate-900 line-clamp-1">{entry.name}</p>
-                  <p className="text-xs font-semibold text-[#e6194c]">{currency(entry.revenue)}</p>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                  <span>{t("수량", "Units")}: {entry.unitsSold}</span>
-                  <span>{t("주문", "Orders")}: {entry.orderCount}</span>
-                  <span>{t("조회수", "Views")}: {entry.views}</span>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-slate-900">{t("조회수 상위 상품", "Top Viewed Products")}</h2>
-          <div className="mt-4 grid gap-3">
-            {topViewedProducts.length === 0 && (
-              <p className="text-sm text-slate-500">{t("조회 데이터가 아직 없습니다.", "No view data yet.")}</p>
-            )}
-            {topViewedProducts.map((entry) => (
-              <article key={`analytics-view-${entry.slug}`} className="rounded-lg border border-slate-200 p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-semibold text-slate-900 line-clamp-1">{entry.name}</p>
-                  <p className="text-xs font-semibold text-[#e6194c]">{entry.views.toLocaleString()}</p>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                  <span>{t("수량", "Units")}: {entry.unitsSold}</span>
-                  <span>{t("전환율", "Conversion")}: {entry.unitConversionRate.toFixed(1)}%</span>
-                </div>
-              </article>
+        <section className="admin-surface p-6 self-start h-fit xl:col-span-5">
+          <h2 className="text-[14px] font-medium text-black/55">{t("운영 리스크", "Operational Risks")}</h2>
+          <p className="mt-2 text-sm text-black/55">{t("0이 아닌 항목을 우선 처리하세요.", "Prioritize items with non-zero counts.")}</p>
+          <div className="mt-5 grid gap-2.5">
+            {riskItems.map((item) => (
+              <Link
+                key={item.key}
+                href={item.href}
+                className="admin-hover-subtle flex items-center justify-between rounded-[14px] border border-black/10 bg-white px-3 py-2.5 transition-[background-color,border-color,color] duration-200 ease-out"
+              >
+                <span className="flex items-center gap-2 text-sm font-medium text-black/74">
+                  <span className={cn("h-2 w-2 rounded-full", item.count > 0 ? "bg-[color:var(--admin-accent)]" : "bg-transparent")} />
+                  {item.label}
+                </span>
+                <span
+                  className={cn(
+                    "inline-flex min-w-9 items-center justify-center rounded-full border px-2 py-1 text-xs tabular-nums",
+                    item.count > 0
+                      ? "border-[rgba(232,46,92,0.25)] bg-[rgba(232,46,92,0.04)] font-semibold text-[color:var(--admin-accent)]"
+                      : "border-black/10 bg-black/[0.02] text-black/55",
+                  )}
+                >
+                  {item.count}
+                </span>
+              </Link>
             ))}
           </div>
         </section>
       </div>
 
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-slate-900">{t("컬렉션 성과", "Collection Performance")}</h2>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[760px] text-sm">
-            <thead>
-              <tr className="text-left text-slate-500 border-b border-slate-200">
-                <th className="py-2 pr-3">{t("컬렉션", "Collection")}</th>
-                <th className="py-2 pr-3">{t("조회수", "Views")}</th>
-                <th className="py-2 pr-3">{t("수량", "Units")}</th>
-                <th className="py-2 pr-3">{t("주문", "Orders")}</th>
-                <th className="py-2 pr-3">{t("매출", "Revenue")}</th>
-                <th className="py-2">{t("전환율", "Conversion")}</th>
+      <div className="grid gap-6 xl:grid-cols-12">
+        <AnalyticsProductList
+          className="xl:col-span-6"
+          title={t("매출 상위 상품", "Top Revenue Products")}
+          emptyLabel={t("선택 기간의 매출 데이터가 없습니다.", "No sales data for this range.")}
+          viewLabel={t("보기", "View")}
+          items={topRevenueProducts.map((entry) => ({
+            key: `analytics-revenue-${entry.slug}`,
+            slug: entry.slug,
+            name: entry.name,
+            image: productBySlug.get(entry.slug)?.images[0] ?? null,
+            secondary: `${t("조회", "Views")} ${entry.views.toLocaleString()} | ${t("주문", "Orders")} ${entry.orderCount.toLocaleString()}`,
+            valueLabel: t("매출", "Revenue"),
+            value: currency(entry.revenue),
+          }))}
+        />
+        <AnalyticsProductList
+          className="xl:col-span-6"
+          title={t("조회수 상위 상품", "Top Viewed Products")}
+          emptyLabel={t("조회 데이터가 아직 없습니다.", "No view data yet.")}
+          viewLabel={t("보기", "View")}
+          items={topViewedProducts.map((entry) => ({
+            key: `analytics-view-${entry.slug}`,
+            slug: entry.slug,
+            name: entry.name,
+            image: productBySlug.get(entry.slug)?.images[0] ?? null,
+            secondary: `${t("전환", "Conversion")} ${entry.unitConversionRate.toFixed(1)}% | ${t("주문", "Orders")} ${entry.orderCount.toLocaleString()}`,
+            valueLabel: t("조회수", "Views"),
+            value: entry.views.toLocaleString(),
+          }))}
+        />
+      </div>
+
+      <section className="admin-surface p-6">
+        <h2 className="text-[14px] font-medium text-black/55">{t("컬렉션 성과", "Collection Performance")}</h2>
+        <div className="mt-4 overflow-x-auto rounded-2xl border border-black/10">
+          <table className="w-full min-w-[760px] border-collapse text-sm">
+            <thead className="sticky top-0 z-[1] bg-white">
+              <tr className="border-b border-black/10 text-xs uppercase tracking-[0.12em] text-black/45">
+                <th className="px-4 py-3 text-left font-medium">{t("컬렉션", "Collection")}</th>
+                <th className="px-4 py-3 text-right font-medium">{t("조회수", "Views")}</th>
+                <th className="px-4 py-3 text-right font-medium">{t("수량", "Units")}</th>
+                <th className="px-4 py-3 text-right font-medium">{t("주문", "Orders")}</th>
+                <th className="px-4 py-3 text-right font-medium">{t("매출", "Revenue")}</th>
+                <th className="px-4 py-3 text-right font-medium">{t("전환율", "Conversion")}</th>
               </tr>
             </thead>
             <tbody>
               {collectionStats.map((entry) => (
-                <tr key={`analytics-collection-${entry.slug}`} className="border-b border-slate-100 last:border-b-0">
-                  <td className="py-3 pr-3 font-semibold text-slate-900">{entry.name}</td>
-                  <td className="py-3 pr-3 text-slate-600">{entry.views.toLocaleString()}</td>
-                  <td className="py-3 pr-3 text-slate-600">{entry.unitsSold.toLocaleString()}</td>
-                  <td className="py-3 pr-3 text-slate-600">{entry.orderCount.toLocaleString()}</td>
-                  <td className="py-3 pr-3 text-slate-900 font-medium">{currency(entry.revenue)}</td>
-                  <td className="py-3 text-slate-600">{entry.unitConversionRate.toFixed(1)}%</td>
+                <tr key={`analytics-collection-${entry.slug}`} className="admin-hover-subtle border-b border-black/5 transition-[background-color,border-color] duration-200 ease-out last:border-b-0">
+                  <td className="px-4 py-3 font-semibold text-black/84">{entry.name}</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-black/62">{entry.views.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-black/62">{entry.unitsSold.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-black/62">{entry.orderCount.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-right tabular-nums font-semibold text-black/84">{currency(entry.revenue)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-black/62">{entry.unitConversionRate.toFixed(1)}%</td>
                 </tr>
               ))}
               {collectionStats.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center text-slate-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-black/52">
                     {t("컬렉션 통계 데이터가 없습니다.", "No collection analytics available.")}
                   </td>
                 </tr>
@@ -1012,22 +2005,27 @@ function AdminAnalyticsView() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-slate-900">{t("개선이 필요한 상품", "Products to Improve")}</h2>
-        <p className="text-sm text-slate-500 mt-1">
-          {t("조회수가 의미 있게 있지만 전환이 낮은 상품입니다.", "Products with meaningful views but low conversion.")}
+      <section className="admin-surface p-6">
+        <h2 className="text-[14px] font-medium text-black/55">{t("개인화 인사이트", "Personalized Insights")}</h2>
+        <p className="text-sm text-black/55 mt-1">
+          {t("조회는 높지만 전환이 낮은 상품을 추려 개선 우선순위를 제안합니다.", "Highlights products with high views but low conversion for optimization.")}
         </p>
         <div className="mt-4 grid gap-3">
           {lowConversionProducts.length === 0 && (
-            <p className="text-sm text-slate-500">{t("조건에 맞는 상품이 없습니다.", "No products match this condition.")}</p>
+            <div className="rounded-2xl border border-black/10 bg-white p-4">
+              <p className="text-sm text-black/55">{t("현재 개선이 필요한 상품이 없습니다.", "No products need immediate optimization.")}</p>
+              <Link href="/admin/products" className="mt-3 inline-flex h-9 items-center rounded-xl border border-black/10 px-3 text-xs font-semibold text-[color:var(--admin-accent)] transition-colors duration-200 ease-out hover:text-black/80">
+                {t("상품 보러가기", "Go to products")}
+              </Link>
+            </div>
           )}
           {lowConversionProducts.map((entry) => (
-            <article key={`analytics-low-conv-${entry.slug}`} className="rounded-lg border border-slate-200 p-3">
+            <article key={`analytics-low-conv-${entry.slug}`} className="rounded-2xl border border-black/10 bg-white p-4">
               <div className="flex items-start justify-between gap-2">
-                <p className="font-semibold text-slate-900 line-clamp-1">{entry.name}</p>
-                <p className="text-xs font-semibold text-amber-600">{entry.unitConversionRate.toFixed(1)}%</p>
+                <p className="font-semibold text-black/84 line-clamp-1">{entry.name}</p>
+                <p className="text-xs tabular-nums font-semibold text-[color:var(--admin-accent)]">{entry.unitConversionRate.toFixed(1)}%</p>
               </div>
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+              <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-black/55">
                 <span>{t("조회수", "Views")}: {entry.views}</span>
                 <span>{t("수량", "Units")}: {entry.unitsSold}</span>
                 <span>{t("매출", "Revenue")}: {currency(entry.revenue)}</span>
@@ -1040,11 +2038,10 @@ function AdminAnalyticsView() {
   );
 }
 
-function AdminProductsView() {
+function AdminProductsView({ editSlug }: { editSlug?: string | null }) {
   const { db, upsertProduct, deleteProduct, locale } = useStore();
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
-  const [editingSlug, setEditingSlug] = useState<string | null>(null);
-  const [form, setForm] = useState({
+  const buildEmptyForm = () => ({
     slug: "",
     name: "",
     shortDescription: "",
@@ -1054,19 +2051,23 @@ function AdminProductsView() {
     image: "",
     collectionSlugs: "",
   });
+  const toProductForm = (product: Product) => ({
+    slug: product.slug,
+    name: resolveText(product.name, locale),
+    shortDescription: resolveText(product.shortDescription, locale),
+    price: String(product.price),
+    freeShipping: Boolean(product.freeShipping),
+    category: product.category,
+    image: product.images[0] ?? "",
+    collectionSlugs: product.collectionSlugs.join(","),
+  });
+  const initialEditProduct = editSlug ? db.products.find((entry) => entry.slug === editSlug) ?? null : null;
+  const [editingSlug, setEditingSlug] = useState<string | null>(initialEditProduct?.slug ?? null);
+  const [form, setForm] = useState(() => (initialEditProduct ? toProductForm(initialEditProduct) : buildEmptyForm()));
 
   const reset = () => {
     setEditingSlug(null);
-    setForm({
-      slug: "",
-      name: "",
-      shortDescription: "",
-      price: "0",
-      freeShipping: false,
-      category: "serum",
-      image: "",
-      collectionSlugs: "",
-    });
+    setForm(buildEmptyForm());
   };
 
   const save = () => {
@@ -1146,7 +2147,7 @@ function AdminProductsView() {
         <label className="inline-flex items-center gap-2 text-sm text-slate-700">
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-slate-300 text-[#e6194c] focus:ring-[#e6194c]"
+            className="h-4 w-4 rounded border-slate-300 text-[#e82e5c] focus:ring-[#e82e5c]"
             checked={form.freeShipping}
             onChange={(event) => setForm((prev) => ({ ...prev, freeShipping: event.target.checked }))}
           />
@@ -1154,7 +2155,7 @@ function AdminProductsView() {
         </label>
         <InputField label={t("이미지 URL", "Image URL")} value={form.image} onChange={(value) => setForm((prev) => ({ ...prev, image: value }))} />
         <div className="flex gap-2">
-          <button type="button" className="h-11 px-6 rounded-xl bg-[#e6194c] text-white text-sm" onClick={save}>
+          <button type="button" className="h-11 px-6 rounded-xl bg-[#e82e5c] text-white text-sm" onClick={save}>
             {editingSlug ? t("저장", "Update") : t("생성", "Create")}
           </button>
           {editingSlug && (
@@ -1176,7 +2177,7 @@ function AdminProductsView() {
                   {product.slug} - {currency(product.price)}
                 </p>
                 {product.freeShipping && (
-                  <p className="text-xs font-medium text-[#e6194c] mt-1">{t("무료배송 적용", "Free shipping enabled")}</p>
+                  <p className="text-xs font-medium text-[#e82e5c] mt-1">{t("무료배송 적용", "Free shipping enabled")}</p>
                 )}
               </div>
               <div className="flex gap-2">
@@ -1185,16 +2186,7 @@ function AdminProductsView() {
                   className="h-10 px-4 rounded-full border border-slate-300 text-sm"
                   onClick={() => {
                     setEditingSlug(product.slug);
-                    setForm({
-                      slug: product.slug,
-                      name: resolveText(product.name, locale),
-                      shortDescription: resolveText(product.shortDescription, locale),
-                      price: String(product.price),
-                      freeShipping: Boolean(product.freeShipping),
-                      category: product.category,
-                      image: product.images[0] ?? "",
-                      collectionSlugs: product.collectionSlugs.join(","),
-                    });
+                    setForm(toProductForm(product));
                   }}
                 >
                   {t("수정", "Edit")}
@@ -1263,7 +2255,7 @@ function AdminCollectionsView() {
           onChange={(value) => setForm((prev) => ({ ...prev, productSlugs: value }))}
         />
         <InputField label={t("정렬 순서", "Sort Order")} value={form.sortOrder} onChange={(value) => setForm((prev) => ({ ...prev, sortOrder: value }))} />
-        <button type="button" className="h-11 px-6 rounded-xl bg-[#e6194c] text-white text-sm w-fit" onClick={save}>
+        <button type="button" className="h-11 px-6 rounded-xl bg-[#e82e5c] text-white text-sm w-fit" onClick={save}>
           {editingSlug ? t("저장", "Update") : t("생성", "Create")}
         </button>
       </section>
@@ -1729,7 +2721,7 @@ function AdminOrderDetailView({ id }: { id: string }) {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <nav className="flex items-center gap-2 text-sm text-slate-500 mb-2">
-              <Link className="hover:text-[#e6194c] transition-colors" href="/admin/orders">
+              <Link className="hover:text-[#e82e5c] transition-colors" href="/admin/orders">
                 {t("주문", "Orders")}
               </Link>
               <span className="material-symbols-outlined text-xs">chevron_right</span>
@@ -1762,7 +2754,7 @@ function AdminOrderDetailView({ id }: { id: string }) {
             </button>
             <div className="relative">
               <button
-                className="inline-flex items-center justify-center rounded-lg bg-[#e6194c] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#e6194c]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-[#e6194c] focus:ring-offset-2"
+                className="inline-flex items-center justify-center rounded-lg bg-[#e82e5c] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#e82e5c]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-[#e82e5c] focus:ring-offset-2"
                 onClick={() => setStatusMenuOpen((prev) => !prev)}
                 type="button"
               >
@@ -1854,7 +2846,7 @@ function AdminOrderDetailView({ id }: { id: string }) {
                 <div className="h-px bg-slate-200 my-1" />
                 <div className="flex justify-between items-center text-base">
                   <span className="font-semibold text-slate-900">{t("합계", "Total")}</span>
-                  <span className="text-xl font-bold text-[#e6194c]">{currency(order.total)}</span>
+                  <span className="text-xl font-bold text-[#e82e5c]">{currency(order.total)}</span>
                 </div>
               </div>
             </div>
@@ -1864,14 +2856,14 @@ function AdminOrderDetailView({ id }: { id: string }) {
             <h3 className="text-base font-semibold text-slate-900 mb-4">{t("내부 메모", "Internal Notes")}</h3>
             <div className="relative">
               <textarea
-                className="w-full rounded-lg border-slate-200 bg-slate-50 text-slate-900 text-sm focus:border-[#e6194c] focus:ring-[#e6194c] placeholder:text-slate-400"
+                className="w-full rounded-lg border-slate-200 bg-slate-50 text-slate-900 text-sm focus:border-[#e82e5c] focus:ring-[#e82e5c] placeholder:text-slate-400"
                 placeholder={t("이 주문에 대한 운영 메모를 남겨주세요.", "Add an internal note for this order.")}
                 rows={3}
                 value={noteInput}
                 onChange={(event) => setNoteInput(event.target.value)}
               />
               <button
-                className="absolute bottom-2 right-2 p-1.5 bg-white rounded-md text-slate-400 hover:text-[#e6194c] shadow-sm border border-slate-100 transition-colors"
+                className="absolute bottom-2 right-2 p-1.5 bg-white rounded-md text-slate-400 hover:text-[#e82e5c] shadow-sm border border-slate-100 transition-colors"
                 onClick={() => {
                   if (!noteInput.trim()) {
                     return;
@@ -1913,12 +2905,12 @@ function AdminOrderDetailView({ id }: { id: string }) {
             </div>
             <div className="p-6 space-y-6">
               <div className="flex items-start gap-4">
-                <div className="h-12 w-12 rounded-full bg-[#e6194c]/10 flex items-center justify-center text-[#e6194c] flex-shrink-0">
+                <div className="h-12 w-12 rounded-full bg-[#e82e5c]/10 flex items-center justify-center text-[#e82e5c] flex-shrink-0">
                   <span className="material-symbols-outlined">person</span>
                 </div>
                 <div>
                   <h4 className="text-sm font-semibold text-slate-900">{customer?.name ?? t("비회원 고객", "Guest Customer")}</h4>
-                  <a className="text-sm text-[#e6194c] hover:underline block mt-0.5" href={`mailto:${customer?.email ?? "guest@example.com"}`}>
+                  <a className="text-sm text-[#e82e5c] hover:underline block mt-0.5" href={`mailto:${customer?.email ?? "guest@example.com"}`}>
                     {customer?.email ?? "guest@example.com"}
                   </a>
                   <p className="text-sm text-slate-500 mt-0.5">{order.shippingAddress.phone || "+1 (555) 000-0000"}</p>
@@ -2001,14 +2993,14 @@ function AdminOrderDetailView({ id }: { id: string }) {
                   </div>
                 </div>
                 <div className="relative">
-                  <span className="absolute -left-[21px] top-1 h-3.5 w-3.5 rounded-full border-[3px] border-white bg-[#e6194c]" />
+                  <span className="absolute -left-[21px] top-1 h-3.5 w-3.5 rounded-full border-[3px] border-white bg-[#e82e5c]" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-slate-900">{t("결제", "Payment")} {order.paymentStatus === "paid" ? t("확인됨", "Verified") : t("대기", "Pending")}</span>
                     <span className="text-xs text-slate-500 mt-0.5">{formatDate(order.createdAt, locale)}</span>
                   </div>
                 </div>
                 <div className="relative">
-                  <span className="absolute -left-[21px] top-1 h-3.5 w-3.5 rounded-full border-[3px] border-white bg-[#e6194c]" />
+                  <span className="absolute -left-[21px] top-1 h-3.5 w-3.5 rounded-full border-[3px] border-white bg-[#e82e5c]" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-slate-900">{t("주문 접수", "Order Placed")}</span>
                     <span className="text-xs text-slate-500 mt-0.5">{formatDate(order.createdAt, locale)}</span>
@@ -2018,7 +3010,7 @@ function AdminOrderDetailView({ id }: { id: string }) {
             </div>
             <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 rounded-b-xl">
               <button
-                className="w-full text-center text-sm font-medium text-[#e6194c] hover:text-[#e6194c]/80 transition-colors"
+                className="w-full text-center text-sm font-medium text-[#e82e5c] hover:text-[#e82e5c]/80 transition-colors"
                 onClick={() => setShowFullHistory((prev) => !prev)}
                 type="button"
               >
@@ -2164,7 +3156,7 @@ function AdminJournalView() {
             onChange={(event) => setForm((prev) => ({ ...prev, content: event.target.value }))}
           />
         </div>
-        <button type="button" className="h-11 px-6 rounded-xl bg-[#e6194c] text-white text-sm w-fit" onClick={save}>
+        <button type="button" className="h-11 px-6 rounded-xl bg-[#e82e5c] text-white text-sm w-fit" onClick={save}>
           {t("아티클 저장", "Save Article")}
         </button>
       </section>
@@ -2272,7 +3264,7 @@ function AdminBannersView() {
           <InputField label={t("CTA 문구", "CTA Text")} value={form.ctaText} onChange={(value) => setForm((prev) => ({ ...prev, ctaText: value }))} />
           <InputField label={t("CTA 경로", "CTA Href")} value={form.ctaHref} onChange={(value) => setForm((prev) => ({ ...prev, ctaHref: value }))} />
         </div>
-        <button type="button" className="h-11 px-6 rounded-xl bg-[#e6194c] text-white text-sm w-fit" onClick={save}>
+        <button type="button" className="h-11 px-6 rounded-xl bg-[#e82e5c] text-white text-sm w-fit" onClick={save}>
           {t("배너 저장", "Save Banner")}
         </button>
       </section>
@@ -2359,7 +3351,7 @@ function AdminCouponsView() {
           <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} />
           {t("활성화", "Active")}
         </label>
-        <button type="button" className="h-11 px-6 rounded-xl bg-[#e6194c] text-white text-sm w-fit" onClick={save}>
+        <button type="button" className="h-11 px-6 rounded-xl bg-[#e82e5c] text-white text-sm w-fit" onClick={save}>
           {t("쿠폰 저장", "Save Coupon")}
         </button>
       </section>
@@ -2540,7 +3532,7 @@ function AdminInquiriesView() {
                 <div>
                   <label className="text-xs uppercase tracking-[0.15em] font-semibold text-slate-500">{t("\uAD00\uB9AC\uC790 \uBA54\uBAA8", "Admin Note")}</label>
                   <textarea
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:border-[#e6194c] focus:outline-none"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:border-[#e82e5c] focus:outline-none"
                     rows={3}
                     value={inquiry.adminNote}
                     onChange={(event) =>
@@ -2590,7 +3582,7 @@ function AdminSettingsView() {
         <div className="flex gap-2 flex-wrap">
           <button
             type="button"
-            className="h-11 px-6 rounded-xl bg-[#e6194c] text-white text-sm"
+            className="h-11 px-6 rounded-xl bg-[#e82e5c] text-white text-sm"
             onClick={() => {
               upsertSettings({
                 ...db.settings,
@@ -2622,23 +3614,285 @@ function AdminSettingsView() {
   );
 }
 
-function AnalyticsCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
+function AnalyticsTopKpiCard({
+  label,
+  value,
+  delta,
+  sparkline,
+  sparklineType,
+  deltaSuffix,
+  upLabel,
+  noBaselineLabel,
+}: {
+  label: string;
+  value: string;
+  delta: KpiDeltaState;
+  sparkline: SparklineValue[];
+  sparklineType: "line" | "bar";
+  deltaSuffix: string;
+  upLabel: string;
+  noBaselineLabel: string;
+}) {
+  const deltaText =
+    delta.kind === "percent"
+      ? `${delta.value >= 0 ? "▲" : "▼"} ${Math.abs(delta.value).toFixed(1)}% ${deltaSuffix}`
+      : delta.kind === "up"
+        ? upLabel
+        : delta.kind === "flat"
+          ? `0.0% ${deltaSuffix}`
+          : noBaselineLabel;
+  const direction: "up" | "down" | "flat" =
+    delta.kind === "percent"
+      ? delta.value > 0
+        ? "up"
+        : delta.value < 0
+          ? "down"
+          : "flat"
+      : delta.kind === "up"
+        ? "up"
+        : "flat";
+  const trendIcon = direction === "up" ? "north_east" : direction === "down" ? "south_east" : "remove";
+
   return (
-    <article className="rounded-xl border border-[#f7e9ef] bg-[#fff8fb] px-4 py-4">
-      <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-slate-500">{label}</p>
-      <p className="text-2xl font-semibold tracking-tight text-slate-900 mt-2">{value}</p>
-      {hint && <p className="text-xs text-slate-500 mt-2">{hint}</p>}
+    <article className="admin-surface admin-hover-subtle flex h-full items-end justify-between gap-3 p-5">
+      <div className="min-w-0">
+        <p className="text-[13px] font-medium text-black/55">{label}</p>
+        <p className="mt-2 tabular-nums text-[clamp(1.75rem,2.8vw,2.2rem)] font-semibold leading-none tracking-tight text-black/88">{value}</p>
+        <p className={cn("mt-3 text-[12px] font-medium", direction === "up" ? "text-[color:var(--admin-accent)]" : direction === "down" ? "text-black/62" : "text-black/45")}>
+          {deltaText}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-end gap-1">
+        <MiniSparkline values={sparkline} type={sparklineType} />
+        <span
+          className={cn(
+            "material-symbols-outlined mb-0.5 text-[14px]",
+            direction === "up" ? "text-[color:var(--admin-accent)]" : direction === "down" ? "text-black/55" : "text-black/35",
+          )}
+        >
+          {trendIcon}
+        </span>
+      </div>
     </article>
   );
 }
 
-function SummaryCard({ label, value, href }: { label: string; value: string; href: string }) {
+function AnalyticsSalesCycleBarChart({
+  data,
+  revenueLegend,
+  ordersLegend,
+  unitsLegend,
+  aovLegend,
+  emptyLabel,
+}: {
+  data: SalesSeriesPoint[];
+  revenueLegend: string;
+  ordersLegend: string;
+  unitsLegend: string;
+  aovLegend: string;
+  emptyLabel: string;
+}) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  if (data.length === 0) {
+    return <p className="rounded-2xl border border-black/10 bg-white p-4 text-sm text-black/55">{emptyLabel}</p>;
+  }
+
+  const formatCompactCurrency = (value: number): string => {
+    if (value >= 1000) {
+      return `$${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`;
+    }
+    return `$${value.toFixed(0)}`;
+  };
+
+  const width = 1000;
+  const height = 250;
+  const leftPadding = 56;
+  const rightPadding = 16;
+  const topPadding = 14;
+  const bottomPadding = 28;
+  const chartBottom = height - bottomPadding;
+  const chartHeight = chartBottom - topPadding;
+  const plotWidth = width - leftPadding - rightPadding;
+  const slotWidth = plotWidth / Math.max(1, data.length);
+  const barWidth = Math.max(9, Math.min(28, slotWidth - 8));
+
+  const maxRevenue = Math.max(0, ...data.map((entry) => entry.revenue));
+  const tickStep = Math.max(100, Math.ceil(maxRevenue / 3 / 100) * 100);
+  const axisMax = Math.max(tickStep * 3, Math.ceil(maxRevenue / tickStep) * tickStep, 100);
+  const tickValues = [axisMax, Math.max(axisMax - tickStep, 0), Math.max(axisMax - tickStep * 2, 0), 0];
+
+  const topIndices = new Set(
+    [...data]
+      .map((entry, index) => ({ index, revenue: entry.revenue }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 2)
+      .filter((entry) => entry.revenue > 0)
+      .map((entry) => entry.index),
+  );
+
+  const points = data.map((entry, index) => {
+    const barHeight = Math.max(entry.revenue > 0 ? 3 : 1.5, (entry.revenue / axisMax) * chartHeight);
+    const x = leftPadding + slotWidth * index + (slotWidth - barWidth) / 2;
+    const y = chartBottom - barHeight;
+    const aov = entry.orders > 0 ? entry.revenue / entry.orders : null;
+    return {
+      ...entry,
+      x,
+      y,
+      barHeight,
+      centerX: x + barWidth / 2,
+      aov,
+    };
+  });
+
+  const labelStep = data.length <= 8 ? 1 : data.length <= 14 ? 2 : 3;
+  const safeHoveredIndex = hoveredIndex === null ? null : Math.max(0, Math.min(points.length - 1, hoveredIndex));
+  const hovered = safeHoveredIndex === null ? null : points[safeHoveredIndex];
+  const tooltipLeft = hovered ? Math.max(120, Math.min(width - 120, hovered.centerX)) : 0;
+
   return (
-    <Link href={href} className="rounded-xl border border-slate-200 bg-white shadow-sm p-5 hover:border-[#e6194c] transition">
-      <p className="text-xs uppercase tracking-[0.14em] text-slate-500 font-semibold">{label}</p>
-      <p className="text-4xl font-semibold tracking-tight text-slate-900 mt-2">{value}</p>
-    </Link>
+    <div className="relative overflow-x-auto">
+      <div className="relative min-w-[700px]">
+        {hovered && (
+          <div
+            className="pointer-events-none absolute z-[3] -translate-x-1/2 rounded-[14px] border border-black/10 bg-white px-3 py-2 text-xs text-black/75"
+            style={{ left: tooltipLeft, top: 8 }}
+          >
+            <p className="mb-1 tabular-nums text-[11px] text-black/55">{hovered.label}</p>
+            <p className="tabular-nums font-semibold text-black/88">{revenueLegend}: {currency(hovered.revenue)}</p>
+            <p className="mt-0.5 tabular-nums">{ordersLegend}: {hovered.orders.toLocaleString()}</p>
+            <p className="mt-0.5 tabular-nums">{unitsLegend}: {hovered.units.toLocaleString()}</p>
+            {hovered.aov !== null && <p className="mt-0.5 tabular-nums">{aovLegend}: {currency(hovered.aov)}</p>}
+          </div>
+        )}
+
+        <svg viewBox={`0 0 ${width} ${height}`} className="h-[180px] w-full md:h-[220px] xl:h-[260px]" role="img" aria-hidden>
+          {tickValues.map((tick) => {
+            const y = chartBottom - (tick / axisMax) * chartHeight;
+            return (
+              <g key={`tick-${tick}`}>
+                <line x1={leftPadding} y1={y} x2={width - rightPadding} y2={y} stroke="rgba(15,23,42,0.08)" strokeWidth="1" />
+                <text x={leftPadding - 8} y={y + 3} textAnchor="end" fontSize="10" fill="rgba(0,0,0,0.45)">
+                  {formatCompactCurrency(tick)}
+                </text>
+              </g>
+            );
+          })}
+
+          {points.map((point, index) => (
+            <rect
+              key={`series-${point.key}`}
+              x={point.x}
+              y={point.y}
+              width={barWidth}
+              height={point.barHeight}
+              rx={3}
+              fill={topIndices.has(index) ? "var(--admin-accent)" : "rgba(15,23,42,0.2)"}
+            />
+          ))}
+
+          {points.map((point, index) =>
+            index % labelStep === 0 || index === points.length - 1 ? (
+              <text key={`label-${point.key}`} x={point.centerX} y={height - 7} textAnchor="middle" fontSize="10" fill="rgba(0,0,0,0.45)">
+                {point.label}
+              </text>
+            ) : null,
+          )}
+
+          {points.map((point, index) => (
+            <rect
+              key={`hover-${point.key}`}
+              x={leftPadding + slotWidth * index}
+              y={topPadding}
+              width={slotWidth}
+              height={chartHeight + bottomPadding}
+              fill="transparent"
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseMove={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+            />
+          ))}
+        </svg>
+      </div>
+    </div>
   );
 }
+
+function AnalyticsProductList({
+  className,
+  title,
+  emptyLabel,
+  viewLabel,
+  items,
+}: {
+  className?: string;
+  title: string;
+  emptyLabel: string;
+  viewLabel: string;
+  items: Array<{
+    key: string;
+    slug: string;
+    name: string;
+    image: string | null;
+    secondary: string;
+    valueLabel: string;
+    value: string;
+  }>;
+}) {
+  return (
+    <article className={cn("admin-surface p-5", className)}>
+      <h3 className="text-[14px] font-medium text-black/55">{title}</h3>
+      <div className="mt-4 grid gap-2">
+        {items.length === 0 && <p className="rounded-[14px] border border-black/10 bg-white p-3 text-sm text-black/55">{emptyLabel}</p>}
+        {items.map((item) => (
+          <article
+            key={item.key}
+            className="admin-hover-subtle group relative flex items-center gap-3 rounded-[14px] border border-black/10 bg-white px-3 py-2.5 transition-[background-color,border-color,color,opacity] duration-200 ease-out"
+          >
+            <span className="absolute bottom-2 left-0 top-2 w-[2px] rounded-full bg-[color:var(--admin-accent)] opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100" />
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              {item.image ? (
+                <img src={item.image} alt={item.name} className="h-10 w-10 rounded-[12px] border border-black/10 object-cover" loading="lazy" />
+              ) : (
+                <div className="grid h-10 w-10 place-items-center rounded-[12px] border border-black/10 bg-black/[0.03] text-black/35">
+                  <span className="material-symbols-outlined text-[14px]">inventory_2</span>
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-black/85">{item.name}</p>
+                <p className="mt-1 truncate text-xs text-black/55">{item.secondary}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[11px] text-black/45">{item.valueLabel}</p>
+                <p className="tabular-nums text-sm font-semibold text-black/85">{item.value}</p>
+              </div>
+            </div>
+            <Link
+              href={`/product/${item.slug}`}
+              className="ml-2 inline-flex h-7 items-center justify-center rounded-full border border-black/10 px-2 text-[11px] font-semibold text-[color:var(--admin-accent)] opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100"
+            >
+              {viewLabel}
+            </Link>
+          </article>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function AnalyticsCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <article className="admin-surface px-4 py-4">
+      <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-black/55">{label}</p>
+      <p className="mt-2 tabular-nums text-2xl font-semibold tracking-tight text-black/88">{value}</p>
+      {hint && <p className="mt-2 text-xs text-black/50">{hint}</p>}
+    </article>
+  );
+}
+
+
+
+
 
 
