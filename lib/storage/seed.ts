@@ -1,6 +1,8 @@
 import type {
+  Address,
   Article,
   Banner,
+  CartItem,
   Collection,
   Coupon,
   Order,
@@ -480,6 +482,30 @@ const articles: Article[] = [
   },
 ];
 
+const createSeedAddress = (
+  id: string,
+  label: string,
+  recipient: string,
+  phone: string,
+  line1: string,
+  city: string,
+  state: string,
+  zip: string,
+  line2?: string,
+): Address => ({
+  id,
+  label,
+  recipient,
+  phone,
+  line1,
+  line2,
+  city,
+  state,
+  zip,
+  country: "US",
+  isDefault: true,
+});
+
 const users: User[] = [
   {
     id: "usr_admin",
@@ -498,20 +524,7 @@ const users: User[] = [
     name: "Soojin Kim",
     role: "user",
     wishlist: ["luminous-silk-serum", "velvet-cloud-cream"],
-    addresses: [
-      {
-        id: "addr_1",
-        label: "Home",
-        recipient: "Soojin Kim",
-        phone: "310-555-0149",
-        line1: "2458 Sunset Blvd",
-        city: "Los Angeles",
-        state: "CA",
-        zip: "90026",
-        country: "US",
-        isDefault: true,
-      },
-    ],
+    addresses: [createSeedAddress("addr_1", "Home", "Soojin Kim", "310-555-0149", "2458 Sunset Blvd", "Los Angeles", "CA", "90026")],
     createdAt: "2026-01-05T10:00:00.000Z",
   },
   {
@@ -520,9 +533,109 @@ const users: User[] = [
     password: "Guest123!",
     name: "Mina Park",
     role: "user",
-    wishlist: [],
-    addresses: [],
+    wishlist: ["bio-cellulose-mask"],
+    addresses: [createSeedAddress("addr_2_home", "Home", "Mina Park", "213-555-0115", "84 Melrose Ave", "Los Angeles", "CA", "90038")],
     createdAt: "2026-01-20T10:00:00.000Z",
+  },
+  {
+    id: "usr_3",
+    email: "alex.johnson@portfolio.com",
+    password: "User123!",
+    name: "Alex Johnson",
+    role: "user",
+    wishlist: ["midnight-recovery-oil", "rose-quartz-roller"],
+    addresses: [createSeedAddress("addr_3_home", "Home", "Alex Johnson", "646-555-0103", "18 7th Ave", "New York", "NY", "10011")],
+    createdAt: "2025-12-22T09:40:00.000Z",
+  },
+  {
+    id: "usr_4",
+    email: "hannah.lee@portfolio.com",
+    password: "User123!",
+    name: "Hannah Lee",
+    role: "user",
+    wishlist: ["velvet-cloud-cream"],
+    addresses: [createSeedAddress("addr_4_home", "Home", "Hannah Lee", "323-555-0190", "905 Beverly Blvd", "Los Angeles", "CA", "90048")],
+    createdAt: "2025-12-29T14:20:00.000Z",
+  },
+  {
+    id: "usr_5",
+    email: "daniel.choi@portfolio.com",
+    password: "User123!",
+    name: "Daniel Choi",
+    role: "user",
+    wishlist: ["enzyme-polish-cleanser", "clarity-gel-cream"],
+    addresses: [createSeedAddress("addr_5_home", "Home", "Daniel Choi", "206-555-0172", "112 Pine St", "Seattle", "WA", "98101")],
+    createdAt: "2026-01-02T11:10:00.000Z",
+  },
+  {
+    id: "usr_6",
+    email: "emma.wilson@portfolio.com",
+    password: "User123!",
+    name: "Emma Wilson",
+    role: "user",
+    wishlist: ["mineral-veil-spf50"],
+    addresses: [createSeedAddress("addr_6_home", "Home", "Emma Wilson", "512-555-0134", "230 Congress Ave", "Austin", "TX", "78701")],
+    createdAt: "2026-01-08T17:45:00.000Z",
+  },
+  {
+    id: "usr_7",
+    email: "grace.park@portfolio.com",
+    password: "User123!",
+    name: "Grace Park",
+    role: "user",
+    wishlist: ["luminous-silk-serum", "bio-cellulose-mask"],
+    addresses: [createSeedAddress("addr_7_home", "Home", "Grace Park", "949-555-0168", "42 Sand Canyon Ave", "Irvine", "CA", "92618")],
+    createdAt: "2026-01-15T08:55:00.000Z",
+  },
+  {
+    id: "usr_8",
+    email: "ethan.kim@portfolio.com",
+    password: "User123!",
+    name: "Ethan Kim",
+    role: "user",
+    wishlist: ["mineral-veil-spf50", "velvet-cloud-cream"],
+    addresses: [createSeedAddress("addr_8_home", "Home", "Ethan Kim", "201-555-0144", "90 Hudson St", "Jersey City", "NJ", "07302")],
+    createdAt: "2026-01-18T12:25:00.000Z",
+  },
+  {
+    id: "usr_9",
+    email: "chloe.moon@portfolio.com",
+    password: "User123!",
+    name: "Chloe Moon",
+    role: "user",
+    wishlist: ["clarity-gel-cream"],
+    addresses: [createSeedAddress("addr_9_home", "Home", "Chloe Moon", "312-555-0129", "401 N Wabash Ave", "Chicago", "IL", "60611")],
+    createdAt: "2026-01-24T09:05:00.000Z",
+  },
+  {
+    id: "usr_10",
+    email: "noah.lim@portfolio.com",
+    password: "User123!",
+    name: "Noah Lim",
+    role: "user",
+    wishlist: ["enzyme-polish-cleanser", "luminous-silk-serum"],
+    addresses: [createSeedAddress("addr_10_home", "Home", "Noah Lim", "619-555-0156", "701 5th Ave", "San Diego", "CA", "92101")],
+    createdAt: "2026-01-30T15:35:00.000Z",
+  },
+  {
+    id: "usr_11",
+    email: "olivia.jeon@portfolio.com",
+    password: "User123!",
+    name: "Olivia Jeon",
+    role: "user",
+    wishlist: ["midnight-recovery-oil", "bio-cellulose-mask"],
+    addresses: [createSeedAddress("addr_11_home", "Home", "Olivia Jeon", "425-555-0118", "600 Bellevue Way", "Bellevue", "WA", "98004")],
+    createdAt: "2026-02-04T10:50:00.000Z",
+  },
+  {
+    id: "usr_12",
+    email: "james.yoo@portfolio.com",
+    password: "User123!",
+    name: "James Yoo",
+    role: "user",
+    wishlist: ["rose-quartz-roller", "velvet-cloud-cream"],
+    addresses: [createSeedAddress("addr_12_home", "Home", "James Yoo", "408-555-0182", "120 S Market St", "San Jose", "CA", "95113")],
+    createdAt: "2026-02-11T13:15:00.000Z",
   },
 ];
 
@@ -584,9 +697,243 @@ const inquiries: SupportInquiry[] = [
     createdAt: "2026-02-18T09:30:00.000Z",
     updatedAt: "2026-02-18T09:30:00.000Z",
   },
+  {
+    id: "inq_2",
+    userId: "usr_2",
+    userName: "Mina Park",
+    userEmail: "guest@portfolio.com",
+    topic: "shipping",
+    message: "My order says delivered but I cannot find the package in my building.",
+    status: "in_progress",
+    adminNote: "Carrier investigation opened. Waiting for last-mile photo proof.",
+    createdAt: "2026-02-20T14:05:00.000Z",
+    updatedAt: "2026-02-20T16:42:00.000Z",
+  },
+  {
+    id: "inq_3",
+    userId: "usr_3",
+    userName: "Alex Johnson",
+    userEmail: "alex.johnson@portfolio.com",
+    topic: "membership",
+    message: "Do VIP points expire if I don't place an order for two months?",
+    status: "resolved",
+    adminNote: "Explained annual expiration policy and bonus carryover terms.",
+    createdAt: "2026-01-29T11:20:00.000Z",
+    updatedAt: "2026-01-29T12:10:00.000Z",
+  },
+  {
+    id: "inq_4",
+    userId: "usr_4",
+    userName: "Hannah Lee",
+    userEmail: "hannah.lee@portfolio.com",
+    topic: "other",
+    message: "Please merge two accounts under one email if possible.",
+    status: "resolved",
+    adminNote: "Identity confirmed and duplicate guest account merged.",
+    createdAt: "2026-02-01T08:50:00.000Z",
+    updatedAt: "2026-02-01T10:25:00.000Z",
+  },
+  {
+    id: "inq_5",
+    userId: "usr_5",
+    userName: "Daniel Choi",
+    userEmail: "daniel.choi@portfolio.com",
+    topic: "shipping",
+    message: "Can I change the shipping address after payment for order ord_1017?",
+    status: "new",
+    adminNote: "",
+    createdAt: "2026-03-02T09:10:00.000Z",
+    updatedAt: "2026-03-02T09:10:00.000Z",
+  },
+  {
+    id: "inq_6",
+    userId: "usr_6",
+    userName: "Emma Wilson",
+    userEmail: "emma.wilson@portfolio.com",
+    topic: "product",
+    message: "Is Midnight Recovery Oil safe to use together with an AHA toner?",
+    status: "resolved",
+    adminNote: "Shared cadence guide and advised alternating nights.",
+    createdAt: "2026-02-12T18:35:00.000Z",
+    updatedAt: "2026-02-12T19:18:00.000Z",
+  },
+  {
+    id: "inq_7",
+    userId: "usr_7",
+    userName: "Grace Park",
+    userEmail: "grace.park@portfolio.com",
+    topic: "other",
+    message: "Please issue a tax invoice for my January business purchases.",
+    status: "in_progress",
+    adminNote: "Finance team requested company registration document.",
+    createdAt: "2026-02-25T07:55:00.000Z",
+    updatedAt: "2026-02-25T13:04:00.000Z",
+  },
+  {
+    id: "inq_8",
+    userId: "usr_8",
+    userName: "Ethan Kim",
+    userEmail: "ethan.kim@portfolio.com",
+    topic: "shipping",
+    message: "How long does expedited shipping take to New Jersey?",
+    status: "resolved",
+    adminNote: "Provided ETA and same-day cutoff for express lanes.",
+    createdAt: "2026-02-07T10:18:00.000Z",
+    updatedAt: "2026-02-07T10:41:00.000Z",
+  },
+  {
+    id: "inq_9",
+    userId: "usr_9",
+    userName: "Chloe Moon",
+    userEmail: "chloe.moon@portfolio.com",
+    topic: "product",
+    message: "Which product should I start with for enlarged pores and redness?",
+    status: "new",
+    adminNote: "",
+    createdAt: "2026-03-01T17:28:00.000Z",
+    updatedAt: "2026-03-01T17:28:00.000Z",
+  },
+  {
+    id: "inq_10",
+    userId: "usr_10",
+    userName: "Noah Lim",
+    userEmail: "noah.lim@portfolio.com",
+    topic: "membership",
+    message: "My welcome coupon disappeared before checkout. Can it be restored?",
+    status: "resolved",
+    adminNote: "Coupon re-issued with 7-day extension.",
+    createdAt: "2026-02-11T15:12:00.000Z",
+    updatedAt: "2026-02-11T15:47:00.000Z",
+  },
+  {
+    id: "inq_11",
+    userId: "usr_11",
+    userName: "Olivia Jeon",
+    userEmail: "olivia.jeon@portfolio.com",
+    topic: "shipping",
+    message: "Can my recurring delivery date be changed from Friday to Monday?",
+    status: "in_progress",
+    adminNote: "Subscription schedule update queued for next billing cycle.",
+    createdAt: "2026-02-27T09:42:00.000Z",
+    updatedAt: "2026-02-27T10:09:00.000Z",
+  },
+  {
+    id: "inq_12",
+    userId: "usr_12",
+    userName: "James Yoo",
+    userEmail: "james.yoo@portfolio.com",
+    topic: "other",
+    message: "Please remove my old office address from the account profile.",
+    status: "resolved",
+    adminNote: "Legacy address removed and defaults updated.",
+    createdAt: "2026-01-23T11:05:00.000Z",
+    updatedAt: "2026-01-23T11:26:00.000Z",
+  },
+  {
+    id: "inq_13",
+    userId: "usr_3",
+    userName: "Alex Johnson",
+    userEmail: "alex.johnson@portfolio.com",
+    topic: "product",
+    message: "Can I use Bio Cellulose Mask right after enzyme cleansing?",
+    status: "resolved",
+    adminNote: "Confirmed compatibility and recommended 2-3 uses per week.",
+    createdAt: "2026-02-14T20:11:00.000Z",
+    updatedAt: "2026-02-14T20:43:00.000Z",
+  },
+  {
+    id: "inq_14",
+    userId: "usr_6",
+    userName: "Emma Wilson",
+    userEmail: "emma.wilson@portfolio.com",
+    topic: "membership",
+    message: "Could you apply points to my latest order before it ships?",
+    status: "new",
+    adminNote: "",
+    createdAt: "2026-03-03T10:30:00.000Z",
+    updatedAt: "2026-03-03T10:30:00.000Z",
+  },
 ];
 
-const orders: Order[] = [
+const orderPriceBySlug = new Map(products.map((product) => [product.slug, product.price]));
+const userDefaultAddressById = new Map(
+  users
+    .filter((user) => user.role === "user")
+    .map((user) => [user.id, user.addresses[0]] as const)
+    .filter((entry): entry is readonly [string, Address] => Boolean(entry[1])),
+);
+
+const roundCurrency = (value: number): number => Math.round((value + Number.EPSILON) * 100) / 100;
+
+const resolveOrderSubtotal = (items: CartItem[]): number => {
+  const subtotal = items.reduce((sum, item) => {
+    const unitPrice = orderPriceBySlug.get(item.productSlug) ?? 0;
+    return sum + unitPrice * Math.max(1, item.quantity);
+  }, 0);
+  return roundCurrency(subtotal);
+};
+
+const resolveCouponDiscount = (subtotal: number, couponCode?: string): number => {
+  if (!couponCode) {
+    return 0;
+  }
+  if (couponCode === "WELCOME10") {
+    return subtotal >= 60 ? roundCurrency(subtotal * 0.1) : 0;
+  }
+  if (couponCode === "GLOW20") {
+    return subtotal >= 150 ? 20 : 0;
+  }
+  return 0;
+};
+
+const resolveOrderAddress = (userId: string, orderId: string): Address => {
+  const base = userDefaultAddressById.get(userId);
+  if (!base) {
+    return createSeedAddress(`addr_${orderId}`, "Home", "Guest Customer", "000-000-0000", "100 Market St", "San Francisco", "CA", "94105");
+  }
+  return {
+    ...base,
+    id: `addr_${orderId}`,
+  };
+};
+
+interface SeedOrderInput {
+  id: string;
+  userId: string;
+  items: CartItem[];
+  couponCode?: string;
+  discount?: number;
+  paymentStatus: Order["paymentStatus"];
+  status: Order["status"];
+  trackingNumber?: string;
+  refundRequested?: boolean;
+  createdAt: string;
+}
+
+const buildSeedOrder = (input: SeedOrderInput): Order => {
+  const subtotal = resolveOrderSubtotal(input.items);
+  const discount = roundCurrency(input.discount ?? resolveCouponDiscount(subtotal, input.couponCode));
+  const total = roundCurrency(Math.max(0, subtotal - discount));
+  const hasTracking = input.status === "shipped" || input.status === "delivered";
+
+  return {
+    id: input.id,
+    userId: input.userId,
+    items: input.items,
+    couponCode: input.couponCode,
+    subtotal,
+    discount,
+    total,
+    paymentStatus: input.paymentStatus,
+    status: input.status,
+    trackingNumber: hasTracking ? input.trackingNumber ?? `TRK${input.id.replace("ord_", "").padStart(8, "0")}` : "",
+    refundRequested: input.refundRequested ?? false,
+    shippingAddress: resolveOrderAddress(input.userId, input.id),
+    createdAt: input.createdAt,
+  };
+};
+
+const seedOrderInputs: SeedOrderInput[] = [
   {
     id: "ord_1001",
     userId: "usr_1",
@@ -594,29 +941,330 @@ const orders: Order[] = [
       { productSlug: "luminous-silk-serum", quantity: 1 },
       { productSlug: "velvet-cloud-cream", quantity: 1 },
     ],
-    subtotal: 159,
-    discount: 15.9,
-    total: 143.1,
     couponCode: "WELCOME10",
     paymentStatus: "paid",
     status: "processing",
-    trackingNumber: "",
-    refundRequested: false,
-    shippingAddress: {
-      id: "addr_order_1",
-      label: "Home",
-      recipient: "Soojin Kim",
-      phone: "310-555-0149",
-      line1: "2458 Sunset Blvd",
-      city: "Los Angeles",
-      state: "CA",
-      zip: "90026",
-      country: "US",
-      isDefault: true,
-    },
     createdAt: "2026-02-15T12:00:00.000Z",
   },
+  {
+    id: "ord_1002",
+    userId: "usr_2",
+    items: [{ productSlug: "bio-cellulose-mask", quantity: 2 }],
+    paymentStatus: "paid",
+    status: "delivered",
+    createdAt: "2026-02-18T10:28:00.000Z",
+  },
+  {
+    id: "ord_1003",
+    userId: "usr_3",
+    items: [
+      { productSlug: "velvet-cloud-cream", quantity: 1 },
+      { productSlug: "mineral-veil-spf50", quantity: 1 },
+    ],
+    paymentStatus: "paid",
+    status: "shipped",
+    createdAt: "2026-02-19T14:12:00.000Z",
+  },
+  {
+    id: "ord_1004",
+    userId: "usr_4",
+    items: [
+      { productSlug: "midnight-recovery-oil", quantity: 1 },
+      { productSlug: "luminous-silk-serum", quantity: 1 },
+    ],
+    couponCode: "GLOW20",
+    paymentStatus: "paid",
+    status: "cancelled",
+    refundRequested: true,
+    createdAt: "2026-02-20T09:43:00.000Z",
+  },
+  {
+    id: "ord_1005",
+    userId: "usr_5",
+    items: [{ productSlug: "luminous-silk-serum", quantity: 1 }],
+    paymentStatus: "pending",
+    status: "pending",
+    createdAt: "2026-02-21T18:05:00.000Z",
+  },
+  {
+    id: "ord_1006",
+    userId: "usr_6",
+    items: [
+      { productSlug: "midnight-recovery-oil", quantity: 1 },
+      { productSlug: "bio-cellulose-mask", quantity: 1 },
+    ],
+    couponCode: "WELCOME10",
+    paymentStatus: "paid",
+    status: "delivered",
+    createdAt: "2026-02-22T11:37:00.000Z",
+  },
+  {
+    id: "ord_1007",
+    userId: "usr_7",
+    items: [
+      { productSlug: "clarity-gel-cream", quantity: 1 },
+      { productSlug: "enzyme-polish-cleanser", quantity: 1 },
+    ],
+    paymentStatus: "paid",
+    status: "processing",
+    createdAt: "2026-02-23T13:12:00.000Z",
+  },
+  {
+    id: "ord_1008",
+    userId: "usr_8",
+    items: [
+      { productSlug: "luminous-silk-serum", quantity: 1 },
+      { productSlug: "bio-cellulose-mask", quantity: 1 },
+      { productSlug: "rose-quartz-roller", quantity: 1 },
+    ],
+    couponCode: "GLOW20",
+    paymentStatus: "paid",
+    status: "shipped",
+    createdAt: "2026-02-24T16:54:00.000Z",
+  },
+  {
+    id: "ord_1009",
+    userId: "usr_9",
+    items: [{ productSlug: "mineral-veil-spf50", quantity: 2 }],
+    paymentStatus: "pending",
+    status: "pending",
+    createdAt: "2026-02-24T19:06:00.000Z",
+  },
+  {
+    id: "ord_1010",
+    userId: "usr_10",
+    items: [{ productSlug: "velvet-cloud-cream", quantity: 2 }],
+    paymentStatus: "paid",
+    status: "delivered",
+    createdAt: "2026-02-25T08:24:00.000Z",
+  },
+  {
+    id: "ord_1011",
+    userId: "usr_11",
+    items: [
+      { productSlug: "luminous-silk-serum", quantity: 1 },
+      { productSlug: "velvet-cloud-cream", quantity: 1 },
+      { productSlug: "mineral-veil-spf50", quantity: 1 },
+    ],
+    couponCode: "GLOW20",
+    paymentStatus: "paid",
+    status: "delivered",
+    createdAt: "2026-02-26T15:45:00.000Z",
+  },
+  {
+    id: "ord_1012",
+    userId: "usr_12",
+    items: [
+      { productSlug: "enzyme-polish-cleanser", quantity: 1 },
+      { productSlug: "clarity-gel-cream", quantity: 1 },
+      { productSlug: "bio-cellulose-mask", quantity: 1 },
+    ],
+    paymentStatus: "paid",
+    status: "processing",
+    createdAt: "2026-02-27T10:58:00.000Z",
+  },
+  {
+    id: "ord_1013",
+    userId: "usr_3",
+    items: [
+      { productSlug: "luminous-silk-serum", quantity: 1 },
+      { productSlug: "midnight-recovery-oil", quantity: 1 },
+    ],
+    paymentStatus: "paid",
+    status: "shipped",
+    createdAt: "2026-02-28T17:20:00.000Z",
+  },
+  {
+    id: "ord_1014",
+    userId: "usr_1",
+    items: [{ productSlug: "bio-cellulose-mask", quantity: 1 }],
+    paymentStatus: "pending",
+    status: "pending",
+    createdAt: "2026-03-01T09:52:00.000Z",
+  },
+  {
+    id: "ord_1015",
+    userId: "usr_2",
+    items: [
+      { productSlug: "rose-quartz-roller", quantity: 1 },
+      { productSlug: "bio-cellulose-mask", quantity: 2 },
+    ],
+    paymentStatus: "paid",
+    status: "delivered",
+    createdAt: "2026-03-01T14:16:00.000Z",
+  },
+  {
+    id: "ord_1016",
+    userId: "usr_4",
+    items: [
+      { productSlug: "velvet-cloud-cream", quantity: 1 },
+      { productSlug: "clarity-gel-cream", quantity: 1 },
+      { productSlug: "mineral-veil-spf50", quantity: 1 },
+    ],
+    paymentStatus: "paid",
+    status: "processing",
+    createdAt: "2026-03-02T12:08:00.000Z",
+  },
+  {
+    id: "ord_1017",
+    userId: "usr_5",
+    items: [{ productSlug: "midnight-recovery-oil", quantity: 1 }],
+    paymentStatus: "paid",
+    status: "cancelled",
+    refundRequested: true,
+    createdAt: "2026-03-02T16:41:00.000Z",
+  },
+  {
+    id: "ord_1018",
+    userId: "usr_6",
+    items: [
+      { productSlug: "luminous-silk-serum", quantity: 1 },
+      { productSlug: "bio-cellulose-mask", quantity: 1 },
+      { productSlug: "mineral-veil-spf50", quantity: 1 },
+    ],
+    paymentStatus: "paid",
+    status: "shipped",
+    createdAt: "2026-03-03T11:12:00.000Z",
+  },
+  {
+    id: "ord_1019",
+    userId: "usr_7",
+    items: [
+      { productSlug: "mineral-veil-spf50", quantity: 1 },
+      { productSlug: "enzyme-polish-cleanser", quantity: 1 },
+    ],
+    paymentStatus: "paid",
+    status: "delivered",
+    createdAt: "2026-01-12T10:04:00.000Z",
+  },
+  {
+    id: "ord_1020",
+    userId: "usr_8",
+    items: [
+      { productSlug: "velvet-cloud-cream", quantity: 1 },
+      { productSlug: "midnight-recovery-oil", quantity: 1 },
+    ],
+    paymentStatus: "paid",
+    status: "delivered",
+    createdAt: "2026-01-16T15:29:00.000Z",
+  },
+  {
+    id: "ord_1021",
+    userId: "usr_9",
+    items: [{ productSlug: "clarity-gel-cream", quantity: 2 }],
+    paymentStatus: "paid",
+    status: "shipped",
+    createdAt: "2026-01-21T13:44:00.000Z",
+  },
+  {
+    id: "ord_1022",
+    userId: "usr_10",
+    items: [{ productSlug: "luminous-silk-serum", quantity: 1 }],
+    paymentStatus: "paid",
+    status: "delivered",
+    createdAt: "2026-01-28T09:17:00.000Z",
+  },
+  {
+    id: "ord_1023",
+    userId: "usr_11",
+    items: [{ productSlug: "bio-cellulose-mask", quantity: 3 }],
+    paymentStatus: "paid",
+    status: "delivered",
+    createdAt: "2026-01-31T19:34:00.000Z",
+  },
+  {
+    id: "ord_1024",
+    userId: "usr_12",
+    items: [
+      { productSlug: "rose-quartz-roller", quantity: 1 },
+      { productSlug: "velvet-cloud-cream", quantity: 1 },
+    ],
+    paymentStatus: "paid",
+    status: "processing",
+    createdAt: "2026-02-05T07:58:00.000Z",
+  },
+  {
+    id: "ord_1025",
+    userId: "usr_1",
+    items: [
+      { productSlug: "luminous-silk-serum", quantity: 1 },
+      { productSlug: "midnight-recovery-oil", quantity: 1 },
+      { productSlug: "velvet-cloud-cream", quantity: 1 },
+    ],
+    couponCode: "GLOW20",
+    paymentStatus: "paid",
+    status: "delivered",
+    createdAt: "2025-12-19T16:18:00.000Z",
+  },
+  {
+    id: "ord_1026",
+    userId: "usr_2",
+    items: [
+      { productSlug: "enzyme-polish-cleanser", quantity: 1 },
+      { productSlug: "mineral-veil-spf50", quantity: 1 },
+      { productSlug: "clarity-gel-cream", quantity: 1 },
+    ],
+    paymentStatus: "paid",
+    status: "delivered",
+    createdAt: "2025-12-27T11:06:00.000Z",
+  },
+  {
+    id: "ord_1027",
+    userId: "usr_6",
+    items: [
+      { productSlug: "bio-cellulose-mask", quantity: 2 },
+      { productSlug: "luminous-silk-serum", quantity: 1 },
+    ],
+    paymentStatus: "paid",
+    status: "delivered",
+    createdAt: "2026-02-10T18:41:00.000Z",
+  },
+  {
+    id: "ord_1028",
+    userId: "usr_3",
+    items: [{ productSlug: "velvet-cloud-cream", quantity: 1 }],
+    paymentStatus: "pending",
+    status: "pending",
+    createdAt: "2026-03-03T16:53:00.000Z",
+  },
+  {
+    id: "ord_1029",
+    userId: "usr_4",
+    items: [
+      { productSlug: "luminous-silk-serum", quantity: 1 },
+      { productSlug: "rose-quartz-roller", quantity: 1 },
+    ],
+    paymentStatus: "paid",
+    status: "processing",
+    createdAt: "2026-03-04T09:21:00.000Z",
+  },
+  {
+    id: "ord_1030",
+    userId: "usr_8",
+    items: [
+      { productSlug: "bio-cellulose-mask", quantity: 1 },
+      { productSlug: "clarity-gel-cream", quantity: 1 },
+    ],
+    paymentStatus: "paid",
+    status: "delivered",
+    createdAt: "2026-03-04T11:02:00.000Z",
+  },
 ];
+
+const orders: Order[] = seedOrderInputs
+  .map((entry) => buildSeedOrder(entry))
+  .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+const seedProductViewsBySlug: Record<string, number> = {
+  "luminous-silk-serum": 4360,
+  "midnight-recovery-oil": 1785,
+  "rose-quartz-roller": 1320,
+  "velvet-cloud-cream": 4025,
+  "mineral-veil-spf50": 2690,
+  "enzyme-polish-cleanser": 2410,
+  "bio-cellulose-mask": 3890,
+  "clarity-gel-cream": 2125,
+};
 
 const coupons: Coupon[] = [
   {
@@ -684,11 +1332,14 @@ export const createSeedDb = (): StoreDB => ({
     taxRate: 0.08,
   },
   analytics: {
-    productViewsBySlug: {},
+    productViewsBySlug: seedProductViewsBySlug,
   },
   cartByUser: {
     guest: [],
     usr_1: [{ productSlug: "bio-cellulose-mask", quantity: 1 }],
+    usr_2: [{ productSlug: "velvet-cloud-cream", quantity: 1 }],
+    usr_7: [{ productSlug: "luminous-silk-serum", quantity: 1 }, { productSlug: "mineral-veil-spf50", quantity: 1 }],
+    usr_10: [{ productSlug: "enzyme-polish-cleanser", quantity: 1 }],
   },
   couponByUser: {},
 });

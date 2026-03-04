@@ -919,7 +919,7 @@ function DashboardKpiCard({
           : noBaselineLabel;
   const trendDirection: "up" | "down" | "flat" =
     delta.kind === "percent" ? (delta.value > 0 ? "up" : delta.value < 0 ? "down" : "flat") : delta.kind === "up" ? "up" : "flat";
-  const trendIcon = trendDirection === "up" ? "north_east" : trendDirection === "down" ? "south_east" : "remove";
+  const trendGlyph = trendDirection === "up" ? "↗" : trendDirection === "down" ? "↘" : "—";
   const compactDeltaValue =
     delta.kind === "percent"
       ? Math.abs(delta.value) < 0.05
@@ -958,8 +958,8 @@ function DashboardKpiCard({
               </>
             )}
           </p>
-          <span className={cn("material-symbols-outlined text-[13px]", trendDirection === "up" || trendDirection === "down" ? "text-[color:var(--admin-accent)]" : "text-black/35")}>
-            {trendIcon}
+          <span className={cn("text-[13px] font-semibold leading-none", trendDirection === "up" || trendDirection === "down" ? "text-[color:var(--admin-accent)]" : "text-black/35")}>
+            {trendGlyph}
           </span>
         </div>
       </Link>
@@ -996,12 +996,11 @@ function DashboardKpiCard({
         <MiniSparkline values={sparkline} type={sparklineType} />
         <span
           className={cn(
-            "material-symbols-outlined transition-colors duration-200 ease-out",
-            "mb-0.5 text-[14px]",
+            "mb-0.5 text-[14px] font-semibold leading-none transition-colors duration-200 ease-out",
             trendDirection === "flat" ? "text-black/35" : "text-black/45 group-hover:text-[color:var(--admin-accent)]",
           )}
         >
-          {trendIcon}
+          {trendGlyph}
         </span>
       </div>
     </Link>
@@ -4072,7 +4071,7 @@ function AnalyticsTopKpiCard({
       : delta.kind === "up"
         ? "up"
         : "flat";
-  const trendIcon = direction === "up" ? "north_east" : direction === "down" ? "south_east" : "remove";
+  const trendGlyph = direction === "up" ? "↗" : direction === "down" ? "↘" : "—";
 
   return (
     <article className="admin-surface admin-hover-subtle flex h-[104px] flex-col justify-between p-4 xl:h-full xl:flex-row xl:items-end xl:gap-3 xl:p-5">
@@ -4086,8 +4085,8 @@ function AnalyticsTopKpiCard({
               {deltaPercentText}
             </span>
           </p>
-          <span className={cn("material-symbols-outlined text-[13px] xl:hidden", direction === "up" || direction === "down" ? "text-[color:var(--admin-accent)]" : "text-black/35")}>
-            {trendIcon}
+          <span className={cn("text-[13px] font-semibold leading-none xl:hidden", direction === "up" || direction === "down" ? "text-[color:var(--admin-accent)]" : "text-black/35")}>
+            {trendGlyph}
           </span>
         </div>
       </div>
@@ -4095,11 +4094,11 @@ function AnalyticsTopKpiCard({
         <MiniSparkline values={sparkline} type={sparklineType} />
         <span
           className={cn(
-            "material-symbols-outlined mb-0.5 text-[14px]",
+            "mb-0.5 text-[14px] font-semibold leading-none",
             direction === "up" ? "text-[color:var(--admin-accent)]" : direction === "down" ? "text-black/55" : "text-black/35",
           )}
         >
-          {trendIcon}
+          {trendGlyph}
         </span>
       </div>
     </article>

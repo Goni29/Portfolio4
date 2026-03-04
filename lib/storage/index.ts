@@ -184,6 +184,59 @@ const migrateSupportEmailDomain = (db: StoreDB): StoreDB => {
   };
 };
 
+const migrateSeedCommerceHistory = (db: StoreDB, seed: StoreDB): StoreDB => {
+  const currentUsers = Array.isArray(db.users) ? db.users : [];
+  const currentOrders = Array.isArray(db.orders) ? db.orders : [];
+  const currentInquiries = Array.isArray(db.inquiries) ? db.inquiries : [];
+  const seedUsers = Array.isArray(seed.users) ? seed.users : [];
+  const seedOrders = Array.isArray(seed.orders) ? seed.orders : [];
+  const seedInquiries = Array.isArray(seed.inquiries) ? seed.inquiries : [];
+
+  const existingUserIds = new Set(currentUsers.map((user) => user.id));
+  const existingOrderIds = new Set(currentOrders.map((order) => order.id));
+  const existingInquiryIds = new Set(currentInquiries.map((inquiry) => inquiry.id));
+
+  const missingUsers = seedUsers.filter((user) => !existingUserIds.has(user.id));
+  const missingOrders = seedOrders.filter((order) => !existingOrderIds.has(order.id));
+  const missingInquiries = seedInquiries.filter((inquiry) => !existingInquiryIds.has(inquiry.id));
+
+  const mergedProductViews: Record<string, number> = { ...(db.analytics?.productViewsBySlug ?? {}) };
+  let viewsUpdated = false;
+  Object.entries(seed.analytics.productViewsBySlug ?? {}).forEach(([slug, seedViews]) => {
+    const currentViews = Math.floor(Number(mergedProductViews[slug] ?? 0));
+    const normalizedSeedViews = Math.floor(Number(seedViews));
+    if (!Number.isFinite(normalizedSeedViews) || normalizedSeedViews <= 0) {
+      return;
+    }
+
+    const nextViews = Math.max(0, Number.isFinite(currentViews) ? currentViews : 0, normalizedSeedViews);
+    if (nextViews !== currentViews) {
+      mergedProductViews[slug] = nextViews;
+      viewsUpdated = true;
+    }
+  });
+
+  const hasChanges =
+    missingUsers.length > 0 ||
+    missingOrders.length > 0 ||
+    missingInquiries.length > 0 ||
+    viewsUpdated;
+
+  if (!hasChanges) {
+    return db;
+  }
+
+  return {
+    ...db,
+    users: [...currentUsers, ...missingUsers],
+    orders: [...currentOrders, ...missingOrders],
+    inquiries: [...currentInquiries, ...missingInquiries],
+    analytics: {
+      productViewsBySlug: mergedProductViews,
+    },
+  };
+};
+
 const migrateDailyDefenseHeroImage = (db: StoreDB): StoreDB => {
   return {
     ...db,
@@ -336,8 +389,11 @@ export const loadDb = (): StoreDB => {
         migrateProductFreeShipping(
           migrateProductDetailImages(
             migrateDailyDefenseHeroImage(
-              migrateSupportEmailDomain(
-                migrateLegacyAccountEmailDomain(normalizeDbLocalizedFields(saved, seed)),
+              migrateSeedCommerceHistory(
+                migrateSupportEmailDomain(
+                  migrateLegacyAccountEmailDomain(normalizeDbLocalizedFields(saved, seed)),
+                ),
+                seed,
               ),
             ),
             seed,
