@@ -50,7 +50,7 @@ export function ContactView() {
   const email = currentUser?.email ?? "";
 
   const loginHref = withLocalePath("/account/login", locale);
-  const supportEmail = db.settings.supportEmail || "concierge@portfolio.com";
+  const supportEmail = db.settings.supportEmail || "support@portfolio.com";
   const submitDisabled = !currentUser || !name.trim() || !email.trim() || !message.trim();
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {

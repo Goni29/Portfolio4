@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "@/components/providers/store-provider";
 import { EmptyState, InputField } from "@/components/public/shared/ui";
 import { resolveText } from "@/lib/i18n";
@@ -113,7 +113,8 @@ function AdminLoginView() {
 
 function AdminDashboardView() {
   const { db, locale } = useStore();
-  const [trendRange, setTrendRange] = useState<"7d" | "30d" | "90d">("30d");
+  const [trendRange, setTrendRange] = useState<"7d" | "30d" | "90d">("7d");
+  const [mobileProductTab, setMobileProductTab] = useState<"revenue" | "views">("revenue");
   const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
   const statusLabelMap: Record<Order["status"], { ko: string; en: string }> = {
     pending: { ko: "대기", en: "Pending" },
@@ -304,7 +305,7 @@ function AdminDashboardView() {
 
   const rangeDays = trendRange === "7d" ? 7 : trendRange === "30d" ? 30 : 90;
   const trendSlice = dailySeries.slice(-rangeDays);
-  const labelStep = trendSlice.length <= 7 ? 3 : trendSlice.length <= 30 ? 6 : 15;
+  const labelStep = trendSlice.length <= 7 ? 1 : trendSlice.length <= 30 ? 6 : 15;
   const trendSeries: TrendPoint[] = trendSlice.map((entry, index) => ({
     key: entry.key,
     label: index % labelStep === 0 || index === trendSlice.length - 1 ? entry.key.slice(5).replace("-", "/") : "",
@@ -334,6 +335,7 @@ function AdminDashboardView() {
     {
       key: "kpi-weekly-revenue",
       label: t("주간 매출", "Weekly Revenue"),
+      mobileLabel: t("매출", "Revenue"),
       value: currency(currentWeek.revenue),
       delta: buildDeltaState(currentWeek.revenue, previousWeek.revenue),
       href: "/admin/analytics",
@@ -344,6 +346,7 @@ function AdminDashboardView() {
     {
       key: "kpi-weekly-orders",
       label: t("주간 주문", "Weekly Orders"),
+      mobileLabel: t("주문", "Orders"),
       value: currentWeek.orders.toLocaleString(),
       delta: buildDeltaState(currentWeek.orders, previousWeek.orders),
       href: "/admin/orders",
@@ -354,6 +357,7 @@ function AdminDashboardView() {
     {
       key: "kpi-weekly-units",
       label: t("주간 판매수량", "Weekly Units"),
+      mobileLabel: t("판매", "Units"),
       value: currentWeek.units.toLocaleString(),
       delta: buildDeltaState(currentWeek.units, previousWeek.units),
       href: "/admin/products",
@@ -364,6 +368,7 @@ function AdminDashboardView() {
     {
       key: "kpi-weekly-aov",
       label: t("주간 객단가", "Weekly AOV"),
+      mobileLabel: t("객단가", "AOV"),
       value: currency(currentWeekAov),
       delta: buildDeltaState(currentWeekAov, previousWeekAov),
       href: "/admin/analytics",
@@ -402,6 +407,8 @@ function AdminDashboardView() {
     { key: "todo-inquiries", label: t("미해결 문의", "Open Inquiries"), count: openInquiries.length, href: "/admin/inquiries" },
     { key: "todo-coupons", label: t("활성 쿠폰", "Active Coupons"), count: activeCoupons.length, href: "/admin/coupons" },
   ];
+  const mobileTopItems = (mobileProductTab === "revenue" ? topRevenueList : topViewedList).slice(0, 5);
+  const mobileRecentOrderRows = recentOrderRows.slice(0, 3);
 
   return (
     <div className="grid gap-10">
@@ -412,7 +419,166 @@ function AdminDashboardView() {
         </p>
       </header>
 
-      <section className="grid grid-cols-2 gap-5 xl:grid-cols-12">
+      <section className="grid gap-6 md:hidden">
+        <section className="grid grid-cols-2 gap-3">
+          {kpiCards.map((card) => (
+            <DashboardKpiCard
+              key={`mobile-${card.key}`}
+              className="col-span-1 h-[104px]"
+              compact
+              label={card.mobileLabel}
+              value={card.value}
+              delta={card.delta}
+              href={card.href}
+              sparkline={card.sparkline}
+              sparklineType={card.sparklineType}
+              icon={card.icon}
+              noBaselineLabel={t("기준없음", "No base")}
+              upLabel={t("상승", "Up")}
+              deltaSuffix={t("전주 대비", "vs LW")}
+            />
+          ))}
+        </section>
+
+        <article className="admin-surface p-4">
+          <h2 className="text-[14px] font-medium text-black/55">{t("오늘 처리할 일", "Today's To-do")}</h2>
+          <div className="mt-4 grid gap-2">
+            {todoItems.map((item) => (
+              <Link
+                key={`mobile-${item.key}`}
+                href={item.href}
+                className="admin-hover-subtle flex items-center justify-between rounded-[14px] border border-black/10 bg-white px-3 py-2.5 transition-[background-color,border-color,color] duration-200 ease-out"
+              >
+                <span className="flex items-center gap-2 text-sm font-medium text-black/74">
+                  <span className={cn("h-2 w-2 rounded-full", item.count > 0 ? "bg-[color:var(--admin-accent)]" : "bg-transparent")} />
+                  {item.label}
+                </span>
+                <span
+                  className={cn(
+                    "inline-flex min-w-9 items-center justify-center rounded-full border px-2 py-1 text-xs tabular-nums",
+                    item.count > 0
+                      ? "border-[rgba(232,46,92,0.25)] bg-[rgba(232,46,92,0.04)] font-semibold text-[color:var(--admin-accent)]"
+                      : "border-black/10 bg-black/[0.02] text-black/55",
+                  )}
+                >
+                  {item.count}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </article>
+
+        <article className="admin-surface p-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[14px] font-medium text-black/55">{t("매출 추세", "Revenue Trend")}</h2>
+            <SegmentedControl
+              value={trendRange}
+              onChange={setTrendRange}
+              options={[
+                { label: "7D", value: "7d" },
+                { label: "30D", value: "30d" },
+                { label: "90D", value: "90d" },
+              ]}
+            />
+          </div>
+          <div className="mt-3">
+            <RevenueOrdersTrendChart
+              data={trendSeries}
+              revenueLegend={t("매출", "Revenue")}
+              ordersLegend={t("주문", "Orders")}
+              unitsLabel={t("판매수량", "Units")}
+              aovLabel={t("객단가", "AOV")}
+              emptyLabel={t("차트 데이터가 없습니다.", "No chart data")}
+              compact
+              allowHorizontalScroll={false}
+            />
+          </div>
+        </article>
+
+        <article className="admin-surface p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="inline-flex rounded-2xl border border-black/10 bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setMobileProductTab("revenue")}
+                className={cn(
+                  "relative h-9 rounded-xl px-4 text-xs font-semibold transition-[background-color,color] duration-200 ease-out",
+                  mobileProductTab === "revenue" ? "bg-[color:var(--admin-subtle-bg)] text-black/88" : "text-black/55",
+                )}
+              >
+                {t("상위 매출", "Top Revenue")}
+                <span className={cn("absolute bottom-1 left-3 right-3 h-[2px] rounded-full", mobileProductTab === "revenue" ? "bg-[color:var(--admin-accent)]" : "bg-transparent")} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileProductTab("views")}
+                className={cn(
+                  "relative h-9 rounded-xl px-4 text-xs font-semibold transition-[background-color,color] duration-200 ease-out",
+                  mobileProductTab === "views" ? "bg-[color:var(--admin-subtle-bg)] text-black/88" : "text-black/55",
+                )}
+              >
+                {t("상위 조회", "Top Views")}
+                <span className={cn("absolute bottom-1 left-3 right-3 h-[2px] rounded-full", mobileProductTab === "views" ? "bg-[color:var(--admin-accent)]" : "bg-transparent")} />
+              </button>
+            </div>
+            <Link href="/admin/products" className="text-xs font-semibold text-[color:var(--admin-accent)]">
+              {t("전체보기", "View all")}
+            </Link>
+          </div>
+          <div className="mt-3 grid gap-2">
+            {mobileTopItems.length === 0 && (
+              <p className="rounded-[14px] border border-black/10 bg-white p-3 text-sm text-black/55">
+                {mobileProductTab === "revenue" ? t("매출 데이터가 아직 없습니다.", "No sales data yet.") : t("조회 데이터가 아직 없습니다.", "No view data yet.")}
+              </p>
+            )}
+            {mobileTopItems.map((item) => (
+              <Link
+                key={`mobile-list-${item.key}`}
+                href={item.href}
+                className="admin-hover-subtle flex items-center gap-3 rounded-[14px] border border-black/10 bg-white px-3 py-2.5 transition-[background-color,border-color,color] duration-200 ease-out"
+              >
+                <img src={item.image} alt={item.name} className="h-10 w-10 rounded-[12px] border border-black/10 object-cover" loading="lazy" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-black/85">{item.name}</p>
+                  <p className="mt-0.5 truncate text-xs text-black/55">{item.secondary}</p>
+                </div>
+                <p className="tabular-nums text-xs font-semibold text-black/82">{item.value}</p>
+              </Link>
+            ))}
+          </div>
+        </article>
+
+        <article className="admin-surface p-4">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="text-[14px] font-medium text-black/55">{t("최근 주문", "Recent Orders")}</h2>
+            <Link href="/admin/orders" className="text-xs font-semibold text-[color:var(--admin-accent)]">
+              {t("전체보기", "View all")}
+            </Link>
+          </div>
+          <div className="grid gap-2.5">
+            {mobileRecentOrderRows.length === 0 && <p className="rounded-2xl border border-black/10 bg-white p-4 text-sm text-black/55">{t("주문 데이터가 없습니다.", "No orders yet.")}</p>}
+            {mobileRecentOrderRows.map((row) => (
+              <Link
+                key={`mobile-dashboard-${row.id}`}
+                href={`/admin/orders/${row.id}`}
+                className="admin-hover-subtle rounded-2xl border border-black/10 bg-white p-3.5 transition-[background-color,border-color,color] duration-200 ease-out"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-semibold text-black/85">{row.id}</p>
+                  <OrderStatusPill status={row.status} label={row.statusLabel} />
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                  <p className="text-black/55">{row.customer}</p>
+                  <p className="tabular-nums text-right font-semibold text-black/85">{currency(row.total)}</p>
+                  <p className="col-span-2 text-right tabular-nums text-xs text-black/55">{formatDate(row.createdAt)}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="hidden md:grid grid-cols-2 gap-5 xl:grid-cols-12">
         {kpiCards.map((card) => (
           <DashboardKpiCard
             key={card.key}
@@ -431,7 +597,7 @@ function AdminDashboardView() {
         ))}
       </section>
 
-      <section className="grid items-start gap-6 xl:grid-cols-12">
+      <section className="hidden md:grid items-start gap-6 xl:grid-cols-12">
         <article className="admin-surface self-start p-5 xl:col-span-12 flex flex-col">
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-black/5 pb-4">
             <div className="grid gap-2">
@@ -470,6 +636,7 @@ function AdminDashboardView() {
               unitsLabel={t("판매수량", "Units")}
               aovLabel={t("객단가", "AOV")}
               emptyLabel={t("차트 데이터가 없습니다.", "No chart data")}
+              allowHorizontalScroll={false}
             />
           </div>
           <p className="mt-1.5 overflow-x-auto whitespace-nowrap text-[12px] leading-[1.35] text-black/52">
@@ -478,7 +645,7 @@ function AdminDashboardView() {
         </article>
       </section>
 
-      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-12">
+      <section className="hidden md:grid gap-6 md:grid-cols-2 xl:grid-cols-12">
         <div className="xl:col-span-6">
           <ProductRichList
             title={t("상위 조회 상품", "Top Viewed Products")}
@@ -495,7 +662,7 @@ function AdminDashboardView() {
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-12">
+      <section className="hidden md:grid gap-6 xl:grid-cols-12">
         <article className="admin-surface p-6 md:p-7 xl:col-span-6">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h2 className="text-[14px] font-medium text-black/55">{t("최근 주문", "Recent Orders")}</h2>
@@ -583,6 +750,7 @@ function AdminDashboardView() {
 type DashboardKpi = {
   key: string;
   label: string;
+  mobileLabel: string;
   value: string;
   delta: KpiDeltaState;
   href: string;
@@ -716,6 +884,7 @@ function buildDisplayAovSparkline(
 
 function DashboardKpiCard({
   className,
+  compact = false,
   label,
   value,
   delta,
@@ -728,6 +897,7 @@ function DashboardKpiCard({
   deltaSuffix,
 }: {
   className?: string;
+  compact?: boolean;
   label: string;
   value: string;
   delta: KpiDeltaState;
@@ -750,22 +920,75 @@ function DashboardKpiCard({
   const trendDirection: "up" | "down" | "flat" =
     delta.kind === "percent" ? (delta.value > 0 ? "up" : delta.value < 0 ? "down" : "flat") : delta.kind === "up" ? "up" : "flat";
   const trendIcon = trendDirection === "up" ? "north_east" : trendDirection === "down" ? "south_east" : "remove";
+  const compactDeltaValue =
+    delta.kind === "percent"
+      ? Math.abs(delta.value) < 0.05
+        ? "0%"
+        : `${delta.value > 0 ? "+" : "-"}${Math.abs(delta.value).toFixed(1)}%`
+      : delta.kind === "up"
+        ? upLabel
+        : delta.kind === "flat"
+          ? "0%"
+          : noBaselineLabel;
+
+  if (compact) {
+    return (
+      <Link
+        href={href}
+        className={cn(
+          "admin-surface admin-hover-subtle group flex h-full flex-col justify-between p-4 transition-[background-color,border-color,color] duration-200 ease-out",
+          className,
+        )}
+      >
+        <p className="flex items-center gap-1.5 text-[11px] font-medium leading-none text-black/58">
+          <span className="material-symbols-outlined text-[13px] text-black/45 transition-colors duration-200 ease-out group-hover:text-[color:var(--admin-accent)]">{icon}</span>
+          <span className="whitespace-nowrap">{label}</span>
+        </p>
+        <p className="tabular-nums whitespace-nowrap text-[clamp(1.38rem,6vw,1.62rem)] font-semibold leading-none tracking-tight text-black/88">{value}</p>
+        <div className="flex items-end justify-between gap-2">
+          <p className="min-w-0 whitespace-nowrap text-[10px] font-medium text-black/50">
+            {delta.kind === "none" ? (
+              <span>{compactDeltaValue}</span>
+            ) : (
+              <>
+                <span>{deltaSuffix} </span>
+                <span className={cn("tabular-nums font-semibold", trendDirection === "up" || trendDirection === "down" ? "text-[color:var(--admin-accent)]" : "text-black/58")}>
+                  {compactDeltaValue}
+                </span>
+              </>
+            )}
+          </p>
+          <span className={cn("material-symbols-outlined text-[13px]", trendDirection === "up" || trendDirection === "down" ? "text-[color:var(--admin-accent)]" : "text-black/35")}>
+            {trendIcon}
+          </span>
+        </div>
+      </Link>
+    );
+  }
 
   return (
     <Link
       href={href}
       className={cn(
-        "admin-surface admin-hover-subtle group flex h-full items-end justify-between gap-3 p-5 transition-[background-color,border-color,color] duration-200 ease-out",
+        "admin-surface admin-hover-subtle group flex h-full justify-between transition-[background-color,border-color,color] duration-200 ease-out",
+        "items-end gap-3 p-5",
         className,
       )}
     >
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="flex items-center gap-1.5 text-[13px] font-medium text-black/55">
-          <span className="material-symbols-outlined text-[14px] text-black/45 transition-colors duration-200 ease-out group-hover:text-[color:var(--admin-accent)]">{icon}</span>
+          <span className="material-symbols-outlined text-[14px] text-black/45 transition-colors duration-200 ease-out group-hover:text-[color:var(--admin-accent)]">
+            {icon}
+          </span>
           <span>{label}</span>
         </p>
         <p className="mt-2 tabular-nums text-[clamp(1.65rem,3vw,2.35rem)] font-semibold leading-none tracking-tight text-black/88">{value}</p>
-        <p className={cn("mt-3 text-[12px] font-medium", trendDirection === "up" ? "text-[color:var(--admin-accent)]" : trendDirection === "down" ? "text-black/60" : "text-black/45")}>
+        <p
+          className={cn(
+            "mt-3 text-[12px] font-medium",
+            trendDirection === "up" ? "text-[color:var(--admin-accent)]" : trendDirection === "down" ? "text-black/60" : "text-black/45",
+          )}
+        >
           {deltaText}
         </p>
       </div>
@@ -773,7 +996,8 @@ function DashboardKpiCard({
         <MiniSparkline values={sparkline} type={sparklineType} />
         <span
           className={cn(
-            "material-symbols-outlined mb-0.5 text-[14px] transition-colors duration-200 ease-out",
+            "material-symbols-outlined transition-colors duration-200 ease-out",
+            "mb-0.5 text-[14px]",
             trendDirection === "flat" ? "text-black/35" : "text-black/45 group-hover:text-[color:var(--admin-accent)]",
           )}
         >
@@ -787,13 +1011,25 @@ function DashboardKpiCard({
 function MiniSparkline({
   values,
   type,
+  compact = false,
 }: {
   values: SparklineValue[];
   type: "line" | "bar";
+  compact?: boolean;
 }) {
   if (values.length === 0) {
     return null;
   }
+  const compactWidth = type === "bar" ? 72 : 84;
+  const compactHeight = type === "bar" ? 18 : 20;
+  const width = compact ? compactWidth : 108;
+  const height = compact ? compactHeight : 38;
+  const padding = compact ? 3.5 : 4;
+  const sparklineClass = compact
+    ? type === "bar"
+      ? "h-[18px] w-[72px] shrink-0"
+      : "h-5 w-[84px] shrink-0"
+    : "h-10 w-28 shrink-0";
 
   const parsedValues = values.map((value) => toNumericValue(value));
   const validEntries = parsedValues
@@ -802,17 +1038,13 @@ function MiniSparkline({
 
   if (validEntries.length === 0) {
     return (
-      <div className="flex h-10 w-28 shrink-0 items-center justify-center gap-1.5">
+      <div className={cn("flex items-center justify-center gap-1.5", sparklineClass)}>
         <span className="h-[3px] w-[3px] rounded-full bg-black/35" />
         <span className="h-[3px] w-[3px] rounded-full bg-black/35" />
         <span className="h-[3px] w-[3px] rounded-full bg-black/35" />
       </div>
     );
   }
-
-  const width = 108;
-  const height = 38;
-  const padding = 4;
   const xForIndex = (index: number): number =>
     parsedValues.length <= 1 ? width / 2 : padding + (index * (width - padding * 2)) / Math.max(1, parsedValues.length - 1);
   const lastValidIndex = validEntries[validEntries.length - 1].index;
@@ -821,15 +1053,15 @@ function MiniSparkline({
     const singleX = xForIndex(lastValidIndex);
     const singleY = height / 2;
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-10 w-28 shrink-0" role="img" aria-hidden>
-        <circle cx={singleX} cy={singleY} r={2.8} fill="var(--admin-accent)" />
+      <svg viewBox={`0 0 ${width} ${height}`} className={sparklineClass} role="img" aria-hidden>
+        <circle cx={singleX} cy={singleY} r={compact ? 2.2 : 2.8} fill="var(--admin-accent)" />
       </svg>
     );
   }
 
   if (!hasEnoughData(values)) {
     return (
-      <div className="flex h-10 w-28 shrink-0 items-center justify-center gap-1.5">
+      <div className={cn("flex items-center justify-center gap-1.5", sparklineClass)}>
         <span className="h-[3px] w-[3px] rounded-full bg-black/35" />
         <span className="h-[3px] w-[3px] rounded-full bg-black/35" />
         <span className="h-[3px] w-[3px] rounded-full bg-black/35" />
@@ -852,9 +1084,9 @@ function MiniSparkline({
 
   if (type === "bar") {
     const slotWidth = width / Math.max(1, parsedValues.length);
-    const barWidth = Math.max(3.5, Math.min(6, slotWidth - 2));
+    const barWidth = compact ? Math.max(2.6, Math.min(4.6, slotWidth - 1.4)) : Math.max(3.5, Math.min(6, slotWidth - 2));
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-10 w-28 shrink-0" role="img" aria-hidden>
+      <svg viewBox={`0 0 ${width} ${height}`} className={sparklineClass} role="img" aria-hidden>
         {parsedValues.map((value, index) => {
           if (value === null) {
             return null;
@@ -884,11 +1116,11 @@ function MiniSparkline({
   const lastPoint = points[points.length - 1];
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-10 w-28 shrink-0" role="img" aria-hidden>
+    <svg viewBox={`0 0 ${width} ${height}`} className={sparklineClass} role="img" aria-hidden>
       <path d={areaPath} fill="rgba(15,23,42,0.08)" />
-      <path d={path} fill="none" stroke="rgba(15,23,42,0.45)" strokeWidth="1.75" strokeLinecap="round" />
-      {previousPoint && <circle cx={previousPoint.x} cy={previousPoint.y} r={2.45} fill="white" stroke="rgba(15,23,42,0.35)" strokeWidth="1.2" />}
-      <circle cx={lastPoint.x} cy={lastPoint.y} r={2.8} fill="var(--admin-accent)" />
+      <path d={path} fill="none" stroke="rgba(15,23,42,0.45)" strokeWidth={compact ? "1.45" : "1.75"} strokeLinecap="round" />
+      {previousPoint && <circle cx={previousPoint.x} cy={previousPoint.y} r={compact ? 1.95 : 2.45} fill="white" stroke="rgba(15,23,42,0.35)" strokeWidth={compact ? "1.05" : "1.2"} />}
+      <circle cx={lastPoint.x} cy={lastPoint.y} r={compact ? 2.2 : 2.8} fill="var(--admin-accent)" />
     </svg>
   );
 }
@@ -931,6 +1163,8 @@ function RevenueOrdersTrendChart({
   unitsLabel,
   aovLabel,
   emptyLabel,
+  compact = false,
+  allowHorizontalScroll = true,
 }: {
   data: TrendPoint[];
   revenueLegend: string;
@@ -938,6 +1172,8 @@ function RevenueOrdersTrendChart({
   unitsLabel: string;
   aovLabel: string;
   emptyLabel: string;
+  compact?: boolean;
+  allowHorizontalScroll?: boolean;
 }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
@@ -966,7 +1202,8 @@ function RevenueOrdersTrendChart({
     return `${date.getMonth() + 1}/${date.getDate()}`;
   };
 
-  const width = Math.max(620, data.length * 24);
+  // Keep dashboard layout stable across 7D/30D/90D by fixing the viewport width in non-scroll mode.
+  const width = allowHorizontalScroll ? Math.max(620, data.length * 24) : compact ? 360 : 960;
   const height = 236;
   const leftPadding = 52;
   const rightPadding = 12;
@@ -1004,8 +1241,8 @@ function RevenueOrdersTrendChart({
   const tooltipLeft = hoveredPoint ? Math.max(90, Math.min(width - 90, hoveredPoint.x)) : 0;
 
   return (
-    <div className="overflow-x-auto">
-      <div className="relative mx-auto min-w-[620px]" style={{ width }}>
+    <div className={allowHorizontalScroll ? "overflow-x-auto" : "overflow-x-hidden"}>
+      <div className={cn("relative mx-auto", allowHorizontalScroll ? "min-w-[620px]" : "w-full")} style={allowHorizontalScroll ? { width } : undefined}>
         {hoveredPoint && (
           <div
             className="pointer-events-none absolute z-[3] -translate-x-1/2 rounded-[13px] border border-black/10 bg-white px-3 py-2 text-xs text-black/75"
@@ -1019,7 +1256,7 @@ function RevenueOrdersTrendChart({
           </div>
         )}
 
-        <svg viewBox={`0 0 ${width} ${height}`} className="h-[180px] w-full md:h-[220px] xl:h-[260px]" role="img" aria-hidden>
+        <svg viewBox={`0 0 ${width} ${height}`} className={cn("w-full", compact ? "h-[170px]" : "h-[180px] md:h-[220px] xl:h-[260px]")} role="img" aria-hidden>
           {revenueTickValues.map((tickValue) => {
             const y = chartBottom - (tickValue / revenueAxisMax) * chartHeight;
             return (
@@ -1227,6 +1464,7 @@ function AdminAnalyticsView() {
   const [range, setRange] = useState<AnalyticsRange>("30d");
   const [salesInterval, setSalesInterval] = useState<SalesInterval>("daily");
   const [compareEnabled, setCompareEnabled] = useState(true);
+  const [mobileProductTab, setMobileProductTab] = useState<"revenue" | "views">("revenue");
   const [analysisNow] = useState<number>(() => Date.now());
   const toTimestamp = (value: string): number => {
     const parsed = new Date(value).getTime();
@@ -1418,6 +1656,26 @@ function AdminAnalyticsView() {
     .sort((a, b) => a.unitConversionRate - b.unitConversionRate || b.views - a.views)
     .slice(0, 5);
 
+  const topRevenueItems = topRevenueProducts.map((entry) => ({
+    key: `analytics-revenue-${entry.slug}`,
+    slug: entry.slug,
+    name: entry.name,
+    image: productBySlug.get(entry.slug)?.images[0] ?? null,
+    secondary: `${t("조회", "Views")} ${entry.views.toLocaleString()} | ${t("주문", "Orders")} ${entry.orderCount.toLocaleString()}`,
+    valueLabel: t("매출", "Revenue"),
+    value: currency(entry.revenue),
+  }));
+  const topViewedItems = topViewedProducts.map((entry) => ({
+    key: `analytics-view-${entry.slug}`,
+    slug: entry.slug,
+    name: entry.name,
+    image: productBySlug.get(entry.slug)?.images[0] ?? null,
+    secondary: `${t("전환", "Conversion")} ${entry.unitConversionRate.toFixed(1)}% | ${t("주문", "Orders")} ${entry.orderCount.toLocaleString()}`,
+    valueLabel: t("조회수", "Views"),
+    value: entry.views.toLocaleString(),
+  }));
+  const mobileTopProductItems = (mobileProductTab === "revenue" ? topRevenueItems : topViewedItems).slice(0, 5);
+
   const collectionStats = db.collections
     .map((collection) => {
       const slugs = db.products
@@ -1525,7 +1783,14 @@ function AdminAnalyticsView() {
             : range === "180d"
               ? t("최근 180일", "Last 180 days")
               : t("전체 기간", "All time");
-  const customRangeValue = range === "180d" || range === "all" || range === "custom" ? range : "custom";
+  const customRangeValue: "none" | "custom" | "180d" | "all" =
+    range === "custom" || range === "180d" || range === "all" ? range : "none";
+  const mobileMoreRangeValue: "more" | "ytd" | "custom" | "180d" | "all" =
+    range === "7d" || range === "30d" || range === "90d"
+      ? "more"
+      : range === "ytd" || range === "custom" || range === "180d" || range === "all"
+        ? range
+        : "more";
 
   const salesIntervalData = useMemo<Record<SalesInterval, SalesSeriesPoint[]>>(() => {
     const DAY_MS = 24 * 60 * 60 * 1000;
@@ -1677,14 +1942,48 @@ function AdminAnalyticsView() {
 
   return (
     <div className="mx-auto grid w-full max-w-[1200px] gap-6">
-      <header className="admin-surface p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-[28px] font-semibold tracking-tight text-black/88">{t("통계", "Analytics")}</h1>
-            <p className="mt-1 text-sm text-black/55">{t("매출, 주문, 전환 지표를 동일 톤으로 스캔합니다.", "Scan revenue, orders, and conversion in a consistent layout.")}</p>
+      <header className="admin-surface sticky top-[4.5rem] z-30 p-4 sm:p-5">
+        <div className="grid gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h1 className="text-[28px] font-semibold tracking-tight text-black/88">{t("통계", "Analytics")}</h1>
+              <p className="mt-1 text-sm text-black/55">{t("매출, 주문, 전환 지표를 동일 톤으로 스캔합니다.", "Scan revenue, orders, and conversion in a consistent layout.")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCompareEnabled((prev) => !prev)}
+              className={cn(
+                "admin-ghost-button inline-flex h-10 items-center gap-2 px-3 text-xs font-semibold",
+                compareEnabled && "border-[rgba(232,46,92,0.28)] text-[color:var(--admin-accent)]",
+              )}
+            >
+              <span className={cn("inline-flex h-2.5 w-2.5 rounded-full border", compareEnabled ? "border-[color:var(--admin-accent)] bg-[color:var(--admin-accent)]" : "border-black/20")} />
+              {t("전기간 대비", "Compare previous")}
+            </button>
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <div className="inline-flex rounded-2xl border border-black/10 bg-white p-1">
+
+          <div className="grid gap-2 md:flex md:flex-wrap md:items-center md:justify-end">
+            <div className="grid grid-cols-3 gap-1 rounded-2xl border border-black/10 bg-white p-1 md:hidden">
+              {(["7d", "30d", "90d"] as AnalyticsRange[]).map((option) => {
+                const active = range === option;
+                return (
+                  <button
+                    key={`analytics-mobile-range-${option}`}
+                    type="button"
+                    onClick={() => setRange(option)}
+                    className={cn(
+                      "relative h-9 rounded-xl px-3 text-xs font-semibold transition-[background-color,color] duration-200 ease-out",
+                      active ? "bg-[color:var(--admin-subtle-bg)] text-black/88" : "text-black/55 hover:bg-[color:var(--admin-subtle-bg)]",
+                    )}
+                  >
+                    {option.toUpperCase()}
+                    <span className={cn("absolute bottom-1 left-2 right-2 h-[2px] rounded-full", active ? "bg-[color:var(--admin-accent)]" : "bg-transparent")} />
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="hidden rounded-2xl border border-black/10 bg-white p-1 md:inline-flex">
               {([
                 { label: "7D", value: "7d" },
                 { label: "30D", value: "30d" },
@@ -1708,33 +2007,49 @@ function AdminAnalyticsView() {
                 );
               })}
             </div>
+
             <select
-              className="admin-input h-10 rounded-2xl px-3 text-sm text-black/75"
-              value={customRangeValue}
+              className="admin-input h-10 rounded-2xl px-3 text-sm text-black/75 md:hidden"
+              value={mobileMoreRangeValue}
               onChange={(event) => {
-                const next = event.target.value as AnalyticsRange | "custom";
+                const next = event.target.value as AnalyticsRange | "custom" | "more";
+                if (next === "more") {
+                  return;
+                }
                 if (next === "custom") {
                   setRange("custom");
-                } else {
-                  setRange(next);
+                  return;
                 }
+                setRange(next);
               }}
             >
+              <option value="more">{t("더보기", "More")}</option>
+              <option value="ytd">YTD</option>
               <option value="custom">{t("커스텀", "Custom")}</option>
               <option value="180d">180D</option>
               <option value="all">{t("전체 기간", "All time")}</option>
             </select>
-            <button
-              type="button"
-              onClick={() => setCompareEnabled((prev) => !prev)}
-              className={cn(
-                "admin-ghost-button inline-flex h-10 items-center gap-2 px-3 text-xs font-semibold",
-                compareEnabled && "border-[rgba(232,46,92,0.28)] text-[color:var(--admin-accent)]",
-              )}
+
+            <select
+              className="admin-input hidden h-10 rounded-2xl px-3 text-sm text-black/75 md:block"
+              value={customRangeValue}
+              onChange={(event) => {
+                const next = event.target.value as AnalyticsRange | "custom" | "none";
+                if (next === "none") {
+                  return;
+                }
+                if (next === "custom") {
+                  setRange("custom");
+                  return;
+                }
+                setRange(next);
+              }}
             >
-              <span className={cn("inline-flex h-2.5 w-2.5 rounded-full border", compareEnabled ? "border-[color:var(--admin-accent)] bg-[color:var(--admin-accent)]" : "border-black/20")} />
-              {t("전기간 대비", "Compare previous")}
-            </button>
+              <option value="none">{t("추가 기간", "More ranges")}</option>
+              <option value="custom">{t("커스텀", "Custom")}</option>
+              <option value="180d">180D</option>
+              <option value="all">{t("전체 기간", "All time")}</option>
+            </select>
           </div>
         </div>
         {range === "custom" && (
@@ -1763,9 +2078,9 @@ function AdminAnalyticsView() {
         )}
       </header>
 
-      <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-12">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-12">
         {topKpis.map((kpi) => (
-          <div key={kpi.key} className="xl:col-span-3">
+          <div key={kpi.key} className="col-span-1 xl:col-span-3">
             <AnalyticsTopKpiCard
               label={kpi.label}
               value={kpi.value}
@@ -1773,8 +2088,6 @@ function AdminAnalyticsView() {
               sparkline={kpi.sparkline}
               sparklineType={kpi.sparklineType}
               deltaSuffix={t("전기간 대비", "vs previous")}
-              upLabel={t("상승", "Up")}
-              noBaselineLabel={t("기준 없음", "No baseline")}
             />
           </div>
         ))}
@@ -1839,7 +2152,7 @@ function AdminAnalyticsView() {
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className="mt-4 hidden gap-3 md:grid md:grid-cols-3">
           <AnalyticsCard
             label={t("선택 구간 총매출", "Window Revenue")}
             value={currency(salesSeriesTotalRevenue)}
@@ -1872,7 +2185,7 @@ function AdminAnalyticsView() {
           />
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
+        <div className="mt-3 hidden flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500 md:flex">
           <span>{t("총 주문", "Total Orders")}: {salesSeriesTotalOrders.toLocaleString()}</span>
           <span>{t("총 판매 수량", "Units Sold")}: {salesSeriesTotalUnits.toLocaleString()}</span>
           <span>{t("집계 기간", "Window")}: {salesSeriesWindowLabel}</span>
@@ -1880,7 +2193,7 @@ function AdminAnalyticsView() {
       </section>
 
       <div className="grid gap-6 xl:grid-cols-12 items-start">
-        <section className="admin-surface p-6 xl:col-span-7">
+        <section className="hidden lg:block admin-surface p-6 xl:col-span-7">
           <h2 className="text-[14px] font-medium text-black/55">{t("매출 추이", "Revenue Trend")}</h2>
           <div className="mt-5 grid gap-3">
             {trendData.map((entry) => (
@@ -1935,40 +2248,112 @@ function AdminAnalyticsView() {
         </section>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-12">
+      <section className="admin-surface p-4 lg:hidden">
+        <div className="flex items-center justify-between gap-2">
+          <div className="inline-flex rounded-2xl border border-black/10 bg-white p-1">
+            <button
+              type="button"
+              onClick={() => setMobileProductTab("revenue")}
+              className={cn(
+                "relative h-9 rounded-xl px-4 text-xs font-semibold transition-[background-color,color] duration-200 ease-out",
+                mobileProductTab === "revenue" ? "bg-[color:var(--admin-subtle-bg)] text-black/88" : "text-black/55",
+              )}
+            >
+              {t("매출 상위", "Top Revenue")}
+              <span className={cn("absolute bottom-1 left-3 right-3 h-[2px] rounded-full", mobileProductTab === "revenue" ? "bg-[color:var(--admin-accent)]" : "bg-transparent")} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileProductTab("views")}
+              className={cn(
+                "relative h-9 rounded-xl px-4 text-xs font-semibold transition-[background-color,color] duration-200 ease-out",
+                mobileProductTab === "views" ? "bg-[color:var(--admin-subtle-bg)] text-black/88" : "text-black/55",
+              )}
+            >
+              {t("조회 상위", "Top Views")}
+              <span className={cn("absolute bottom-1 left-3 right-3 h-[2px] rounded-full", mobileProductTab === "views" ? "bg-[color:var(--admin-accent)]" : "bg-transparent")} />
+            </button>
+          </div>
+          <Link href="/admin/products" className="text-xs font-semibold text-[color:var(--admin-accent)]">
+            {t("전체보기", "View all")}
+          </Link>
+        </div>
+        <div className="mt-3 grid gap-2">
+          {mobileTopProductItems.length === 0 && (
+            <p className="rounded-[14px] border border-black/10 bg-white p-3 text-sm text-black/55">
+              {mobileProductTab === "revenue" ? t("선택 기간의 매출 데이터가 없습니다.", "No sales data for this range.") : t("조회 데이터가 아직 없습니다.", "No view data yet.")}
+            </p>
+          )}
+          {mobileTopProductItems.map((item) => (
+            <Link
+              key={`analytics-mobile-top-${item.key}`}
+              href={`/product/${item.slug}`}
+              className="admin-hover-subtle flex items-center gap-3 rounded-[14px] border border-black/10 bg-white px-3 py-2.5 transition-[background-color,border-color,color] duration-200 ease-out"
+            >
+              {item.image ? (
+                <img src={item.image} alt={item.name} className="h-10 w-10 rounded-[12px] border border-black/10 object-cover" loading="lazy" />
+              ) : (
+                <div className="grid h-10 w-10 place-items-center rounded-[12px] border border-black/10 bg-black/[0.03] text-black/35">
+                  <span className="material-symbols-outlined text-[14px]">inventory_2</span>
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-black/85">{item.name}</p>
+                <p className="mt-1 truncate text-xs text-black/55">{item.secondary}</p>
+              </div>
+              <p className="tabular-nums text-xs font-semibold text-black/82">{item.value}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <div className="hidden gap-6 lg:grid xl:grid-cols-12">
         <AnalyticsProductList
           className="xl:col-span-6"
           title={t("매출 상위 상품", "Top Revenue Products")}
           emptyLabel={t("선택 기간의 매출 데이터가 없습니다.", "No sales data for this range.")}
           viewLabel={t("보기", "View")}
-          items={topRevenueProducts.map((entry) => ({
-            key: `analytics-revenue-${entry.slug}`,
-            slug: entry.slug,
-            name: entry.name,
-            image: productBySlug.get(entry.slug)?.images[0] ?? null,
-            secondary: `${t("조회", "Views")} ${entry.views.toLocaleString()} | ${t("주문", "Orders")} ${entry.orderCount.toLocaleString()}`,
-            valueLabel: t("매출", "Revenue"),
-            value: currency(entry.revenue),
-          }))}
+          items={topRevenueItems}
         />
         <AnalyticsProductList
           className="xl:col-span-6"
           title={t("조회수 상위 상품", "Top Viewed Products")}
           emptyLabel={t("조회 데이터가 아직 없습니다.", "No view data yet.")}
           viewLabel={t("보기", "View")}
-          items={topViewedProducts.map((entry) => ({
-            key: `analytics-view-${entry.slug}`,
-            slug: entry.slug,
-            name: entry.name,
-            image: productBySlug.get(entry.slug)?.images[0] ?? null,
-            secondary: `${t("전환", "Conversion")} ${entry.unitConversionRate.toFixed(1)}% | ${t("주문", "Orders")} ${entry.orderCount.toLocaleString()}`,
-            valueLabel: t("조회수", "Views"),
-            value: entry.views.toLocaleString(),
-          }))}
+          items={topViewedItems}
         />
       </div>
 
-      <section className="admin-surface p-6">
+      <section className="admin-surface p-4 lg:hidden">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-[14px] font-medium text-black/55">{t("컬렉션 성과", "Collection Performance")}</h2>
+          <Link href="/admin/collections" className="text-xs font-semibold text-[color:var(--admin-accent)]">
+            {t("전체보기", "View all")}
+          </Link>
+        </div>
+        <div className="mt-3 grid gap-2.5">
+          {collectionStats.slice(0, 3).map((entry) => (
+            <article key={`analytics-collection-mobile-${entry.slug}`} className="rounded-2xl border border-black/10 bg-white p-3.5">
+              <div className="flex items-start justify-between gap-2">
+                <p className="line-clamp-1 text-sm font-semibold text-black/84">{entry.name}</p>
+                <p className="tabular-nums text-xs font-semibold text-black/82">{currency(entry.revenue)}</p>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-black/55">
+                <span>{t("조회수", "Views")}: <span className="tabular-nums">{entry.views.toLocaleString()}</span></span>
+                <span>{t("주문", "Orders")}: <span className="tabular-nums">{entry.orderCount.toLocaleString()}</span></span>
+                <span>{t("전환율", "Conversion")}: <span className="tabular-nums">{entry.unitConversionRate.toFixed(1)}%</span></span>
+              </div>
+            </article>
+          ))}
+          {collectionStats.length === 0 && (
+            <p className="rounded-2xl border border-black/10 bg-white p-4 text-sm text-black/55">
+              {t("컬렉션 통계 데이터가 없습니다.", "No collection analytics available.")}
+            </p>
+          )}
+        </div>
+      </section>
+
+      <section className="hidden lg:block admin-surface p-6">
         <h2 className="text-[14px] font-medium text-black/55">{t("컬렉션 성과", "Collection Performance")}</h2>
         <div className="mt-4 overflow-x-auto rounded-2xl border border-black/10">
           <table className="w-full min-w-[760px] border-collapse text-sm">
@@ -2183,7 +2568,7 @@ function AdminProductsView({ editSlug }: { editSlug?: string | null }) {
               <div className="flex gap-2">
                 <button
                   type="button"
-                  className="h-10 px-4 rounded-full border border-slate-300 text-sm"
+                  className="inline-flex h-10 min-w-[72px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 text-sm leading-none"
                   onClick={() => {
                     setEditingSlug(product.slug);
                     setForm(toProductForm(product));
@@ -2191,7 +2576,7 @@ function AdminProductsView({ editSlug }: { editSlug?: string | null }) {
                 >
                   {t("수정", "Edit")}
                 </button>
-                <button type="button" className="h-10 px-4 rounded-full border border-slate-300 text-sm" onClick={() => deleteProduct(product.slug)}>
+                <button type="button" className="inline-flex h-10 min-w-[72px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 text-sm leading-none" onClick={() => deleteProduct(product.slug)}>
                   {t("삭제", "Delete")}
                 </button>
               </div>
@@ -2272,7 +2657,7 @@ function AdminCollectionsView() {
               <div className="flex gap-2">
                 <button
                   type="button"
-                  className="h-10 px-4 rounded-full border border-slate-300 text-sm"
+                  className="inline-flex h-10 min-w-[72px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 text-sm leading-none"
                   onClick={() => {
                     setEditingSlug(collection.slug);
                     setForm({
@@ -2287,7 +2672,7 @@ function AdminCollectionsView() {
                 >
                   {t("수정", "Edit")}
                 </button>
-                <button type="button" className="h-10 px-4 rounded-full border border-slate-300 text-sm" onClick={() => deleteCollection(collection.slug)}>
+                <button type="button" className="inline-flex h-10 min-w-[72px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 text-sm leading-none" onClick={() => deleteCollection(collection.slug)}>
                   {t("삭제", "Delete")}
                 </button>
               </div>
@@ -2320,6 +2705,7 @@ function AdminOrdersView() {
   const [statusFilter, setStatusFilter] = useState<"all" | Order["status"]>("all");
   const [dateFilter, setDateFilter] = useState<"all" | "30d" | "7d">("all");
   const [page, setPage] = useState(1);
+  const usersById = useMemo(() => new Map(db.users.map((user) => [user.id, user])), [db.users]);
 
   const sortedOrders = useMemo(
     () => [...db.orders].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)),
@@ -2345,11 +2731,11 @@ function AdminOrdersView() {
         return true;
       }
 
-      const customer = db.users.find((user) => user.id === order.userId);
+      const customer = usersById.get(order.userId);
       const haystack = `${order.id} ${customer?.name ?? ""} ${customer?.email ?? ""}`.toLowerCase();
       return haystack.includes(query.trim().toLowerCase());
     });
-  }, [sortedOrders, statusFilter, dateFilter, query, db.users]);
+  }, [sortedOrders, statusFilter, dateFilter, query, usersById]);
 
   if (db.orders.length === 0) {
     return <EmptyState title={t("주문이 없습니다", "No orders")} body={t("결제가 완료되면 주문이 이곳에 표시됩니다.", "Orders will appear here after checkout.")} />;
@@ -2387,31 +2773,20 @@ function AdminOrdersView() {
     URL.revokeObjectURL(url);
   };
 
-  const dateLabel =
-    dateFilter === "all"
-      ? t("최근 30일", "Last 30 Days")
-      : dateFilter === "30d"
-        ? t("최근 30일", "Last 30 Days")
-        : t("최근 7일", "Last 7 Days");
-  const statusLabel = statusFilter === "all" ? t("상태: 전체", "Status: All") : `${t("상태", "Status")}: ${orderStatusLabel(statusFilter)}`;
-
-  const statusClassMap: Record<Order["status"], string> = {
-    shipped: "bg-[#E3F2FD] text-[#1976D2]",
-    processing: "bg-[#FFF3E0] text-[#F57C00]",
-    delivered: "bg-[#E8F5E9] text-[#388E3C]",
-    cancelled: "bg-[#F5F5F5] text-[#757575]",
-    pending: "bg-[#FFF3E0] text-[#F57C00]",
-  };
+  const paymentPillClass = (status: Order["paymentStatus"]) =>
+    status === "pending"
+      ? "border-[rgba(232,46,92,0.25)] bg-[rgba(232,46,92,0.04)] text-[color:var(--admin-accent)]"
+      : "border-black/10 bg-black/[0.02] text-black/60";
 
   return (
     <>
-      <div className="mb-10 flex flex-wrap items-center justify-between gap-6">
-        <div className="relative w-full max-w-sm">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[#64748B]">
-            <span className="material-symbols-outlined text-[20px] font-light">search</span>
-          </div>
+      <div className="mb-6 grid gap-2.5 md:mb-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <div className="relative w-full lg:max-w-sm">
+          <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-black/42">
+            <span className="material-symbols-outlined text-[18px]">search</span>
+          </span>
           <input
-            className="block w-full border-0 border-b border-[#E2E8F0] bg-transparent py-3 pl-10 pr-3 text-sm text-[#0F172A] placeholder-[#64748B] focus:border-[#0F172A] focus:ring-0 transition-all font-light"
+            className="admin-input admin-menu-search-input h-11 w-full pl-10 pr-3 text-sm text-black/82 placeholder:text-black/45"
             placeholder={t("주문 검색", "Search orders")}
             type="text"
             value={query}
@@ -2422,80 +2797,68 @@ function AdminOrdersView() {
           />
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <button className="group flex items-center gap-2 border-b border-transparent hover:border-[#E2E8F0] px-2 py-2 text-sm text-[#64748B] hover:text-[#0F172A] transition-all">
-              <span className="font-medium">{dateLabel}</span>
-              <span className="material-symbols-outlined text-[18px]">expand_more</span>
-            </button>
-            <select
-              className="absolute inset-0 opacity-0 cursor-pointer"
-              value={dateFilter}
-              onChange={(event) => {
-                setDateFilter(event.target.value as typeof dateFilter);
-                setPage(1);
-              }}
-            >
-              <option value="30d">{t("최근 30일", "Last 30 Days")}</option>
-              <option value="7d">{t("최근 7일", "Last 7 Days")}</option>
-              <option value="all">{t("전체 기간", "All time")}</option>
-            </select>
-          </div>
-
-          <div className="relative">
-            <button className="group flex items-center gap-2 border-b border-transparent hover:border-[#E2E8F0] px-2 py-2 text-sm text-[#64748B] hover:text-[#0F172A] transition-all">
-              <span className="font-medium">{statusLabel}</span>
-              <span className="material-symbols-outlined text-[18px]">expand_more</span>
-            </button>
-            <select
-              className="absolute inset-0 opacity-0 cursor-pointer"
-              value={statusFilter}
-              onChange={(event) => {
-                setStatusFilter(event.target.value as typeof statusFilter);
-                setPage(1);
-              }}
-            >
-              <option value="all">{t("상태: 전체", "Status: All")}</option>
-              <option value="pending">{orderStatusLabel("pending")}</option>
-              <option value="processing">{orderStatusLabel("processing")}</option>
-              <option value="shipped">{orderStatusLabel("shipped")}</option>
-              <option value="delivered">{orderStatusLabel("delivered")}</option>
-              <option value="cancelled">{orderStatusLabel("cancelled")}</option>
-            </select>
-          </div>
-
+        <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-wrap lg:items-center lg:justify-end">
+          <select
+            className="admin-input h-11 w-full min-w-[124px] px-3 text-sm text-black/76"
+            aria-label={t("기간 필터", "Date filter")}
+            value={dateFilter}
+            onChange={(event) => {
+              setDateFilter(event.target.value as typeof dateFilter);
+              setPage(1);
+            }}
+          >
+            <option value="30d">{t("최근 30일", "Last 30 Days")}</option>
+            <option value="7d">{t("최근 7일", "Last 7 Days")}</option>
+            <option value="all">{t("전체 기간", "All time")}</option>
+          </select>
+          <select
+            className="admin-input h-11 w-full min-w-[124px] px-3 text-sm text-black/76"
+            aria-label={t("주문 상태 필터", "Order status filter")}
+            value={statusFilter}
+            onChange={(event) => {
+              setStatusFilter(event.target.value as typeof statusFilter);
+              setPage(1);
+            }}
+          >
+            <option value="all">{t("상태: 전체", "Status: All")}</option>
+            <option value="pending">{orderStatusLabel("pending")}</option>
+            <option value="processing">{orderStatusLabel("processing")}</option>
+            <option value="shipped">{orderStatusLabel("shipped")}</option>
+            <option value="delivered">{orderStatusLabel("delivered")}</option>
+            <option value="cancelled">{orderStatusLabel("cancelled")}</option>
+          </select>
           <button
-            className="group flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#0F172A] hover:bg-white transition-all ml-4"
+            className="admin-ghost-button inline-flex h-11 items-center justify-center gap-1.5 px-3 text-xs font-semibold text-black/72"
             onClick={exportCsv}
             type="button"
           >
             <span className="material-symbols-outlined text-[18px]">download</span>
-            <span className="uppercase text-xs tracking-wider">{t("CSV 내보내기", "Export CSV")}</span>
+            <span>{t("CSV 내보내기", "Export CSV")}</span>
           </button>
-          <button className="flex items-center gap-2 border border-[#0F172A] bg-transparent px-6 py-2.5 text-xs uppercase tracking-widest font-medium text-[#0F172A] hover:bg-[#0F172A] hover:text-white transition-all duration-300">
+          <button className="admin-solid-button inline-flex h-11 items-center justify-center gap-1.5 px-3 text-xs font-semibold" type="button">
             <span className="material-symbols-outlined text-[16px]">add</span>
             {t("주문 생성", "Create Order")}
           </button>
         </div>
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)]">
-        <div className="overflow-x-auto">
+      <div className="admin-surface overflow-hidden">
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-[#E2E8F0] text-[11px] uppercase tracking-widest text-[#64748B] font-medium bg-[#F8FAFC]/30">
-                <th className="px-8 py-5 font-medium w-32">{t("주문 번호", "Order ID")}</th>
-                <th className="px-8 py-5 font-medium w-40">{t("주문일", "Date")}</th>
-                <th className="px-8 py-5 font-medium">{t("고객", "Customer")}</th>
-                <th className="px-8 py-5 font-medium w-40">{t("상태", "Status")}</th>
-                <th className="px-8 py-5 font-medium w-32 text-right">{t("합계", "Total")}</th>
-                <th className="px-8 py-5 font-medium w-32 text-center">{t("결제", "Payment")}</th>
-                <th className="px-8 py-5 font-medium w-16 text-center" />
+              <tr className="border-b border-black/10 bg-black/[0.015] text-[11px] uppercase tracking-[0.12em] text-black/45">
+                <th className="px-5 py-4 font-medium">{t("주문 번호", "Order ID")}</th>
+                <th className="px-5 py-4 font-medium">{t("주문일", "Date")}</th>
+                <th className="px-5 py-4 font-medium">{t("고객", "Customer")}</th>
+                <th className="px-5 py-4 font-medium">{t("상태", "Status")}</th>
+                <th className="px-5 py-4 text-right font-medium">{t("합계", "Total")}</th>
+                <th className="px-5 py-4 text-center font-medium">{t("결제", "Payment")}</th>
+                <th className="px-5 py-4 text-right font-medium">{t("보기", "View")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E2E8F0]/50 text-sm font-light">
+            <tbody className="divide-y divide-black/5 text-sm">
               {pagedOrders.map((order) => {
-                const customer = db.users.find((entry) => entry.id === order.userId);
+                const customer = usersById.get(order.userId);
                 const customerName = customer?.name ?? t("비회원", "Guest");
                 const customerEmail = customer?.email ?? "guest@example.com";
                 const initials = customerName
@@ -2515,62 +2878,63 @@ function AdminOrdersView() {
                     : "hourglass_empty";
 
                 return (
-                  <tr key={order.id} className="group hover:bg-[#F8FAFC] transition-colors duration-200">
-                    <td className="px-8 py-6 whitespace-nowrap text-[#0F172A]">
+                  <tr key={order.id} className="admin-hover-subtle group">
+                    <td className="px-5 py-4 whitespace-nowrap text-black/86">
                       <Link
-                        className="hover:underline underline-offset-4 decoration-[#E2E8F0]"
+                        className="font-semibold transition-colors duration-200 ease-out hover:text-[color:var(--admin-accent)]"
                         href={`/admin/orders/${order.id}`}
                       >
                         #{order.id}
                       </Link>
                     </td>
-                    <td className="px-8 py-6 whitespace-nowrap text-[#64748B]">
+                    <td className="px-5 py-4 whitespace-nowrap text-black/58">
                       {formatDate(order.createdAt)} <br />
-                      <span className="text-[11px] text-[#64748B]/60 tracking-wider uppercase">{timeLabel}</span>
+                      <span className="text-[11px] tabular-nums text-black/42">{timeLabel}</span>
                     </td>
-                    <td className="px-8 py-6 whitespace-nowrap">
+                    <td className="px-5 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-4">
-                        <div className="h-9 w-9 rounded-full bg-[#F3F4F6] flex items-center justify-center text-[#0F172A] border border-[#E2E8F0]/50">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-black/[0.03] text-black/80">
                           <span className="text-xs font-semibold">{initials || "NA"}</span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[#0F172A] font-medium">{customerName}</span>
-                          <span className="text-xs text-[#64748B]/80">{customerEmail}</span>
+                          <span className="font-medium text-black/84">{customerName}</span>
+                          <span className="max-w-[220px] truncate text-xs text-black/52">{customerEmail}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center px-3 py-1 text-[11px] uppercase tracking-wider font-medium ${statusClassMap[order.status]}`}
-                      >
-                        {orderStatusLabel(order.status)}
-                      </span>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <OrderStatusPill status={order.status} label={orderStatusLabel(order.status)} />
                     </td>
                     <td
-                      className={`px-8 py-6 whitespace-nowrap text-right text-base ${
+                      className={`px-5 py-4 whitespace-nowrap text-right tabular-nums text-base font-semibold ${
                         order.status === "cancelled"
-                          ? "text-[#64748B] line-through decoration-[#64748B]/30"
-                          : "text-[#0F172A]"
+                          ? "text-black/52 line-through decoration-black/20"
+                          : "text-black/86"
                       }`}
                     >
                       {currency(order.total)}
                     </td>
-                    <td className="px-8 py-6 whitespace-nowrap text-center">
+                    <td className="px-5 py-4 whitespace-nowrap text-center">
                       <div className="flex justify-center">
-                        <span className="inline-flex min-w-5 items-center justify-center px-2 text-[#64748B]/70 text-xs font-medium">
-                          <span className="material-symbols-outlined text-[18px]">{paymentIcon}</span>
+                        <span
+                          className={cn(
+                            "inline-flex min-w-5 items-center justify-center rounded-full border px-2.5 py-1 text-[11px] font-medium",
+                            paymentPillClass(order.paymentStatus),
+                          )}
+                        >
+                          <span className="material-symbols-outlined text-[15px]">{paymentIcon}</span>
                           <span className="ml-1">{paymentStatusLabel(order.paymentStatus)}</span>
                         </span>
                       </div>
                     </td>
-                    <td className="px-8 py-6 whitespace-nowrap text-center">
+                    <td className="px-5 py-4 whitespace-nowrap text-right">
                       <button
-                        className="rounded p-1 text-[#64748B] hover:text-[#0F172A] transition-colors opacity-0 group-hover:opacity-100"
+                        className="inline-flex h-8 items-center rounded-full border border-black/10 px-3 text-xs font-semibold text-[color:var(--admin-accent)] opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100"
                         type="button"
-                        aria-label={t(`二쇰Ц ${order.id} ?묒뾽 ?닿린`, `Open actions for ${order.id}`)}
+                        aria-label={t(`주문 ${order.id} 보기`, `View order ${order.id}`)}
                         onClick={() => router.push(`/admin/orders/${order.id}`)}
                       >
-                        <span className="material-symbols-outlined text-[20px]">more_horiz</span>
+                        {t("보기", "View")}
                       </button>
                     </td>
                   </tr>
@@ -2579,14 +2943,77 @@ function AdminOrdersView() {
             </tbody>
           </table>
         </div>
+
+        <div className="divide-y divide-black/10 md:hidden">
+          {pagedOrders.map((order) => {
+            const customer = usersById.get(order.userId);
+            const customerName = customer?.name ?? t("비회원", "Guest");
+            const customerEmail = customer?.email ?? "guest@example.com";
+            const timeLabel = new Date(order.createdAt).toLocaleTimeString(locale === "ko" ? "ko-KR" : "en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            return (
+              <article key={`mobile-${order.id}`} className="admin-hover-subtle p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Link href={`/admin/orders/${order.id}`} className="block break-all text-sm font-semibold text-black/85">
+                      #{order.id}
+                    </Link>
+                    <p className="mt-1 tabular-nums text-xs text-black/52">
+                      {formatDate(order.createdAt)} · {timeLabel}
+                    </p>
+                  </div>
+                  <p
+                    className={cn(
+                      "tabular-nums text-right text-sm font-semibold",
+                      order.status === "cancelled" ? "text-black/52 line-through decoration-black/20" : "text-black/86",
+                    )}
+                  >
+                    {currency(order.total)}
+                  </p>
+                </div>
+
+                <div className="mt-3">
+                  <p className="text-sm font-medium text-black/84">{customerName}</p>
+                  <p className="mt-0.5 truncate text-xs text-black/52">{customerEmail}</p>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <OrderStatusPill status={order.status} label={orderStatusLabel(order.status)} />
+                  <span
+                    className={cn(
+                      "inline-flex min-w-5 items-center justify-center rounded-full border px-2.5 py-1 text-[11px] font-medium",
+                      paymentPillClass(order.paymentStatus),
+                    )}
+                  >
+                    {paymentStatusLabel(order.paymentStatus)}
+                  </span>
+                  {order.refundRequested && (
+                    <span className="inline-flex items-center rounded-full border border-[rgba(232,46,92,0.25)] bg-[rgba(232,46,92,0.04)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--admin-accent)]">
+                      {t("환불 요청", "Refund")}
+                    </span>
+                  )}
+                  <button
+                    className="admin-ghost-button ml-auto inline-flex h-8 items-center px-3 text-xs font-semibold text-[color:var(--admin-accent)]"
+                    type="button"
+                    onClick={() => router.push(`/admin/orders/${order.id}`)}
+                  >
+                    {t("보기", "View")}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </div>
 
       {pagedOrders.length === 0 && <p className="text-sm text-[#64748B] mt-6">{t("필터 조건에 맞는 주문이 없습니다.", "No orders match this filter.")}</p>}
 
-      <div className="flex items-center justify-between pt-8 pb-4">
+      <div className="flex items-center justify-between pb-4 pt-6">
         <div className="flex flex-1 justify-between sm:hidden">
           <button
-            className="relative inline-flex items-center border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#0F172A] hover:bg-[#F8FAFC] disabled:opacity-40"
+            className="admin-ghost-button relative inline-flex items-center px-4 py-2 text-sm font-medium text-black/84 disabled:opacity-40"
             onClick={() => setPage((prev) => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
             type="button"
@@ -2594,7 +3021,7 @@ function AdminOrdersView() {
             {t("이전", "Previous")}
           </button>
           <button
-            className="relative ml-3 inline-flex items-center border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#0F172A] hover:bg-[#F8FAFC] disabled:opacity-40"
+            className="admin-ghost-button relative ml-3 inline-flex items-center px-4 py-2 text-sm font-medium text-black/84 disabled:opacity-40"
             onClick={() => setPage((prev) => Math.min(pageCount, prev + 1))}
             disabled={currentPage === pageCount}
             type="button"
@@ -2789,7 +3216,7 @@ function AdminOrderDetailView({ id }: { id: string }) {
             <div className="border-b border-slate-200 px-6 py-4 flex justify-between items-center bg-slate-50/50">
               <h3 className="text-base font-semibold text-slate-900">{t("주문 품목", "Order Items")}</h3>
               <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
-                {locale === "ko" ? `${lines.length}媛??덈ぉ` : `${lines.length} Items`}
+                {locale === "ko" ? `${lines.length}개 항목` : `${lines.length} Items`}
               </span>
             </div>
 
@@ -3082,11 +3509,11 @@ function AdminReviewsView() {
             <p className="text-sm mt-3">{resolveText(review.body, locale)}</p>
             <div className="mt-4 flex gap-2">
               {!review.approved && (
-                <button type="button" className="h-10 px-4 rounded-full border border-slate-300 text-sm" onClick={() => approveReview(review.id)}>
+                <button type="button" className="inline-flex h-10 min-w-[72px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 text-sm leading-none" onClick={() => approveReview(review.id)}>
                   {t("승인", "Approve")}
                 </button>
               )}
-              <button type="button" className="h-10 px-4 rounded-full border border-slate-300 text-sm" onClick={() => deleteReview(review.id)}>
+              <button type="button" className="inline-flex h-10 min-w-[72px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 text-sm leading-none" onClick={() => deleteReview(review.id)}>
                 {t("삭제", "Delete")}
               </button>
             </div>
@@ -3171,7 +3598,7 @@ function AdminJournalView() {
             <div className="flex gap-2">
               <button
                 type="button"
-                className="h-10 px-4 rounded-full border border-slate-300 text-sm"
+                className="inline-flex h-10 min-w-[72px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 text-sm leading-none"
                 onClick={() =>
                   setForm({
                     slug: article.slug,
@@ -3186,7 +3613,7 @@ function AdminJournalView() {
               >
                 {t("수정", "Edit")}
               </button>
-              <button type="button" className="h-10 px-4 rounded-full border border-slate-300 text-sm" onClick={() => deleteArticle(article.slug)}>
+              <button type="button" className="inline-flex h-10 min-w-[72px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 text-sm leading-none" onClick={() => deleteArticle(article.slug)}>
                 {t("삭제", "Delete")}
               </button>
             </div>
@@ -3237,7 +3664,7 @@ function AdminBannersView() {
           <div>
             <label className="text-xs uppercase tracking-[0.15em] font-semibold text-slate-500">{t("키", "Key")}</label>
             <select className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm mt-2" value={form.key} onChange={(event) => setForm((prev) => ({ ...prev, key: event.target.value }))}>
-              <option value="hero">{t("硫붿씤", "Hero")}</option>
+              <option value="hero">{t("메인", "Hero")}</option>
               <option value="secondary">{t("서브", "Secondary")}</option>
             </select>
           </div>
@@ -3274,15 +3701,15 @@ function AdminBannersView() {
           <article key={banner.id} className="rounded-xl border border-slate-200 p-4 flex items-center justify-between gap-3">
             <div>
               <p className="font-semibold">
-                {(banner.key === "hero" ? t("硫붿씤", "Hero") : t("서브", "Secondary"))} - {banner.type === "image" ? t("이미지", "Image") : t("영상", "Video")}
+                {(banner.key === "hero" ? t("메인", "Hero") : t("서브", "Secondary"))} - {banner.type === "image" ? t("이미지", "Image") : t("영상", "Video")}
               </p>
               <p className="text-sm text-slate-500">{banner.headline}</p>
             </div>
             <div className="flex gap-2">
-              <button type="button" className="h-10 px-4 rounded-full border border-slate-300 text-sm" onClick={() => setForm({ ...banner, id: banner.id })}>
+              <button type="button" className="inline-flex h-10 min-w-[72px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 text-sm leading-none" onClick={() => setForm({ ...banner, id: banner.id })}>
                 {t("수정", "Edit")}
               </button>
-              <button type="button" className="h-10 px-4 rounded-full border border-slate-300 text-sm" onClick={() => deleteBanner(banner.id)}>
+              <button type="button" className="inline-flex h-10 min-w-[72px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 text-sm leading-none" onClick={() => deleteBanner(banner.id)}>
                 {t("삭제", "Delete")}
               </button>
             </div>
@@ -3362,11 +3789,11 @@ function AdminCouponsView() {
             <div>
               <p className="font-semibold">{coupon.code}</p>
               <p className="text-sm text-slate-500">
-                {(coupon.type === "percent" ? t("정률", "Percent") : t("정액", "Fixed"))} {coupon.value} - {t("理쒖냼", "min")} {currency(coupon.minSubtotal)}
+                {(coupon.type === "percent" ? t("정률", "Percent") : t("정액", "Fixed"))} {coupon.value} - {t("최소", "min")} {currency(coupon.minSubtotal)}
               </p>
             </div>
             <div className="flex gap-2">
-              <button type="button" className="h-10 px-4 rounded-full border border-slate-300 text-sm" onClick={() => setForm({
+              <button type="button" className="inline-flex h-10 min-w-[72px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 text-sm leading-none" onClick={() => setForm({
                 id: coupon.id,
                 code: coupon.code,
                 type: coupon.type,
@@ -3377,7 +3804,7 @@ function AdminCouponsView() {
               })}>
                 {t("수정", "Edit")}
               </button>
-              <button type="button" className="h-10 px-4 rounded-full border border-slate-300 text-sm" onClick={() => deleteCoupon(coupon.id)}>
+              <button type="button" className="inline-flex h-10 min-w-[72px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 text-sm leading-none" onClick={() => deleteCoupon(coupon.id)}>
                 {t("삭제", "Delete")}
               </button>
             </div>
@@ -3621,8 +4048,6 @@ function AnalyticsTopKpiCard({
   sparkline,
   sparklineType,
   deltaSuffix,
-  upLabel,
-  noBaselineLabel,
 }: {
   label: string;
   value: string;
@@ -3630,17 +4055,13 @@ function AnalyticsTopKpiCard({
   sparkline: SparklineValue[];
   sparklineType: "line" | "bar";
   deltaSuffix: string;
-  upLabel: string;
-  noBaselineLabel: string;
 }) {
-  const deltaText =
+  const deltaPercentText =
     delta.kind === "percent"
-      ? `${delta.value >= 0 ? "▲" : "▼"} ${Math.abs(delta.value).toFixed(1)}% ${deltaSuffix}`
+      ? `${delta.value >= 0 ? "+" : "-"}${Math.abs(delta.value).toFixed(1)}%`
       : delta.kind === "up"
-        ? upLabel
-        : delta.kind === "flat"
-          ? `0.0% ${deltaSuffix}`
-          : noBaselineLabel;
+        ? "+100%"
+        : "0%";
   const direction: "up" | "down" | "flat" =
     delta.kind === "percent"
       ? delta.value > 0
@@ -3654,15 +4075,23 @@ function AnalyticsTopKpiCard({
   const trendIcon = direction === "up" ? "north_east" : direction === "down" ? "south_east" : "remove";
 
   return (
-    <article className="admin-surface admin-hover-subtle flex h-full items-end justify-between gap-3 p-5">
+    <article className="admin-surface admin-hover-subtle flex h-[104px] flex-col justify-between p-4 xl:h-full xl:flex-row xl:items-end xl:gap-3 xl:p-5">
       <div className="min-w-0">
-        <p className="text-[13px] font-medium text-black/55">{label}</p>
-        <p className="mt-2 tabular-nums text-[clamp(1.75rem,2.8vw,2.2rem)] font-semibold leading-none tracking-tight text-black/88">{value}</p>
-        <p className={cn("mt-3 text-[12px] font-medium", direction === "up" ? "text-[color:var(--admin-accent)]" : direction === "down" ? "text-black/62" : "text-black/45")}>
-          {deltaText}
-        </p>
+        <p className="text-[12px] font-medium text-black/55">{label}</p>
+        <p className="mt-1.5 tabular-nums text-[clamp(1.38rem,5.5vw,1.62rem)] font-semibold leading-none tracking-tight text-black/88 xl:text-[clamp(1.75rem,2.8vw,2.2rem)]">{value}</p>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <p className="whitespace-nowrap text-[11px] font-medium text-black/52">
+            {deltaSuffix}{" "}
+            <span className={cn("tabular-nums font-semibold", direction === "up" || direction === "down" ? "text-[color:var(--admin-accent)]" : "text-black/58")}>
+              {deltaPercentText}
+            </span>
+          </p>
+          <span className={cn("material-symbols-outlined text-[13px] xl:hidden", direction === "up" || direction === "down" ? "text-[color:var(--admin-accent)]" : "text-black/35")}>
+            {trendIcon}
+          </span>
+        </div>
       </div>
-      <div className="flex shrink-0 items-end gap-1">
+      <div className="hidden shrink-0 items-end gap-1 xl:flex">
         <MiniSparkline values={sparkline} type={sparklineType} />
         <span
           className={cn(
@@ -3693,6 +4122,30 @@ function AnalyticsSalesCycleBarChart({
   emptyLabel: string;
 }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) {
+      return;
+    }
+
+    const updateWidth = () => {
+      setContainerWidth(node.clientWidth);
+    };
+
+    updateWidth();
+
+    if (typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver(() => updateWidth());
+      observer.observe(node);
+      return () => observer.disconnect();
+    }
+
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
 
   if (data.length === 0) {
     return <p className="rounded-2xl border border-black/10 bg-white p-4 text-sm text-black/55">{emptyLabel}</p>;
@@ -3705,7 +4158,7 @@ function AnalyticsSalesCycleBarChart({
     return `$${value.toFixed(0)}`;
   };
 
-  const width = 1000;
+  const width = containerWidth > 0 ? Math.max(340, Math.min(1200, containerWidth)) : 640;
   const height = 250;
   const leftPadding = 56;
   const rightPadding = 16;
@@ -3746,14 +4199,15 @@ function AnalyticsSalesCycleBarChart({
     };
   });
 
-  const labelStep = data.length <= 8 ? 1 : data.length <= 14 ? 2 : 3;
+  const maxVisibleLabels = width < 420 ? 4 : width < 640 ? 6 : 8;
+  const labelStep = Math.max(1, Math.ceil(data.length / maxVisibleLabels));
   const safeHoveredIndex = hoveredIndex === null ? null : Math.max(0, Math.min(points.length - 1, hoveredIndex));
   const hovered = safeHoveredIndex === null ? null : points[safeHoveredIndex];
   const tooltipLeft = hovered ? Math.max(120, Math.min(width - 120, hovered.centerX)) : 0;
 
   return (
-    <div className="relative overflow-x-auto">
-      <div className="relative min-w-[700px]">
+    <div className="relative overflow-x-hidden">
+      <div ref={containerRef} className="relative w-full">
         {hovered && (
           <div
             className="pointer-events-none absolute z-[3] -translate-x-1/2 rounded-[14px] border border-black/10 bg-white px-3 py-2 text-xs text-black/75"
@@ -3767,7 +4221,7 @@ function AnalyticsSalesCycleBarChart({
           </div>
         )}
 
-        <svg viewBox={`0 0 ${width} ${height}`} className="h-[180px] w-full md:h-[220px] xl:h-[260px]" role="img" aria-hidden>
+        <svg viewBox={`0 0 ${width} ${height}`} className="h-[190px] w-full sm:h-[240px] xl:h-[260px]" role="img" aria-hidden>
           {tickValues.map((tick) => {
             const y = chartBottom - (tick / axisMax) * chartHeight;
             return (
@@ -3794,7 +4248,7 @@ function AnalyticsSalesCycleBarChart({
 
           {points.map((point, index) =>
             index % labelStep === 0 || index === points.length - 1 ? (
-              <text key={`label-${point.key}`} x={point.centerX} y={height - 7} textAnchor="middle" fontSize="10" fill="rgba(0,0,0,0.45)">
+              <text key={`label-${point.key}`} x={point.centerX} y={height - 7} textAnchor="middle" fontSize={width < 420 ? "11" : "10"} fill="rgba(0,0,0,0.58)">
                 {point.label}
               </text>
             ) : null,
@@ -3808,6 +4262,8 @@ function AnalyticsSalesCycleBarChart({
               width={slotWidth}
               height={chartHeight + bottomPadding}
               fill="transparent"
+              onClick={() => setHoveredIndex(index)}
+              onTouchStart={() => setHoveredIndex(index)}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseMove={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
@@ -3890,6 +4346,8 @@ function AnalyticsCard({ label, value, hint }: { label: string; value: string; h
     </article>
   );
 }
+
+
 
 
 

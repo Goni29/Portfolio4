@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useStore } from "@/components/providers/store-provider";
+import { Drawer } from "@/components/ui/drawer";
 import { stripLocalePrefix, withLocalePath } from "@/lib/locale-routing";
 import { cn } from "@/lib/utils";
 
@@ -102,6 +103,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     () => activeMenuItem?.label[locale] ?? (locale === "ko" ? "관리자" : "Admin"),
     [activeMenuItem, locale],
   );
+  const [isAdminMenuDrawerOpen, setIsAdminMenuDrawerOpen] = useState(false);
   const [adminMenuQuery, setAdminMenuQuery] = useState("");
   const normalizedMenuQuery = normalizeSearchText(adminMenuQuery);
   const queryTokens = useMemo(() => normalizedMenuQuery.split(" ").filter(Boolean), [normalizedMenuQuery]);
@@ -331,6 +333,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-50 border-b border-black/10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90">
         <div className="flex h-[4.5rem] items-center justify-between gap-3 px-4 sm:px-6 lg:px-10">
           <div className="flex min-w-0 items-center gap-4">
+            <button
+              type="button"
+              className="admin-ghost-button inline-flex h-10 w-10 shrink-0 items-center justify-center xl:hidden"
+              onClick={() => setIsAdminMenuDrawerOpen(true)}
+              aria-label={t("관리자 메뉴 열기", "Open admin menu")}
+            >
+              <span className="material-symbols-outlined text-[19px]">menu</span>
+            </button>
             <Link href={localize("/")} className="flex items-center gap-2.5 text-[color:var(--admin-text)] xl:hidden">
               <Image
                 src="/logo_header.png"
@@ -340,7 +350,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 className="h-10 w-auto object-contain"
                 priority
               />
-              <span className="inline-flex h-6 items-center rounded-full border border-[color:var(--admin-border)] bg-[color:var(--admin-subtle-bg)] px-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--admin-accent)]">
+              <span className="inline-flex h-6 items-center whitespace-nowrap rounded-full border border-[color:var(--admin-border)] bg-[color:var(--admin-subtle-bg)] px-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--admin-accent)]">
                 Admin
               </span>
             </Link>
@@ -357,10 +367,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="inline-flex h-10 max-w-[42vw] items-center gap-1.5 rounded-full border border-black/10 bg-[color:var(--admin-subtle-bg)] px-3 text-xs font-medium text-black/65">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <div className="hidden h-10 max-w-[42vw] items-center gap-1.5 rounded-full border border-black/10 bg-[color:var(--admin-subtle-bg)] px-3 text-xs font-medium text-black/65 sm:inline-flex">
               <span className="material-symbols-outlined text-[15px] text-black/50">{activeMenuItem?.icon ?? "dashboard"}</span>
-              <span className="truncate">{currentSection}</span>
+              <span className="truncate whitespace-nowrap">{currentSection}</span>
             </div>
 
             <Link href={localize("/shop")} className="admin-solid-button hidden h-10 items-center px-3.5 text-xs font-semibold uppercase tracking-[0.12em] sm:inline-flex">
@@ -368,13 +378,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </Link>
             <button
               type="button"
-              className="admin-ghost-button inline-flex h-10 items-center px-3.5 text-xs font-semibold uppercase tracking-[0.12em]"
+              className="admin-ghost-button inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-3 sm:px-3.5 text-xs font-semibold uppercase tracking-[0.1em]"
               onClick={() => {
                 logout();
-                router.push(localize("/"));
+                window.location.assign(localize("/"));
               }}
+              aria-label={t("로그아웃", "Sign Out")}
             >
-              {t("로그아웃", "Sign Out")}
+              <span className="material-symbols-outlined text-[16px] sm:hidden">logout</span>
+              <span className="hidden sm:inline">{t("로그아웃", "Sign Out")}</span>
             </button>
           </div>
         </div>
@@ -385,7 +397,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <div className="border-b border-black/10 px-5 py-5">
             <Link href={localize("/")} className="mb-4 flex items-center justify-between gap-3">
               <Image src="/logo_header.png" alt="Portfolio logo" width={320} height={132} className="h-9 w-auto object-contain" />
-              <span className="inline-flex h-6 items-center rounded-full border border-[color:var(--admin-border)] bg-[color:var(--admin-subtle-bg)] px-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--admin-accent)]">
+              <span className="inline-flex h-6 items-center whitespace-nowrap rounded-full border border-[color:var(--admin-border)] bg-[color:var(--admin-subtle-bg)] px-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--admin-accent)]">
                 Admin
               </span>
             </Link>
@@ -445,7 +457,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               </div>
               <button
                 type="button"
-                className="admin-ghost-button inline-flex h-10 items-center gap-1.5 px-3 text-xs font-semibold uppercase tracking-[0.12em] xl:hidden"
+                className="admin-ghost-button inline-flex h-10 items-center gap-1.5 whitespace-nowrap px-3 text-xs font-semibold uppercase tracking-[0.12em] xl:hidden"
                 onClick={() => {
                   router.push(localize("/admin"));
                 }}
@@ -458,6 +470,78 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
         </main>
       </div>
+
+      <Drawer
+        open={isAdminMenuDrawerOpen}
+        title={t("관리자 메뉴", "Admin Menu")}
+        onClose={() => setIsAdminMenuDrawerOpen(false)}
+        side="left"
+        headerContent={(
+          <div className="leading-tight">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-black/45">{t("Admin Navigation", "Admin Navigation")}</p>
+            <p className="mt-1 text-sm font-semibold text-black/85">{t("관리자 메뉴", "Admin Menu")}</p>
+          </div>
+        )}
+      >
+        <div className="grid gap-4 text-black/80">
+          <div className="admin-input flex h-11 items-center gap-2 px-3">
+            <span className="material-symbols-outlined text-[18px] text-black/45">search</span>
+            <input
+              className="admin-menu-search-input w-full border-none bg-transparent p-0 text-sm text-black/80 placeholder:text-black/40 focus:ring-0"
+              placeholder={t("관리자 메뉴 검색", "Search admin")}
+              type="search"
+              value={adminMenuQuery}
+              onChange={(event) => setAdminMenuQuery(event.target.value)}
+            />
+          </div>
+
+          <div className="admin-surface flex items-center gap-3 p-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--admin-border)] bg-[color:var(--admin-subtle-bg)] text-[color:var(--admin-accent)]">
+              <span className="material-symbols-outlined text-[20px]">person</span>
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-black/85">{currentUser.name}</p>
+              <p className="truncate text-xs text-black/55">{currentUser.email}</p>
+            </div>
+          </div>
+
+          <nav className="grid gap-4">
+            {groupedAdminMenu.map((entry) => (
+              <div key={`drawer-${entry.group}`}>
+                <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-black/45">{entry.label}</p>
+                <div className="grid gap-1">
+                  {entry.items.map((item) => {
+                    const isActive = isActivePath(routePath, item.href);
+                    return (
+                      <Link
+                        key={`drawer-${item.href}`}
+                        href={localize(item.href)}
+                        onClick={() => setIsAdminMenuDrawerOpen(false)}
+                        className={cn(
+                          "admin-hover-subtle group relative flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-sm",
+                          isActive ? "bg-[color:var(--admin-subtle-bg)] font-semibold text-black/85" : "font-medium text-black/65",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "absolute left-0 top-2 bottom-2 w-[2px] rounded-full",
+                            isActive ? "bg-[color:var(--admin-accent)] opacity-100" : "opacity-0",
+                          )}
+                        />
+                        <span className={cn("material-symbols-outlined text-[19px]", isActive ? "text-[color:var(--admin-accent)]" : "text-black/40 group-hover:text-black/75")}>
+                          {item.icon}
+                        </span>
+                        <span className="truncate">{item.label[locale]}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            {noMenuMatches && <p className="px-3 py-2 text-sm text-black/45">{t("검색 결과가 없습니다.", "No matching menu results.")}</p>}
+          </nav>
+        </div>
+      </Drawer>
     </div>
   );
 }

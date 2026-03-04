@@ -20,6 +20,9 @@ const PRODUCT_DETAIL_IMAGE_PATCHES: Record<string, { thumbnail: string; mainImag
   "enzyme-polish-cleanser": { mainImage: "/form.png", thumbnail: "/form1.png" },
 };
 const ROSE_QUARTZ_ROLLER_SLUG = "rose-quartz-roller";
+const BIO_CELLULOSE_MASK_SLUG = "bio-cellulose-mask";
+const LEGACY_SUPPORT_EMAIL = "support@portfolio4.com";
+const PRIMARY_SUPPORT_EMAIL = "support@portfolio.com";
 
 const hasHangul = (value: string): boolean => /[가-힣]/.test(value);
 const hasNonAscii = (value: string): boolean => /[^\u0000-\u007f]/.test(value);
@@ -166,6 +169,21 @@ const migrateLegacyAccountEmailDomain = (db: StoreDB): StoreDB => {
   };
 };
 
+const migrateSupportEmailDomain = (db: StoreDB): StoreDB => {
+  const supportEmail = db.settings.supportEmail.trim().toLowerCase();
+  if (supportEmail !== LEGACY_SUPPORT_EMAIL) {
+    return db;
+  }
+
+  return {
+    ...db,
+    settings: {
+      ...db.settings,
+      supportEmail: PRIMARY_SUPPORT_EMAIL,
+    },
+  };
+};
+
 const migrateDailyDefenseHeroImage = (db: StoreDB): StoreDB => {
   return {
     ...db,
@@ -256,6 +274,26 @@ const migrateRoseQuartzRollerFreeShipping = (db: StoreDB): StoreDB => {
   };
 };
 
+const migrateBioCelluloseMaskFreeShipping = (db: StoreDB): StoreDB => {
+  return {
+    ...db,
+    products: db.products.map((product) => {
+      if (product.slug !== BIO_CELLULOSE_MASK_SLUG) {
+        return product;
+      }
+
+      if (!product.freeShipping) {
+        return product;
+      }
+
+      return {
+        ...product,
+        freeShipping: false,
+      };
+    }),
+  };
+};
+
 const migrateAnalytics = (db: StoreDB): StoreDB => {
   const rawViews = db.analytics?.productViewsBySlug;
   const normalizedViews: Record<string, number> = {};
@@ -293,15 +331,19 @@ export const loadDb = (): StoreDB => {
   }
 
   const normalized = migrateAnalytics(
-    migrateRoseQuartzRollerFreeShipping(
-      migrateProductFreeShipping(
-        migrateProductDetailImages(
-          migrateDailyDefenseHeroImage(
-            migrateLegacyAccountEmailDomain(normalizeDbLocalizedFields(saved, seed)),
+    migrateBioCelluloseMaskFreeShipping(
+      migrateRoseQuartzRollerFreeShipping(
+        migrateProductFreeShipping(
+          migrateProductDetailImages(
+            migrateDailyDefenseHeroImage(
+              migrateSupportEmailDomain(
+                migrateLegacyAccountEmailDomain(normalizeDbLocalizedFields(saved, seed)),
+              ),
+            ),
+            seed,
           ),
           seed,
         ),
-        seed,
       ),
     ),
   );

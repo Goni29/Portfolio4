@@ -43,6 +43,9 @@ export function AccountRouterView({ segments }: { segments: string[] }) {
   if (segments[0] === "orders") {
     return <AccountOrdersView />;
   }
+  if (segments[0] === "inquiries") {
+    return <AccountInquiriesView />;
+  }
   if (segments[0] === "wishlist") {
     return <AccountWishlistView />;
   }
@@ -926,6 +929,106 @@ function AccountAddressesView() {
           {resolveText(CONTENT_COPY.accountSaveAddress, locale)}
         </button>
       </form>
+    </div>
+  );
+}
+
+function AccountInquiriesView() {
+  const { currentUser, db, locale } = useStore();
+  const t = (ko: string, en: string) => (locale === "ko" ? ko : en);
+
+  if (!currentUser) {
+    return null;
+  }
+
+  const topicLabel = (topic: string) => {
+    const map: Record<string, { ko: string; en: string }> = {
+      product: { ko: "상품 문의", en: "Product Inquiry" },
+      shipping: { ko: "배송/주문", en: "Shipping & Orders" },
+      membership: { ko: "멤버십", en: "Membership" },
+      other: { ko: "기타", en: "Other" },
+    };
+    return map[topic]?.[locale] ?? topic;
+  };
+
+  const statusLabel = (status: string) => {
+    const map: Record<string, { ko: string; en: string }> = {
+      new: { ko: "접수됨", en: "New" },
+      in_progress: { ko: "처리 중", en: "In Progress" },
+      resolved: { ko: "해결됨", en: "Resolved" },
+    };
+    return map[status]?.[locale] ?? status;
+  };
+
+  const statusPillClass = (status: string) => {
+    if (status === "new") {
+      return "border-[#e6194c]/20 bg-[#e6194c]/5 text-[#e6194c]";
+    }
+    if (status === "in_progress") {
+      return "border-amber-200 bg-amber-50 text-amber-700";
+    }
+    return "border-slate-200 bg-slate-50 text-slate-600";
+  };
+
+  const inquiries = db.inquiries
+    .filter((inquiry) => inquiry.userId === currentUser.id)
+    .sort((a, b) => +new Date(b.updatedAt || b.createdAt) - +new Date(a.updatedAt || a.createdAt));
+
+  if (inquiries.length === 0) {
+    return (
+      <EmptyState
+        title={t("문의 내역이 없습니다", "No inquiries yet")}
+        body={t("문의하기 페이지에서 문의를 남기면 이곳에서 진행 상태를 확인할 수 있습니다.", "Submit a request on the contact page and track its status here.")}
+        ctaHref={localizePath("/contact", locale)}
+        ctaLabel={t("문의하기", "Contact Us")}
+      />
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-[#f3e7ea] bg-white p-6">
+      <div className="mb-5 flex items-center justify-between gap-3 flex-wrap">
+        <h1 className="text-3xl font-bold text-slate-900">{t("내 문의 내역", "My Inquiries")}</h1>
+        <Link
+          href={localizePath("/contact", locale)}
+          className="inline-flex h-10 items-center rounded-full border border-[#e4d7db] px-4 text-sm font-semibold text-[#e6194c] hover:bg-[#fcf8f9] transition-colors"
+        >
+          {t("새 문의", "New Inquiry")}
+        </Link>
+      </div>
+
+      <div className="space-y-3">
+        {inquiries.map((inquiry) => (
+          <article key={inquiry.id} className="rounded-lg border border-[#f3e7ea] p-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex rounded-full border border-[#f3e7ea] bg-[#fcf8f9] px-2.5 py-1 text-xs font-semibold text-slate-600">
+                  {topicLabel(inquiry.topic)}
+                </span>
+                <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${statusPillClass(inquiry.status)}`}>
+                  {statusLabel(inquiry.status)}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                {t("문의일", "Created")} {formatDate(inquiry.createdAt, locale)}
+              </p>
+            </div>
+
+            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-slate-700">{inquiry.message}</p>
+
+            {inquiry.adminNote.trim().length > 0 && (
+              <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t("관리자 메모", "Admin Note")}</p>
+                <p className="mt-1 text-sm text-slate-700 whitespace-pre-line">{inquiry.adminNote}</p>
+              </div>
+            )}
+
+            <p className="mt-3 text-xs text-slate-500">
+              {t("최종 업데이트", "Last updated")} {formatDate(inquiry.updatedAt, locale)}
+            </p>
+          </article>
+        ))}
+      </div>
     </div>
   );
 }

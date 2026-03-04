@@ -310,7 +310,7 @@ const products: Product[] = [
     skinTypes: ["dry", "combination", "normal", "sensitive"],
     concerns: ["hydration", "dullness", "redness"],
     price: 28,
-    freeShipping: true,
+    freeShipping: false,
     images: [
       "/mask.png",
       "/mask1.png",
@@ -677,7 +677,7 @@ export const createSeedDb = (): StoreDB => ({
   banners,
   settings: {
     storeName: "Portfolio",
-    supportEmail: "support@portfolio4.com",
+    supportEmail: "support@portfolio.com",
     currency: "USD",
     shippingFlat: 8,
     freeShippingThreshold: 120,
