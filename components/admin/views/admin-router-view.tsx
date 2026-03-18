@@ -822,7 +822,7 @@ function toNumericValue(value: SparklineValue): number | null {
 }
 
 function countValidValues(series: SparklineValue[]): number {
-  return series.reduce((count, value) => (toNumericValue(value) === null ? count : count + 1), 0);
+  return series.reduce<number>((count, value) => (toNumericValue(value) === null ? count : count + 1), 0);
 }
 
 function hasEnoughData(series: SparklineValue[]): boolean {
